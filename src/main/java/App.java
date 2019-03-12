@@ -49,18 +49,31 @@ public class App {
         JLabel cmdLabel = formLabel("КОМАНДЫ", 0);
         managerPanel.add(cmdLabel);
         textArea = new JTextArea();
-        textArea.setBounds(30, 140, 500, 200);
-        managerPanel.add(textArea);
+        textArea.setWrapStyleWord(true);
+        textArea.setEditable(false);
+        textArea.setAutoscrolls(true);
+        JScrollPane scroll = new JScrollPane(textArea);
+        scroll.setBounds(30, 140, 500, 200);
+        managerPanel.add(scroll);
         JButton enableButton = new JButton("рыбалка");
         enableButton.setBounds(30, 60, 160, 30);
         enableButton.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 try {
-                    int[] buffer = new int[]{40, 1, 11, 245, 72, 107};
-                    textArea.setText(textArea.getText() + "OUTPUT:  " + Arrays.toString(buffer) + "\n");
-
-                    textArea.setText(textArea.getText() + manager.sendBytes(buffer) + "\n");
+                    textArea.setText(textArea.getText() + "ENABLE CASHMACHINE PROCESS STARTED:\n");
+                    int[] poll = new int[]{40, 0, 127, 192, 137};
+                    textArea.setText(textArea.getText() + "poll >> " + Arrays.toString(poll) + "\n");
+                    textArea.setText(textArea.getText() + manager.sendBytes(poll) + "\n");
+                    int[] readBufferedBillEvents = new int[]{40, 0, 203, 216, 255};
+                    textArea.setText(textArea.getText() + "read buffered bill events >> " + Arrays.toString(readBufferedBillEvents) + "\n");
+                    textArea.setText(textArea.getText() + manager.sendBytes(readBufferedBillEvents) + "\n");
+                    int[] modifyInhibitStatus = new int[]{40, 2, 80, 14, 24, 92, 232};
+                    textArea.setText(textArea.getText() + "modify inhibit status >> " + Arrays.toString(modifyInhibitStatus) + "\n");
+                    textArea.setText(textArea.getText() + manager.sendBytes(modifyInhibitStatus) + "\n");
+                    int[] modifyMasterInhibitOff = new int[]{40, 1, 11, 245, 72, 107};
+                    textArea.setText(textArea.getText() + "modify master inhibit off >> " + Arrays.toString(modifyMasterInhibitOff) + "\n");
+                    textArea.setText(textArea.getText() + manager.sendBytes(modifyMasterInhibitOff) + "\n");
                 } catch (InterruptedException | SerialPortException e1) {
                     e1.printStackTrace();
                 }

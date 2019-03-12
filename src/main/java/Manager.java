@@ -6,9 +6,9 @@ import jssc.SerialPortException;
 import java.util.Arrays;
 import java.util.Calendar;
 
-public class Manager {
-    SerialPort serialPort;
-    StringBuilder response = new StringBuilder();
+class Manager {
+    private SerialPort serialPort;
+    private StringBuilder response = new StringBuilder();
 
     Manager(String portName) throws SerialPortException {
         System.out.println("Инициализация ком порта: " + portName);
@@ -60,16 +60,6 @@ public class Manager {
             } else {
                 System.out.println("какой то другой сигнал");
             }
-//            if (event.isRXCHAR() && event.getEventValue() > 0) {
-//                try {
-//                    Thread.sleep(400);
-//                    int[] received = serialPort.readIntArray();
-//                    System.out.println("Input: " + Arrays.toString(received));
-//                } catch (InterruptedException | SerialPortException e) {
-////                } catch (SerialPortException e) {
-//                    e.printStackTrace();
-//                }
-//            }
         }
     }
 }
