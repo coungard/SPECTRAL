@@ -5,14 +5,14 @@ import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.util.Arrays;
 
 public class App {
-    private JFrame window = new JFrame("Manager");
+    private JFrame window = new JFrame("Spectral" + " (v." + Settings.VERSION + " )");
     private final JPanel mainPanel;
     private JPanel managerPanel;
     private Manager manager;
-    private JTextArea textArea;
+    volatile static JTextArea textArea;
+    private static boolean isEnabled;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
@@ -46,50 +46,92 @@ public class App {
     }
 
     private void createManagerPage() {
-        JLabel cmdLabel = formLabel("КОМАНДЫ", 0);
+        JLabel cmdLabel = formLabel("CashMachine Manager", 0);
         managerPanel.add(cmdLabel);
         textArea = new JTextArea();
         textArea.setWrapStyleWord(true);
         textArea.setEditable(false);
-        textArea.setAutoscrolls(true);
         JScrollPane scroll = new JScrollPane(textArea);
-        scroll.setBounds(30, 140, 500, 200);
+        scroll.setAutoscrolls(true);
+        scroll.setBounds(30, 140, 520, 200);
         managerPanel.add(scroll);
-        JButton enableButton = new JButton("рыбалка");
+        JButton enableButton = new JButton("Enable cashment");
         enableButton.setBounds(30, 60, 160, 30);
         enableButton.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                try {
-                    textArea.setText(textArea.getText() + "ENABLE CASHMACHINE PROCESS STARTED:\n");
-                    int[] poll = new int[]{40, 0, 127, 192, 137};
-                    textArea.setText(textArea.getText() + "poll >> " + Arrays.toString(poll) + "\n");
-                    textArea.setText(textArea.getText() + manager.sendBytes(poll) + "\n");
-                    int[] readBufferedBillEvents = new int[]{40, 0, 203, 216, 255};
-                    textArea.setText(textArea.getText() + "read buffered bill events >> " + Arrays.toString(readBufferedBillEvents) + "\n");
-                    textArea.setText(textArea.getText() + manager.sendBytes(readBufferedBillEvents) + "\n");
-                    int[] modifyInhibitStatus = new int[]{40, 2, 80, 14, 24, 92, 232};
-                    textArea.setText(textArea.getText() + "modify inhibit status >> " + Arrays.toString(modifyInhibitStatus) + "\n");
-                    textArea.setText(textArea.getText() + manager.sendBytes(modifyInhibitStatus) + "\n");
-                    int[] modifyMasterInhibitOff = new int[]{40, 1, 11, 245, 72, 107};
-                    textArea.setText(textArea.getText() + "modify master inhibit off >> " + Arrays.toString(modifyMasterInhibitOff) + "\n");
-                    textArea.setText(textArea.getText() + manager.sendBytes(modifyMasterInhibitOff) + "\n");
-                } catch (InterruptedException | SerialPortException e1) {
-                    e1.printStackTrace();
+                if (isEnabled) {
+                    textArea.setText(textArea.getText() + "cashmachine is already enabled\n");
+                    return;
                 }
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        textArea.setText(textArea.getText() + "ENABLE CASHMACHINE PROCESS STARTED:\n");
+                        textArea.setText(textArea.getText() + manager.sendMessage(new CCTalkCommand(CCTalkCommandType.SimplePoll)));
+                        pause();
+                        manager.sendMessage(new CCTalkCommand(CCTalkCommandType.ReadBufferedBillEvents));
+                        pause();
+                        manager.sendMessage(new CCTalkCommand(CCTalkCommandType.ModifyBillOperatingMode, new byte[]{(byte) 0x01}));
+                        pause();
+                        manager.sendMessage(new CCTalkCommand(CCTalkCommandType.ModifyInhibitStatus, new byte[]{(byte) 0xFF, (byte) 0xFF}));
+                        pause();
+                        manager.sendMessage(new CCTalkCommand(CCTalkCommandType.ModifyMasterInhibit, new byte[]{(byte) 0x01}));
+                        pause();
+
+                        isEnabled = true;
+                        while (isEnabled) {
+                            try {
+                                Thread.sleep(1000);
+                                manager.sendMessage(new CCTalkCommand(CCTalkCommandType.ReadBufferedBillEvents));
+                            } catch (InterruptedException ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                    }
+                }).start();
+            }
+        });
+
+        JButton disableButton = new JButton("Disable cashment");
+        disableButton.setBounds(410, 60, 160, 30);
+        disableButton.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                isEnabled = false;
+                textArea.setText(textArea.getText() + "Bill accepting stopped\n");
+            }
+        });
+
+        JButton resetButton = new JButton("Reset");
+        resetButton.setBounds(220, 60, 160, 30);
+        resetButton.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                textArea.setText(textArea.getText() + manager.sendMessage(new CCTalkCommand(CCTalkCommandType.ResetDevice)));
             }
         });
         managerPanel.add(enableButton);
+        managerPanel.add(disableButton);
+        managerPanel.add(resetButton);
+    }
+
+    private void pause() {
+        try {
+            Thread.sleep(600);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void createMainPage() {
-        JLabel label = formLabel("Выберите ком-порт", 30);
+        JLabel label = formLabel("Choose com-port", 0);
         mainPanel.add(label);
 
         String[] ports = SerialPortList.getPortNames();
         for (int i = 0; i < ports.length; i++) {
             JButton button = new JButton(ports[i]);
-            button.setBounds(window.getWidth() / 2 - 100, 80 + i * 100, 200, 50);
+            button.setBounds(window.getWidth() / 2 - 110, 60 + i * 60, 220, 40);
             button.addMouseListener(new MyListener(ports[i]));
             mainPanel.add(button);
         }
@@ -112,7 +154,7 @@ public class App {
                 manager = new Manager(portName);
                 switchPanel();
             } catch (SerialPortException e1) {
-                System.out.println("Проблемы с подключением к ком порту");
+                System.out.println("COM PORT CONNECTION ERROR!");
                 e1.printStackTrace();
             }
         }
@@ -121,7 +163,7 @@ public class App {
     private JLabel formLabel(String name, int y) {
         JLabel label = new JLabel(name);
         label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 22));
-        label.setBounds(0, y, window.getWidth(), 50);
+        label.setBounds(0, y, window.getWidth(), 40);
         label.setHorizontalAlignment(SwingConstants.CENTER);
         label.setVerticalAlignment(SwingConstants.CENTER);
 
