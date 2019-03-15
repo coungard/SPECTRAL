@@ -1,6 +1,8 @@
 
 public enum CCTalkCommandType {
     SimplePoll((byte) 254),
+    REQ_ManufacturerId((byte) 246),
+    RequestEquipmentCategoryId((byte) 245),
     ModifyInhibitStatus((byte) 231),
     ModifyMasterInhibit((byte) 228),
     ReadBufferedBillEvents((byte) 159),

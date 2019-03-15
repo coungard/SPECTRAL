@@ -50,7 +50,7 @@ public class BNVEncode {
         }
     }
 
-    public static void BNV_decrypt(byte[] secCode, byte[] data) {
+    public static void BNV_decrypt(byte[] data) {
         {
             int initXOR = (secCode[2] << 4 | secCode[2]);
             for (int i = 0; i < data.length; ++i) data[i] ^= initXOR;

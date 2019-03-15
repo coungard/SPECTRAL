@@ -50,6 +50,7 @@ public class App {
         managerPanel.add(cmdLabel);
         textArea = new JTextArea();
         textArea.setWrapStyleWord(true);
+        textArea.setLineWrap(true);
         textArea.setEditable(false);
         JScrollPane scroll = new JScrollPane(textArea);
         scroll.setAutoscrolls(true);
@@ -68,7 +69,7 @@ public class App {
                     @Override
                     public void run() {
                         textArea.setText(textArea.getText() + "ENABLE CASHMACHINE PROCESS STARTED:\n");
-                        textArea.setText(textArea.getText() + manager.sendMessage(new CCTalkCommand(CCTalkCommandType.SimplePoll)));
+                        manager.sendMessage(new CCTalkCommand(CCTalkCommandType.SimplePoll));
                         pause();
                         manager.sendMessage(new CCTalkCommand(CCTalkCommandType.ReadBufferedBillEvents));
                         pause();
@@ -81,12 +82,8 @@ public class App {
 
                         isEnabled = true;
                         while (isEnabled) {
-                            try {
-                                Thread.sleep(1000);
                                 manager.sendMessage(new CCTalkCommand(CCTalkCommandType.ReadBufferedBillEvents));
-                            } catch (InterruptedException ex) {
-                                ex.printStackTrace();
-                            }
+                                pause();
                         }
                     }
                 }).start();
@@ -108,9 +105,20 @@ public class App {
         resetButton.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                textArea.setText(textArea.getText() + manager.sendMessage(new CCTalkCommand(CCTalkCommandType.ResetDevice)));
+                manager.sendMessage(new CCTalkCommand(CCTalkCommandType.ResetDevice));
             }
         });
+
+        JButton testButton = new JButton("Test");
+        testButton.setBounds(30, 100, 160, 30);
+        testButton.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                manager.sendMessage(new CCTalkCommand(CCTalkCommandType.REQ_ManufacturerId));
+            }
+        });
+
+        managerPanel.add(testButton);
         managerPanel.add(enableButton);
         managerPanel.add(disableButton);
         managerPanel.add(resetButton);
@@ -118,7 +126,7 @@ public class App {
 
     private void pause() {
         try {
-            Thread.sleep(600);
+            Thread.sleep(1500);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

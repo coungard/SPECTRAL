@@ -5,11 +5,12 @@ import jssc.SerialPortException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Calendar;
 
 class Manager {
     private SerialPort serialPort;
-    private StringBuilder response = new StringBuilder();
+    private byte[] received;
 
     Manager(String portName) throws SerialPortException {
         serialPort = new SerialPort(portName);
@@ -26,36 +27,48 @@ class Manager {
         System.out.println("Initialization port " + portName + " was succesfull!");
     }
 
-    synchronized String sendMessage(CCTalkCommand command) {
-        String result = null;
+    synchronized void sendMessage(CCTalkCommand command) {
         byte[] crcPacket = formPacket(command.commandType.getCode(), command.getData());
-        logPacket(crcPacket, false);
+        logPacket(crcPacket, "output >> ");
 
         try {
             serialPort.writeBytes(crcPacket);
 
             byte[] encrypt = encryptPacket(crcPacket);
-            logPacket(encrypt, true);
+            logPacket(encrypt, "output(encrypted) >> ");
             serialPort.writeBytes(encrypt);
 
             long start = Calendar.getInstance().getTimeInMillis();
             do {
-                if (response.length() == 0) Thread.sleep(10);
-            } while (Calendar.getInstance().getTimeInMillis() - start < 1200 && response.length() == 0);
-            result = response.length() == 0 ? null : response.toString();
-            response.setLength(0);
+                if (received == null) Thread.sleep(10);
+            } while (Calendar.getInstance().getTimeInMillis() - start < 1200 && received == null);
         } catch (SerialPortException | InterruptedException ex) {
             ex.printStackTrace();
         }
-        return result == null ? "null\n" : result;
     }
 
-    private byte[] encryptPacket(byte[] crcPacket) {
-        byte[] toEncrypt = java.util.Arrays.copyOfRange(crcPacket, 2, crcPacket.length);
-        BNVEncode.BNV_encrypt(toEncrypt);
-        System.arraycopy(toEncrypt, 0, crcPacket, 2, toEncrypt.length);
+    void sendBytes(byte[] bytes) {
+        try {
+            serialPort.writeBytes(bytes);
+        } catch (SerialPortException e) {
+            e.printStackTrace();
+        }
+    }
 
-        return crcPacket;
+    private byte[] encryptPacket(byte[] packet) {
+        byte[] toEncrypt = Arrays.copyOfRange(packet, 2, packet.length);
+        BNVEncode.BNV_encrypt(toEncrypt);
+        System.arraycopy(toEncrypt, 0, packet, 2, toEncrypt.length);
+
+        return packet;
+    }
+
+    private byte[] decryptPacket(byte[] packet) {
+        byte[] toDecrypt = Arrays.copyOfRange(packet, 2, packet.length);
+        BNVEncode.BNV_decrypt(toDecrypt);
+        System.arraycopy(toDecrypt, 0, packet, 2, toDecrypt.length);
+
+        return packet;
     }
 
     private byte[] formPacket(int command, byte[] data) {
@@ -89,24 +102,21 @@ class Manager {
         @Override
         public void serialEvent(SerialPortEvent event) {
             if (event.getEventType() == SerialPortEvent.RXCHAR) {
-                StringBuilder builder = new StringBuilder();
                 try {
-                    Thread.sleep(400);
-                    byte[] received = serialPort.readBytes();
-                    System.out.println("input <<  " + Utils.byteArray2HexString(received));
-
-                    builder.append("input <<  ").append(Utils.byteArray2HexString(received)).append("\n");
-                    App.textArea.setText(App.textArea.getText() + "input <<  " + Utils.byteArray2HexString(received) + "\n");
+                    Thread.sleep(800);
+                    received = serialPort.readBytes();
+                    logPacket(received, "input << ");
+                    byte[] decrypt = decryptPacket(received);
+                    logPacket(decrypt, "input(decrypted) << ");
                 } catch (InterruptedException | SerialPortException ex) {
                     ex.printStackTrace();
                 }
-                response = builder;
             }
         }
     }
 
-    synchronized private void logPacket(byte[] buffer, boolean encrypted) {
-        System.out.println((encrypted ? "output (encrypted) >> " : "output >> ") + Utils.byteArray2HexString(buffer));
-        App.textArea.setText(App.textArea.getText() + "output (encrypted) >>  " +Utils.byteArray2HexString(buffer) + "\n");
+    synchronized private void logPacket(byte[] buffer, String description) {
+        System.out.println((description) + Arrays.toString(buffer));
+        App.textArea.setText(App.textArea.getText() + description + Utils.byteArray2HexString(buffer) + "\n");
     }
 }
