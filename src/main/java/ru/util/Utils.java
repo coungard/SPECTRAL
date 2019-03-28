@@ -1,3 +1,5 @@
+package ru.util;
+
 import java.util.Formatter;
 
 public class Utils {

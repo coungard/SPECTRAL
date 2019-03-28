@@ -1,3 +1,5 @@
+package ru.util;
+
 public class Crc16 {
 
     private int crc = 0;          // initial value

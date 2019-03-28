@@ -1,3 +1,5 @@
+package ru.util;
+
 public class BNVEncode {
     private static final int BNVCodeLength = 6;
     private static final byte[] secCode = new byte[]{1, 2, 3, 4, 5, 6};
@@ -15,7 +17,7 @@ public class BNVEncode {
     private static final int feedMaster = 99;
     private static final byte[] tapArray = {7, 4, 5, 3, 1, 2, 3, 2, 6, 1};
 
-    static void BNV_encrypt(byte[] data) {
+    public static void BNV_encrypt(byte[] data) {
         {
             int initXOR = ~(secCode[0] << 4 | secCode[4]);
             for (int i = 0; i < data.length; ++i) data[i] ^= initXOR;

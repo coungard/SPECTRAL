@@ -1,18 +1,25 @@
+package ru.app;
+
 import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
+import ru.protocol.Command;
+import ru.util.BNVEncode;
+import ru.util.Crc16;
+import ru.util.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Calendar;
 
-class Manager {
+public class Client {
     private SerialPort serialPort;
     private byte[] received;
+    public static Command currentCommand;
 
-    Manager(String portName) throws SerialPortException {
+    Client(String portName) throws SerialPortException {
         serialPort = new SerialPort(portName);
         serialPort.openPort();
 
@@ -27,15 +34,14 @@ class Manager {
         System.out.println("Initialization port " + portName + " was succesfull!");
     }
 
-    synchronized void sendMessage(CCTalkCommand command) {
+    synchronized void sendMessage(Command command) {
+        currentCommand = command;
         byte[] crcPacket = formPacket(command.commandType.getCode(), command.getData());
-        logPacket(crcPacket, "output >> ");
-
         try {
             serialPort.writeBytes(crcPacket);
-
+            byte[] temp = Arrays.copyOf(crcPacket, crcPacket.length);
             byte[] encrypt = encryptPacket(crcPacket);
-            logPacket(encrypt, "output(encrypted) >> ");
+            Logger.logOutput(temp, encrypt);
             serialPort.writeBytes(encrypt);
 
             long start = Calendar.getInstance().getTimeInMillis();
@@ -49,8 +55,13 @@ class Manager {
 
     void sendBytes(byte[] bytes) {
         try {
+            Logger.console(Arrays.toString(bytes));
             serialPort.writeBytes(bytes);
-        } catch (SerialPortException e) {
+            long start = Calendar.getInstance().getTimeInMillis();
+            do {
+                if (received == null) Thread.sleep(10);
+            } while (Calendar.getInstance().getTimeInMillis() - start < 1200 && received == null);
+        } catch (SerialPortException | InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -103,20 +114,19 @@ class Manager {
         public void serialEvent(SerialPortEvent event) {
             if (event.getEventType() == SerialPortEvent.RXCHAR) {
                 try {
-                    Thread.sleep(800);
+                    Thread.sleep(400);
                     received = serialPort.readBytes();
-                    logPacket(received, "input << ");
-                    byte[] decrypt = decryptPacket(received);
-                    logPacket(decrypt, "input(decrypted) << ");
+                    byte[] temp = Arrays.copyOf(received, received.length);
+                    if (received.length >= 5) {
+                        byte[] decrypt = decryptPacket(received);
+                        Logger.logInput(temp, decrypt);
+                    } else {
+                        Logger.console(Arrays.toString(received));
+                    }
                 } catch (InterruptedException | SerialPortException ex) {
                     ex.printStackTrace();
                 }
             }
         }
-    }
-
-    synchronized private void logPacket(byte[] buffer, String description) {
-        System.out.println((description) + Arrays.toString(buffer));
-        App.textArea.setText(App.textArea.getText() + description + Utils.byteArray2HexString(buffer) + "\n");
     }
 }
