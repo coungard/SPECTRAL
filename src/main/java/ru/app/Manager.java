@@ -3,7 +3,7 @@ package ru.app;
 import jssc.SerialPortException;
 import jssc.SerialPortList;
 import ru.protocol.Command;
-import ru.protocol.CommandType;
+import ru.protocol.Nominal;
 import ru.util.Logger;
 
 import javax.swing.*;
@@ -12,13 +12,19 @@ import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 
-public class Manager {
+import static ru.protocol.hopper.HopperCommands.RequestHopperCoin;
+import static ru.protocol.payout.PayoutCommands.*;
+
+public class Manager extends Thread {
     public volatile static JTextArea textArea;
     private JFrame window = new JFrame("Spectral" + " (v." + Settings.VERSION + " )");
     private final JPanel mainPanel;
     private JPanel managerPanel;
     private Client manager;
     private static boolean isEnabled;
+    private String[] banknotes = new String[]{"10", "20", "50", "100", "500", "1000"};
+
+    public static boolean flag;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
@@ -76,31 +82,39 @@ public class Manager {
                     @Override
                     public void run() {
                         Logger.console("ENABLE CASHMACHINE PROCESS STARTED:\n");
-                        manager.sendMessage(new Command(CommandType.SimplePoll));
+                        manager.sendMessage(new Command(SimplePoll));
                         pause();
-                        manager.sendMessage(new Command(CommandType.RequestStatus));
+                        manager.sendMessage(new Command(RequestStatus));
                         pause();
-                        manager.sendMessage(new Command(CommandType.ReadBufferedBillEvents));
+                        manager.sendMessage(new Command(ReadBufferedBillEvents));
                         pause();
-                        manager.sendMessage(new Command(CommandType.RequestStatus));
+                        manager.sendMessage(new Command(RequestStatus));
                         pause();
-                        manager.sendMessage(new Command(CommandType.ModifyBillOperatingMode, new byte[]{(byte) 0x01}));
+                        manager.sendMessage(new Command(SetNoteInhibitStatus, new byte[]{(byte) 0xFF, (byte) 0xFF}));
                         pause();
-                        manager.sendMessage(new Command(CommandType.RequestStatus));
+                        manager.sendMessage(new Command(ModifyBillOperatingMode, new byte[0x01]));
                         pause();
-                        manager.sendMessage(new Command(CommandType.ModifyInhibitStatus, new byte[]{(byte) 0xFF, (byte) 0xFF}));
+                        manager.sendMessage(new Command(SetRouting,
+                                new byte[]{(byte) 0x00, (byte) 0x88, (byte) 0x13, 0, 0, (byte) 0x49, (byte) 0x54, (byte) 0x4C}));
                         pause();
-                        manager.sendMessage(new Command(CommandType.RequestStatus));
+                        manager.sendMessage(new Command(RequestStatus));
                         pause();
-                        manager.sendMessage(new Command(CommandType.ModifyMasterInhibit, new byte[]{(byte) 0x01}));
+                        manager.sendMessage(new Command(ModifyMasterInhibit, new byte[]{(byte) 0x01}));
                         pause();
-                        manager.sendMessage(new Command(CommandType.SimplePoll));
+                        manager.sendMessage(new Command(SimplePoll));
                         pause();
 
                         isEnabled = true;
+//                        while (isEnabled && !flag) {
                         while (isEnabled) {
-                            manager.sendMessage(new Command(CommandType.RequestStatus));
+                            byte[] res = manager.sendMessage(new Command(RequestStatus));
                             pause();
+                            if (res.length == 13 && res[4] == 20 && res[11] != 0) {
+                                System.out.println("note credit!");
+                                pause();
+                                manager.sendMessage(new Command(RouteBill, new byte[]{0x01}));
+                                pause();
+                            }
                         }
                     }
                 }).start();
@@ -113,7 +127,7 @@ public class Manager {
             @Override
             public void mousePressed(MouseEvent e) {
                 Logger.console("Start reseting device!");
-                manager.sendMessage(new Command(CommandType.ResetDevice));
+                manager.sendMessage(new Command(ResetDevice));
             }
         });
 
@@ -124,7 +138,7 @@ public class Manager {
             public void mousePressed(MouseEvent e) {
                 Logger.console("Bill accepting stopped!");
 //                isEnabled = false;
-                manager.sendMessage(new Command(CommandType.ModifyMasterInhibit, new byte[]{(byte) 0x00}));
+                manager.sendMessage(new Command(ModifyMasterInhibit, new byte[]{(byte) 0x00}));
             }
         });
 
@@ -134,15 +148,23 @@ public class Manager {
         dispenseButton.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-//                manager.sendMessage(new Command(CommandType.ModifyMasterInhibit, new byte[]{(byte) 0x00}));
                 isEnabled = false;
+                int choosen = JOptionPane.showOptionDialog(null, "Выберите номинал для выдачи", "dispense",
+                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, new Object[]{10, 20, 50, 100, 500, 1000}, null);
                 pause();
-                manager.sendMessage(new Command(CommandType.PayoutAmount, new byte[]{0, 0x15, (byte) 0xD0, 7, 0, 0, 0x49, 0x54, (byte) 0x4C, 0x19}));
+
+                byte[] note = new Nominal(banknotes[choosen]).getValue();
+                manager.sendMessage(new Command(PayoutAmount, note));
+            }
+        });
+
+        JButton requestHopper = new JButton("Request Hopper");
+        requestHopper.setBounds(230, 100, 160, 30);
+        requestHopper.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
                 pause();
-                manager.sendMessage(new Command(CommandType.PayoutAmount, new byte[]{1}));
-//                manager.sendMessage(new Command(CommandType.PayoutByDenomination, new byte[]{0, 0x15, (byte) 0xD0, 7, 0, 0, 0x49, 0x54, (byte) 0x4C, 0x19}));
-//                pause();
-//                manager.sendMessage(new Command(CommandType.PayoutByDenominationCurrent, new byte[]{0, 0x15, (byte) 0xD0, 7, 0, 0, 0x49, 0x54, (byte) 0x4C, 0x19}));
+                manager.sendMessage(new Command(RequestHopperCoin));
             }
         });
 
@@ -152,15 +174,7 @@ public class Manager {
             @Override
             public void mousePressed(MouseEvent e) {
                 // zdes mojet bit vasha reklama
-                isEnabled = false;
-                pause();
-                manager.sendMessage(new Command(CommandType.PayoutByDenominationCurrent, new byte[]{0, 0, (byte) 0x13, (byte) 0x88}));
-                pause();
-                manager.sendMessage(new Command(CommandType.PayoutByDenominationCurrent, new byte[]{0, 0, (byte) 0x07, (byte) 0xD0}));
-
-//                manager.sendMessage(new Command(CommandType.GetDenominationAmount, new byte[]{(byte) 0x88, (byte) 0x13, 0, 0}));
-//                pause();
-//                manager.sendMessage(new Command(CommandType.GetDenominationAmount, new byte[]{(byte) 0xD0, (byte) 0x07, 0, 0}));
+                isEnabled = !isEnabled;
             }
         });
 
@@ -169,6 +183,7 @@ public class Manager {
         managerPanel.add(disableButton);
         managerPanel.add(resetButton);
         managerPanel.add(dispenseButton);
+        managerPanel.add(requestHopper);
     }
 
     private void pause() {

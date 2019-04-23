@@ -1,28 +1,35 @@
-package ru.protocol;
+package ru.protocol.payout;
 
-public enum CommandType {
+import ru.protocol.CCTalkCommand;
+
+public enum PayoutCommands implements CCTalkCommand {
     SimplePoll((byte) 254),
+    AddressPoll((byte) 253),
     REQ_ManufacturerId((byte) 246),
     RequestEquipmentCategoryId((byte) 245),
-    ModifyInhibitStatus((byte) 231),
+    SetNoteInhibitStatus((byte) 231),
     ModifyMasterInhibit((byte) 228), // data bit 0 = disabled, bit 1 = enabled
     ReadBufferedBillEvents((byte) 159),
+    RouteBill((byte) 154), // data bit 0 = Return escrow bill 1 = send to stack 255 = extend escrow hold time.
     ModifyBillOperatingMode((byte) 153), // data bit 0 = disable escrow, bit 1 = enabled
     PerformStackerCycle((byte) 147),
+    RequestEncryptionSupport((byte) 111),
     SetCashboxPayoutLimits((byte) 54), // (Smart System)
     RequestStatus((byte) 47),
     PayoutByDenominationCurrent((byte) 44),
+    SetRouting((byte) 37),              // data bit 0 = payout, 1 = cashbox
     PayoutByDenomination((byte) 32),
     PayoutAmount((byte) 22),
     ResetDevice((byte) 1);
 
     private byte code;
 
-    CommandType(byte code) {
+    PayoutCommands(byte code) {
         this.code = code;
     }
 
-    public int getCode() {
+    @Override
+    public byte getCode() {
         return code;
     }
 
@@ -35,8 +42,8 @@ public enum CommandType {
     /**
      * Определение типа по коду
      */
-    public static CommandType valueOf(byte b) {
-        for (CommandType type : CommandType.values())
+    public static PayoutCommands valueOf(byte b) {
+        for (PayoutCommands type : PayoutCommands.values())
             if (type.code == b)
                 return type;
         return null;

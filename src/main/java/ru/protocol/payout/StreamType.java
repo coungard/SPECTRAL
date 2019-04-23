@@ -1,4 +1,4 @@
-package ru.protocol;
+package ru.protocol.payout;
 
 public enum StreamType {
     OUTPUT,

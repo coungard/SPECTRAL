@@ -1,4 +1,4 @@
-package ru.protocol;
+package ru.protocol.payout;
 
 public class Event {
     private EventType eventType;

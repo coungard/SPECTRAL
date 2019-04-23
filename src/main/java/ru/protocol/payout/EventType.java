@@ -1,4 +1,4 @@
-package ru.protocol;
+package ru.protocol.payout;
 
 public enum EventType {
     PeripheralDeviceDisabled((byte) 0x38), // Smart System
@@ -6,6 +6,7 @@ public enum EventType {
     CashboxRemoved((byte) 0x1F), // Smart Payout
     Stacking((byte) 0x18), // Smart Payout
     Rejected((byte) 0x17), // Smart Payout {The device has rejected an invalid bill back to the user}
+    Rejecting((byte) 0x16), // Smart Payout {The device rejecting an invalid bill back to the user}
     NoteCredit((byte) 0x15), // Smart Payout
     NoteRead((byte) 0x14), // Smart Payout
     Disabled((byte) 0x11), // Smart Payout & Smart System

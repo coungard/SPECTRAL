@@ -1,11 +1,14 @@
 package ru.util;
 
-import ru.protocol.BillTable;
-import ru.protocol.Command;
-import ru.protocol.EventType;
-import ru.protocol.StreamType;
+import ru.app.Manager;
+import ru.protocol.payout.BillTable;
+import ru.protocol.payout.EventType;
+import ru.protocol.payout.StreamType;
 
-class ResponseHandler {
+public class ResponseHandler {
+    public volatile static int currentNote = 0;
+    public volatile static boolean noteRead;
+
     static String parseResponse(StreamType streamType, byte[] input) {
         byte resp;
         if (input.length > 6) {
@@ -14,8 +17,31 @@ class ResponseHandler {
             resp = streamType == StreamType.INPUT ? input[3] : input[input.length - 2];
         }
         EventType eventType = EventType.valueOf(resp);
+
+        if (eventType == EventType.NoteRead) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            switch (input[6]) {
+                case (byte) 0x07:
+                    currentNote = 20;
+                    noteRead = true;
+                    Manager.flag = true;
+                case (byte) 0x13:
+                    currentNote = 50;
+                    Manager.flag = true;
+                default:
+                    currentNote = 0;
+            }
+        } else {
+            noteRead = false;
+            currentNote = 0;
+        }
         if (eventType == EventType.NoteCredit) {
-            return eventType.toString() + "{" + BillTable.getTable().get(input[6]) + " ITL}";
+//            return eventType.toString() + "{" + BillTable.getTable().get(input[6]) + " ITL}";
+            return eventType.toString();
         }
         if (eventType != null) {
             return eventType.toString();

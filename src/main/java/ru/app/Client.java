@@ -16,6 +16,7 @@ import java.util.Calendar;
 
 public class Client {
     private SerialPort serialPort;
+    private byte deviceAddr;
     private byte[] received;
     public static Command currentCommand;
 
@@ -34,7 +35,8 @@ public class Client {
         System.out.println("Initialization port " + portName + " was succesfull!");
     }
 
-    synchronized void sendMessage(Command command) {
+    synchronized byte[] sendMessage(Command command) {
+        byte[] result = new byte[0];
         currentCommand = command;
         byte[] crcPacket = formPacket(command.commandType.getCode(), command.getData());
         try {
@@ -46,11 +48,15 @@ public class Client {
 
             long start = Calendar.getInstance().getTimeInMillis();
             do {
-                if (received == null) Thread.sleep(10);
+                if (received == null) {
+                    Thread.sleep(10);
+                } else
+                    result = received;
             } while (Calendar.getInstance().getTimeInMillis() - start < 1200 && received == null);
         } catch (SerialPortException | InterruptedException ex) {
             ex.printStackTrace();
         }
+        return result;
     }
 
     void sendBytes(byte[] bytes) {
