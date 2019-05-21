@@ -1,7 +1,7 @@
 package ru.util;
 
-import ru.app.Client;
-import ru.app.Manager;
+import ru.app.smartPayout.Client;
+import ru.app.smartPayout.Manager;
 import ru.protocol.payout.StreamType;
 
 import java.util.Arrays;

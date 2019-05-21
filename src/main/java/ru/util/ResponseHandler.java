@@ -1,7 +1,6 @@
 package ru.util;
 
-import ru.app.Manager;
-import ru.protocol.payout.BillTable;
+import ru.app.smartPayout.Manager;
 import ru.protocol.payout.EventType;
 import ru.protocol.payout.StreamType;
 

@@ -1,6 +1,6 @@
 package ru.protocol;
 
-import ru.app.Settings;
+import ru.app.main.Settings;
 import ru.protocol.payout.BillTable;
 import ru.util.Utils;
 

@@ -1,4 +1,4 @@
-package ru.app;
+package ru.app.smartPayout;
 
 import jssc.SerialPort;
 import jssc.SerialPortEvent;

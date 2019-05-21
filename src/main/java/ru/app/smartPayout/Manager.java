@@ -1,7 +1,7 @@
-package ru.app;
+package ru.app.smartPayout;
 
 import jssc.SerialPortException;
-import jssc.SerialPortList;
+import ru.listeners.ManagerPanel;
 import ru.protocol.Command;
 import ru.protocol.Nominal;
 import ru.util.Logger;
@@ -15,51 +15,27 @@ import java.awt.event.MouseEvent;
 import static ru.protocol.hopper.HopperCommands.RequestHopperCoin;
 import static ru.protocol.payout.PayoutCommands.*;
 
-public class Manager extends Thread {
+public class Manager extends JLayeredPane implements ManagerPanel {
     public volatile static JTextArea textArea;
-    private JFrame window = new JFrame("Spectral" + " (v." + Settings.VERSION + " )");
-    private final JPanel mainPanel;
-    private JPanel managerPanel;
-    private Client manager;
+    private Client client;
     private static boolean isEnabled;
     private String[] banknotes = new String[]{"10", "20", "50", "100", "500", "1000"};
+    private static final Color BACKGROUND_COLOR = new Color(176, 158, 193);
 
     public static boolean flag;
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                new Manager();
-            }
-        });
+    public Manager(String port) throws SerialPortException {
+        setSize(1020, 600);
+        setOpaque(true);
+        setBackground(BACKGROUND_COLOR);
+        client = new Client(port);
+        struct();
     }
 
-    private Manager() {
-        window.setSize(1020, 600);
-        mainPanel = new JPanel();
-        mainPanel.setLayout(null);
-        mainPanel.setSize(window.getSize());
-        window.add(mainPanel);
-        managerPanel = new JPanel();
-        managerPanel.setLayout(null);
-        managerPanel.setSize(window.getSize());
-        managerPanel.setVisible(false);
-        window.add(managerPanel);
-        init();
-
-        window.setVisible(true);
-        window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        window.setLocationRelativeTo(null);
-    }
-
-    private void init() {
-        createMainPage();
-        createManagerPage();
-    }
-
-    private void createManagerPage() {
-        JLabel cmdLabel = formLabel("CCTalk Manager", 0);
-        managerPanel.add(cmdLabel);
+    @Override
+    public void struct() {
+        JLabel cmdLabel = formLabel("CCTalk Smart Payout (CC2)", 0);
+        add(cmdLabel);
         textArea = new JTextArea();
         textArea.setWrapStyleWord(true);
         textArea.setLineWrap(true);
@@ -68,7 +44,7 @@ public class Manager extends Thread {
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         JScrollPane scroll = new JScrollPane(textArea);
         scroll.setBounds(30, 140, 960, 400);
-        managerPanel.add(scroll);
+        add(scroll);
         JButton enableButton = new JButton("Enable cashment");
         enableButton.setBounds(30, 60, 160, 30);
         enableButton.addMouseListener(new MouseInputAdapter() {
@@ -82,37 +58,37 @@ public class Manager extends Thread {
                     @Override
                     public void run() {
                         Logger.console("ENABLE CASHMACHINE PROCESS STARTED:\n");
-                        manager.sendMessage(new Command(SimplePoll));
+                        client.sendMessage(new Command(SimplePoll));
                         pause();
-                        manager.sendMessage(new Command(RequestStatus));
+                        client.sendMessage(new Command(RequestStatus));
                         pause();
-                        manager.sendMessage(new Command(ReadBufferedBillEvents));
+                        client.sendMessage(new Command(ReadBufferedBillEvents));
                         pause();
-                        manager.sendMessage(new Command(RequestStatus));
+                        client.sendMessage(new Command(RequestStatus));
                         pause();
-                        manager.sendMessage(new Command(SetNoteInhibitStatus, new byte[]{(byte) 0xFF, (byte) 0xFF}));
+                        client.sendMessage(new Command(SetNoteInhibitStatus, new byte[]{(byte) 0xFF, (byte) 0xFF}));
                         pause();
-                        manager.sendMessage(new Command(ModifyBillOperatingMode, new byte[0x01]));
+                        client.sendMessage(new Command(ModifyBillOperatingMode, new byte[0x01]));
                         pause();
-                        manager.sendMessage(new Command(SetRouting,
+                        client.sendMessage(new Command(SetRouting,
                                 new byte[]{(byte) 0x00, (byte) 0x88, (byte) 0x13, 0, 0, (byte) 0x49, (byte) 0x54, (byte) 0x4C}));
                         pause();
-                        manager.sendMessage(new Command(RequestStatus));
+                        client.sendMessage(new Command(RequestStatus));
                         pause();
-                        manager.sendMessage(new Command(ModifyMasterInhibit, new byte[]{(byte) 0x01}));
+                        client.sendMessage(new Command(ModifyMasterInhibit, new byte[]{(byte) 0x01}));
                         pause();
-                        manager.sendMessage(new Command(SimplePoll));
+                        client.sendMessage(new Command(SimplePoll));
                         pause();
 
                         isEnabled = true;
 //                        while (isEnabled && !flag) {
                         while (isEnabled) {
-                            byte[] res = manager.sendMessage(new Command(RequestStatus));
+                            byte[] res = client.sendMessage(new Command(RequestStatus));
                             pause();
                             if (res.length == 13 && res[4] == 20 && res[11] != 0) {
                                 System.out.println("note credit!");
                                 pause();
-                                manager.sendMessage(new Command(RouteBill, new byte[]{0x01}));
+                                client.sendMessage(new Command(RouteBill, new byte[]{0x01}));
                                 pause();
                             }
                         }
@@ -127,7 +103,7 @@ public class Manager extends Thread {
             @Override
             public void mousePressed(MouseEvent e) {
                 Logger.console("Start reseting device!");
-                manager.sendMessage(new Command(ResetDevice));
+                client.sendMessage(new Command(ResetDevice));
             }
         });
 
@@ -138,7 +114,7 @@ public class Manager extends Thread {
             public void mousePressed(MouseEvent e) {
                 Logger.console("Bill accepting stopped!");
 //                isEnabled = false;
-                manager.sendMessage(new Command(ModifyMasterInhibit, new byte[]{(byte) 0x00}));
+                client.sendMessage(new Command(ModifyMasterInhibit, new byte[]{(byte) 0x00}));
             }
         });
 
@@ -154,7 +130,7 @@ public class Manager extends Thread {
                 pause();
 
                 byte[] note = new Nominal(banknotes[choosen]).getValue();
-                manager.sendMessage(new Command(PayoutAmount, note));
+                client.sendMessage(new Command(PayoutAmount, note));
             }
         });
 
@@ -164,7 +140,7 @@ public class Manager extends Thread {
             @Override
             public void mousePressed(MouseEvent e) {
                 pause();
-                manager.sendMessage(new Command(RequestHopperCoin));
+                client.sendMessage(new Command(RequestHopperCoin));
             }
         });
 
@@ -178,12 +154,15 @@ public class Manager extends Thread {
             }
         });
 
-        managerPanel.add(testButton);
-        managerPanel.add(enableButton);
-        managerPanel.add(disableButton);
-        managerPanel.add(resetButton);
-        managerPanel.add(dispenseButton);
-        managerPanel.add(requestHopper);
+        add(testButton);
+        add(enableButton);
+        add(disableButton);
+        add(resetButton);
+        add(dispenseButton);
+        add(requestHopper);
+
+        JButton restartButton = new JButton("Restart");
+//        restartButton.setBounds();
     }
 
     private void pause() {
@@ -194,46 +173,11 @@ public class Manager extends Thread {
         }
     }
 
-    private void createMainPage() {
-        JLabel label = formLabel("Choose com-port", 0);
-        mainPanel.add(label);
-
-        String[] ports = SerialPortList.getPortNames();
-        for (int i = 0; i < ports.length; i++) {
-            JButton button = new JButton(ports[i]);
-            button.setBounds(window.getWidth() / 2 - 110, 60 + i * 60, 220, 40);
-            button.addMouseListener(new MyListener(ports[i]));
-            mainPanel.add(button);
-        }
-    }
-
-    private void switchPanel() {
-        mainPanel.setVisible(false);
-        managerPanel.setVisible(true);
-    }
-
-    private class MyListener extends MouseInputAdapter {
-        String portName;
-
-        MyListener(String portName) {
-            this.portName = portName;
-        }
-
-        public void mousePressed(MouseEvent e) {
-            try {
-                manager = new Client(portName);
-                switchPanel();
-            } catch (SerialPortException ex) {
-                Logger.console("COM PORT CONNECTION ERROR!");
-                ex.printStackTrace();
-            }
-        }
-    }
 
     private JLabel formLabel(String name, int y) {
         JLabel label = new JLabel(name);
         label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 22));
-        label.setBounds(0, y, window.getWidth(), 40);
+        label.setBounds(0, y, this.getWidth(), 40);
         label.setHorizontalAlignment(SwingConstants.CENTER);
         label.setVerticalAlignment(SwingConstants.CENTER);
 
