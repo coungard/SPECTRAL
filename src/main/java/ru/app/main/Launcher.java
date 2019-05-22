@@ -1,10 +1,10 @@
 package ru.app.main;
 
 import jssc.SerialPortList;
-import ru.app.smartPayout.Client;
-import ru.listeners.HardwareListener;
-import ru.listeners.ManagerPanel;
-import ru.listeners.PortListener;
+import ru.app.hardware.smartPayout.Client;
+import ru.app.listeners.HardwareListener;
+import ru.app.listeners.ManagerPanel;
+import ru.app.listeners.PortListener;
 
 import javax.swing.*;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
