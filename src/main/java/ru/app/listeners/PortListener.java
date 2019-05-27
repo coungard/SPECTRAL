@@ -2,31 +2,35 @@ package ru.app.listeners;
 
 import jssc.SerialPortException;
 import ru.app.main.Launcher;
-import ru.app.hardware.smartPayout.Client;
 import ru.app.main.Settings;
-import ru.app.hardware.smartPayout.Manager;
+import ru.app.protocol.bus.DeviceType;
 
 import javax.swing.event.MouseInputAdapter;
 import java.awt.event.MouseEvent;
 
 public class PortListener extends MouseInputAdapter {
-    String portName;
+    private String portName;
 
     public PortListener(String portName) {
         this.portName = portName;
     }
 
     public void mousePressed(MouseEvent e) {
-        String hardware = Settings.hardware;
+        DeviceType hardware = Settings.hardware;
         switch (hardware) {
-            case "Smart Payout":
+            case SMART_PAYOUT:
                 try {
-                    Launcher.defineManager(new Manager(portName));
-                } catch (SerialPortException e1) {
-                    e1.printStackTrace();
+                    Launcher.defineManager(new ru.app.hardware.smartPayout.Manager(portName));
+                } catch (SerialPortException ex) {
+                    ex.printStackTrace();
                 }
                 break;
-            case "BNE-S110M":
+            case BNE_S110M:
+                try {
+                    Launcher.defineManager(new ru.app.hardware.bneS110M.Manager(portName));
+                } catch (SerialPortException ex) {
+                    ex.printStackTrace();
+                }
                 break;
         }
         Launcher.portsPanel.setVisible(false);

@@ -1,21 +1,21 @@
 package ru.app.main;
 
 import jssc.SerialPortList;
-import ru.app.hardware.smartPayout.Client;
+import ru.app.listeners.AbstractManager;
 import ru.app.listeners.HardwareListener;
-import ru.app.listeners.ManagerPanel;
 import ru.app.listeners.PortListener;
+import ru.app.protocol.bus.DeviceType;
+import ru.app.util.Logger;
 
 import javax.swing.*;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import java.awt.*;
 
 public class Launcher extends Thread {
-    public volatile static JTextArea textArea;
     private static JFrame window = new JFrame("Spectral" + " (v." + Settings.VERSION + " )");
     public static JPanel mainPanel = new JPanel();
     public static JPanel portsPanel = new JPanel();
-    private ManagerPanel managerPanel;
+    public static AbstractManager currentManager;
     private static final Color BACKGROUND_COLOR = new Color(157, 174, 185);
     private static final Font FONT = new Font(Font.SANS_SERIF, Font.BOLD, 23);
 
@@ -28,8 +28,10 @@ public class Launcher extends Thread {
         });
     }
 
-    public static void defineManager(ManagerPanel managerPanel) {
-        window.add((JLayeredPane) managerPanel);
+    public static void defineManager(AbstractManager manager) {
+        currentManager = manager;
+        Logger.init();
+        window.add(manager);
     }
 
     private Launcher() {
@@ -62,12 +64,12 @@ public class Launcher extends Thread {
         mainPanel.setVisible(true);
         mainPanel.add(label);
 
-        String[] hw = new String[]{"Smart Payout", "BNE-S110M"};
+        String[] hw = new String[]{"SMART_PAYOUT", "BNE_S110M"};
         for (int i = 0; i < hw.length; i++) {
             JButton button = new JButton(hw[i]);
             button.setFont(FONT);
             button.setBounds(window.getWidth() / 2 - 160, 80 + i * 80, 320, 60);
-            button.addMouseListener(new HardwareListener(hw[i]));
+            button.addMouseListener(new HardwareListener(DeviceType.valueOf(hw[i])));
             mainPanel.add(button);
         }
     }

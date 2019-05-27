@@ -4,6 +4,7 @@ import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
+import ru.app.listeners.AbstractClient;
 import ru.app.protocol.Command;
 import ru.app.util.BNVEncode;
 import ru.app.util.Crc16;
@@ -14,11 +15,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Calendar;
 
-public class Client {
+public class Client extends AbstractClient {
     private SerialPort serialPort;
     private byte deviceAddr;
     private byte[] received;
-    public static Command currentCommand;
 
     Client(String portName) throws SerialPortException {
         serialPort = new SerialPort(portName);
@@ -35,7 +35,7 @@ public class Client {
         System.out.println("Initialization port " + portName + " was succesfull!");
     }
 
-    synchronized byte[] sendMessage(Command command) {
+    synchronized public byte[] sendMessage(Command command) {
         byte[] result = new byte[0];
         currentCommand = command;
         byte[] crcPacket = formPacket(command.commandType.getCode(), command.getData());
@@ -59,7 +59,8 @@ public class Client {
         return result;
     }
 
-    void sendBytes(byte[] bytes) {
+    @Override
+    synchronized public void sendBytes(byte[] bytes) {
         try {
             Logger.console(Arrays.toString(bytes));
             serialPort.writeBytes(bytes);

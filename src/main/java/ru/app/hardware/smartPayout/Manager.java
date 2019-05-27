@@ -1,26 +1,20 @@
 package ru.app.hardware.smartPayout;
 
 import jssc.SerialPortException;
-import ru.app.listeners.ManagerPanel;
-import ru.app.main.Launcher;
+import ru.app.listeners.AbstractManager;
 import ru.app.protocol.Command;
 import ru.app.protocol.Nominal;
 import ru.app.util.Logger;
-import ru.app.util.Utils;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
-import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
 
 import static ru.app.protocol.hopper.HopperCommands.RequestHopperCoin;
 import static ru.app.protocol.payout.PayoutCommands.*;
 
-public class Manager extends JLayeredPane implements ManagerPanel {
-    public volatile static JTextArea textArea;
-    private Client client;
+public class Manager extends AbstractManager {
     private static boolean isEnabled;
     private String[] banknotes = new String[]{"10", "20", "50", "100", "500", "1000"};
     private static final Color BACKGROUND_COLOR = new Color(176, 158, 193);
@@ -39,15 +33,6 @@ public class Manager extends JLayeredPane implements ManagerPanel {
     public void struct() {
         JLabel cmdLabel = formLabel("CCTalk Smart Payout (CC2)", 0);
         add(cmdLabel);
-        textArea = new JTextArea();
-        textArea.setWrapStyleWord(true);
-        textArea.setLineWrap(true);
-        textArea.setEditable(false);
-        DefaultCaret caret = (DefaultCaret) textArea.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-        JScrollPane scroll = new JScrollPane(textArea);
-        scroll.setBounds(30, 130, 960, 400);
-        add(scroll);
         JButton enableButton = new JButton("Enable cashment");
         enableButton.setBounds(30, 50, 160, 30);
         enableButton.addMouseListener(new MouseInputAdapter() {
@@ -163,31 +148,6 @@ public class Manager extends JLayeredPane implements ManagerPanel {
         add(resetButton);
         add(dispenseButton);
         add(requestHopper);
-
-        JButton restartButton = new JButton("Restart");
-        restartButton.setBackground(new Color(113, 197, 109));
-        restartButton.setBounds(30, 530, 200, 40);
-        restartButton.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                try {
-                    Utils.restartApplication(new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                Launcher.main(new String[0]);
-                            } catch (UnsupportedLookAndFeelException ex) {
-                                ex.printStackTrace();
-                            }
-                        }
-                    }));
-                    System.exit(0);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                };
-            }
-        });
-        add(restartButton);
     }
 
     private void pause() {
@@ -196,16 +156,5 @@ public class Manager extends JLayeredPane implements ManagerPanel {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-
-    private JLabel formLabel(String name, int y) {
-        JLabel label = new JLabel(name);
-        label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 22));
-        label.setBounds(0, y, this.getWidth(), 40);
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        label.setVerticalAlignment(SwingConstants.CENTER);
-
-        return label;
     }
 }
