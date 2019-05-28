@@ -36,7 +36,7 @@ public class Utils {
      */
     static String byteArray2HexString(byte[] buf) {
         Formatter formatter = new Formatter();
-        for (byte b : buf) formatter.format("%X ", b);
+        for (byte b : buf) formatter.format("%2X ", b);
         return formatter.toString();
     }
 

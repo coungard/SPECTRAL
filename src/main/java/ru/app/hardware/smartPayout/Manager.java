@@ -2,8 +2,8 @@ package ru.app.hardware.smartPayout;
 
 import jssc.SerialPortException;
 import ru.app.listeners.AbstractManager;
-import ru.app.protocol.Command;
-import ru.app.protocol.Nominal;
+import ru.app.protocol.cctalk.Command;
+import ru.app.protocol.cctalk.Nominal;
 import ru.app.util.Logger;
 
 import javax.swing.*;
@@ -11,13 +11,13 @@ import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 
-import static ru.app.protocol.hopper.HopperCommands.RequestHopperCoin;
-import static ru.app.protocol.payout.PayoutCommands.*;
+import static ru.app.protocol.cctalk.hopper.HopperCommands.RequestHopperCoin;
+import static ru.app.protocol.cctalk.payout.PayoutCommands.*;
 
 public class Manager extends AbstractManager {
     private static boolean isEnabled;
     private String[] banknotes = new String[]{"10", "20", "50", "100", "500", "1000"};
-    private static final Color BACKGROUND_COLOR = new Color(176, 158, 193);
+    private static final Color BACKGROUND_COLOR = new Color(107, 230, 235);
 
     public static boolean flag;
 

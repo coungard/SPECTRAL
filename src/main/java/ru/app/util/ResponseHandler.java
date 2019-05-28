@@ -1,8 +1,8 @@
 package ru.app.util;
 
 import ru.app.hardware.smartPayout.Manager;
-import ru.app.protocol.payout.EventType;
-import ru.app.protocol.payout.StreamType;
+import ru.app.protocol.cctalk.payout.EventType;
+import ru.app.protocol.cctalk.payout.StreamType;
 
 public class ResponseHandler {
     public volatile static int currentNote = 0;

@@ -1,6 +1,6 @@
 package ru.app.listeners;
 
-import ru.app.protocol.Command;
+import ru.app.protocol.cctalk.Command;
 
 public abstract class AbstractClient {
     public Command currentCommand;

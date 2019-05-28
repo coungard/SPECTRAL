@@ -1,6 +1,6 @@
-package ru.app.protocol.payout;
+package ru.app.protocol.cctalk.payout;
 
-import ru.app.protocol.CCTalkCommand;
+import ru.app.protocol.cctalk.CCTalkCommand;
 
 public enum PayoutCommands implements CCTalkCommand {
     SimplePoll((byte) 254),

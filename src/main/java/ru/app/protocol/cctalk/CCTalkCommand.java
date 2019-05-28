@@ -1,4 +1,4 @@
-package ru.app.protocol;
+package ru.app.protocol.cctalk;
 
 public interface CCTalkCommand {
 

@@ -2,8 +2,18 @@ package ru.app.main;
 
 import ru.app.protocol.bus.DeviceType;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Settings {
-    static final String VERSION = "0.8";
+    static final String VERSION = "0.9";
     public static final String COUNTRY = "ITL";
     public static DeviceType hardware;
+    public static Map<String, Boolean> properties = new HashMap<>();
+
+    static {
+        properties.put("logLevel.hex", true);
+        properties.put("logLevel.bytes", false);
+        properties.put("logLevel.ascii", false);
+    }
 }

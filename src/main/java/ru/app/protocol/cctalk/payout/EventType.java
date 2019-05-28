@@ -1,4 +1,4 @@
-package ru.app.protocol.payout;
+package ru.app.protocol.cctalk.payout;
 
 public enum EventType {
     PeripheralDeviceDisabled((byte) 0x38), // Smart System

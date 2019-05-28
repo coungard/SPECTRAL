@@ -1,6 +1,6 @@
-package ru.app.protocol.hopper;
+package ru.app.protocol.cctalk.hopper;
 
-import ru.app.protocol.CCTalkCommand;
+import ru.app.protocol.cctalk.CCTalkCommand;
 
 public enum HopperCommands implements CCTalkCommand {
     RequestHopperCoin((byte) 171),

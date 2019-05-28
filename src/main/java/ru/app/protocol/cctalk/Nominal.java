@@ -1,7 +1,7 @@
-package ru.app.protocol;
+package ru.app.protocol.cctalk;
 
 import ru.app.main.Settings;
-import ru.app.protocol.payout.BillTable;
+import ru.app.protocol.cctalk.payout.BillTable;
 import ru.app.util.Utils;
 
 import java.util.Arrays;

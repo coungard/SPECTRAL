@@ -11,7 +11,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 
 public class Manager extends AbstractManager {
-    private static final Color BACKGROUND_COLOR = new Color(103, 193, 140);
+    private static final Color BACKGROUND_COLOR = new Color(175, 198, 170);
 
     public Manager(String port) throws SerialPortException {
         setSize(1020, 600);
@@ -95,6 +95,26 @@ public class Manager extends AbstractManager {
             }
         });
         add(setCurrencyRUB);
+
+        JButton openShutter = new JButton("Open Shutter");
+        openShutter.setBounds(630, 90, 160, 30);
+        openShutter.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 35, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+            }
+        });
+        add(openShutter);
+
+        JButton closeShutter = new JButton("Close Shutter");
+        closeShutter.setBounds(830, 90, 160, 30);
+        closeShutter.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 36, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+            }
+        });
+        add(closeShutter);
 
         JButton testButton = new JButton("Test");
         testButton.setBounds(830, 50, 160, 30);

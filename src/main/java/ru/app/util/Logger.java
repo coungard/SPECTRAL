@@ -4,7 +4,7 @@ import ru.app.listeners.AbstractManager;
 import ru.app.main.Launcher;
 import ru.app.main.Settings;
 import ru.app.protocol.bus.DeviceType;
-import ru.app.protocol.payout.StreamType;
+import ru.app.protocol.cctalk.payout.StreamType;
 
 import java.util.Arrays;
 
@@ -35,7 +35,7 @@ public class Logger {
         for (byte b : buffer) {
             if (b != '\r' || Settings.hardware == DeviceType.BNE_S110M) ascii.append((char) b);
         }
-        String type = null;
+        String type = "";
 
         if (Settings.hardware == DeviceType.SMART_PAYOUT) {
             if (streamType.toString().contains("OUTPUT")) {
@@ -45,9 +45,9 @@ public class Logger {
             }
         }
 
-        String log = streamType + "BYTES: " + Arrays.toString(buffer) +
-                "\tHEX: " + Utils.byteArray2HexString((buffer)) +
-                (Settings.hardware == DeviceType.SMART_PAYOUT ? "\tASCII: " + ascii.toString() + "\t" + type : "");
+        String log = streamType + (Settings.properties.get("logLevel.bytes") ? "BYTES:  " + Arrays.toString(buffer) + "\t" : "") +
+                (Settings.properties.get("logLevel.hex") ? "HEX:  " + Utils.byteArray2HexString((buffer)) + "\t" : "") +
+                (Settings.properties.get("logLevel.ascii") ? "ASCII:  " + ascii.toString() + "\t" + type : "");
 
         System.out.println(log);
         manager.textArea.setText(manager.textArea.getText() + log + "\n");

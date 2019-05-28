@@ -1,4 +1,4 @@
-package ru.app.protocol.payout;
+package ru.app.protocol.cctalk.payout;
 
 public class Event {
     private EventType eventType;

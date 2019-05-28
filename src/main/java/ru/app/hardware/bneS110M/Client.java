@@ -5,7 +5,7 @@ import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
 import ru.app.listeners.AbstractClient;
-import ru.app.protocol.Command;
+import ru.app.protocol.cctalk.Command;
 import ru.app.util.Logger;
 
 import java.util.Calendar;

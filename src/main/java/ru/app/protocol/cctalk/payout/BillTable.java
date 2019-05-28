@@ -1,4 +1,4 @@
-package ru.app.protocol.payout;
+package ru.app.protocol.cctalk.payout;
 
 import java.util.HashMap;
 

@@ -8,15 +8,18 @@ import ru.app.protocol.bus.DeviceType;
 import ru.app.util.Logger;
 
 import javax.swing.*;
+import javax.swing.event.MouseInputAdapter;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import java.awt.*;
+import java.awt.event.MouseEvent;
 
 public class Launcher extends Thread {
     private static JFrame window = new JFrame("Spectral" + " (v." + Settings.VERSION + " )");
     public static JPanel mainPanel = new JPanel();
     public static JPanel portsPanel = new JPanel();
+    private final JPanel settingsPanel;
     public static AbstractManager currentManager;
-    private static final Color BACKGROUND_COLOR = new Color(157, 174, 185);
+    private static final Color BACKGROUND_COLOR = new Color(67, 159, 212);
     private static final Font FONT = new Font(Font.SANS_SERIF, Font.BOLD, 23);
 
     public static void main(String[] args) throws UnsupportedLookAndFeelException {
@@ -39,6 +42,8 @@ public class Launcher extends Thread {
 
         addPanel(mainPanel);
         addPanel(portsPanel);
+        settingsPanel = new SettingsPage();
+        window.add(settingsPanel);
         init();
 
         window.setVisible(true);
@@ -72,6 +77,20 @@ public class Launcher extends Thread {
             button.addMouseListener(new HardwareListener(DeviceType.valueOf(hw[i])));
             mainPanel.add(button);
         }
+
+        JButton settings = new JButton("Settings");
+        settings.setFont(FONT);
+        settings.setBackground(Color.BLACK);
+        settings.setForeground(Color.WHITE);
+        settings.setBounds(20, 500, 320, 50);
+        settings.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                mainPanel.setVisible(false);
+                settingsPanel.setVisible(true);
+            }
+        });
+        mainPanel.add(settings);
     }
 
     private void createPortsPage() {
@@ -90,7 +109,7 @@ public class Launcher extends Thread {
 
     private JLabel formLabel(String name, int y) {
         JLabel label = new JLabel(name);
-        label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 22));
+        label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 28));
         label.setBounds(0, y, window.getWidth(), 40);
         label.setHorizontalAlignment(SwingConstants.CENTER);
         label.setVerticalAlignment(SwingConstants.CENTER);
