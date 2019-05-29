@@ -27,7 +27,7 @@ public class Manager extends AbstractManager {
         add(cmdLabel);
 
         JButton initButton = new JButton("Initialize");
-        initButton.setBounds(30, 50, 160, 30);
+        initButton.setBounds(30, 40, 150, 30);
         initButton.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -37,7 +37,7 @@ public class Manager extends AbstractManager {
         add(initButton);
 
         JButton restartButton = new JButton("Restart");
-        restartButton.setBounds(230, 50, 160, 30);
+        restartButton.setBounds(190, 40, 150, 30);
         restartButton.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -47,7 +47,7 @@ public class Manager extends AbstractManager {
         add(restartButton);
 
         JButton openRecoverDoor = new JButton("Open Door");
-        openRecoverDoor.setBounds(430, 50, 160, 30);
+        openRecoverDoor.setBounds(350, 40, 150, 30);
         openRecoverDoor.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -57,7 +57,7 @@ public class Manager extends AbstractManager {
         add(openRecoverDoor);
 
         JButton closeRecoverDoor = new JButton("Close Door");
-        closeRecoverDoor.setBounds(630, 50, 160, 30);
+        closeRecoverDoor.setBounds(510, 40, 150, 30);
         closeRecoverDoor.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -66,58 +66,108 @@ public class Manager extends AbstractManager {
         });
         add(closeRecoverDoor);
 
-        JButton startMixSort = new JButton("Start Mix Sort");
-        startMixSort.setBounds(30, 90, 160, 30);
-        startMixSort.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
-            }
-        });
-        add(startMixSort);
-
-        JButton stopMixSort = new JButton("Stop Mix Sort");
-        stopMixSort.setBounds(230, 90, 160, 30);
-        stopMixSort.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
-            }
-        });
-        add(stopMixSort);
-
         JButton setCurrencyRUB = new JButton("Set Currency RUB");
-        setCurrencyRUB.setBounds(430, 90, 160, 30);
+        setCurrencyRUB.setBounds(670, 40, 150, 30);
         setCurrencyRUB.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3}));
+                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, (byte) 0x01, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3}));
             }
         });
         add(setCurrencyRUB);
 
         JButton openShutter = new JButton("Open Shutter");
-        openShutter.setBounds(630, 90, 160, 30);
+        openShutter.setBounds(350, 75, 150, 30);
         openShutter.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 35, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, (byte) 0x35, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
             }
         });
         add(openShutter);
 
         JButton closeShutter = new JButton("Close Shutter");
-        closeShutter.setBounds(830, 90, 160, 30);
+        closeShutter.setBounds(510, 75, 150, 30);
         closeShutter.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 36, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, (byte) 0x36, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
             }
         });
         add(closeShutter);
 
+        JButton startMixSort = new JButton("Start Mix Sort");
+        startMixSort.setBounds(670, 75, 150, 30);
+        startMixSort.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, (byte) 0x02, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+            }
+        });
+        add(startMixSort);
+
+        JButton stopMixSort = new JButton("Stop Mix Sort");
+        stopMixSort.setBounds(830, 75, 150, 30);
+        stopMixSort.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, (byte) 0x03, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+            }
+        });
+        add(stopMixSort);
+
+        JButton activate = new JButton("Activate Deposits");
+        activate.setBounds(30, 110, 150, 30);
+        activate.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, (byte) 0x1E, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+            }
+        });
+        add(activate);
+
+        JButton startDeposit = new JButton("Start Deposit");
+        startDeposit.setBounds(190, 110, 150, 30);
+        startDeposit.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, (byte) 0x06, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+            }
+        });
+        add(startDeposit);
+
+        JButton stopDeposit = new JButton("Stop Deposit");
+        stopDeposit.setBounds(350, 110, 150, 30);
+        stopDeposit.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, (byte) 0x07, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+            }
+        });
+        add(stopDeposit);
+
+        JButton cashNotes = new JButton("Cash Notes");
+        cashNotes.setBounds(510, 110, 150, 30);
+        cashNotes.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, (byte) 0x08, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+            }
+        });
+        add(cashNotes);
+
+        JButton dispenseNotes = new JButton("Dispense Notes");
+        dispenseNotes.setBounds(670, 110, 150, 30);
+        dispenseNotes.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                client.sendBytes(formPacket(new byte[]{1, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, (byte) 0x09, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+            }
+        });
+        add(dispenseNotes);
+
         JButton testButton = new JButton("Test");
-        testButton.setBounds(830, 50, 160, 30);
+        testButton.setBounds(830, 40, 150, 30);
         testButton.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {

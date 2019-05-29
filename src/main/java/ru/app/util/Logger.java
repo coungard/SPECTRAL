@@ -37,17 +37,23 @@ public class Logger {
         }
         String type = "";
 
-        if (Settings.hardware == DeviceType.SMART_PAYOUT) {
-            if (streamType.toString().contains("OUTPUT")) {
-                type = manager.client.currentCommand.commandType.toString();
-            } else {
-                type = ResponseHandler.parseResponse(streamType, buffer);
-            }
+        switch (Settings.hardware) {
+            case SMART_PAYOUT:
+                if (streamType.toString().contains("OUTPUT")) {
+                    type = manager.client.currentCommand.commandType.toString();
+                } else {
+                    type = ResponseHandler.parseResponse(streamType, buffer);
+                }
+                break;
+            case BNE_S110M:
+                if (streamType == StreamType.INPUT) {
+                    type = ResponseHandler.parseResponse(streamType, buffer);
+                }
         }
 
         String log = streamType + (Settings.properties.get("logLevel.bytes") ? "BYTES:  " + Arrays.toString(buffer) + "\t" : "") +
                 (Settings.properties.get("logLevel.hex") ? "HEX:  " + Utils.byteArray2HexString((buffer)) + "\t" : "") +
-                (Settings.properties.get("logLevel.ascii") ? "ASCII:  " + ascii.toString() + "\t" + type : "");
+                (Settings.properties.get("logLevel.ascii") ? "ASCII:  " + ascii.toString() + "\t" : "") + type;
 
         System.out.println(log);
         manager.textArea.setText(manager.textArea.getText() + log + "\n");

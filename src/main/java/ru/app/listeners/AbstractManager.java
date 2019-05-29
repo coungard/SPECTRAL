@@ -24,7 +24,7 @@ public abstract class AbstractManager extends JLayeredPane {
         DefaultCaret caret = (DefaultCaret) textArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         JScrollPane scroll = new JScrollPane(textArea);
-        scroll.setBounds(30, 130, 960, 400);
+        scroll.setBounds(30, 140, 960, 390);
         add(scroll);
 
         JButton restartButton = new JButton("Restart");

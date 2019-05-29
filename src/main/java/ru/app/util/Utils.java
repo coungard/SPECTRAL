@@ -114,4 +114,39 @@ public class Utils {
             throw new IOException("Error while trying to restart the application", e);
         }
     }
+
+    static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    static String toHexString(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder();
+
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(0xFF & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+
+        return hexString.toString();
+    }
+
+    static void reverse(byte[] array) {
+        if (array != null) {
+            int i = 0;
+
+            for (int j = array.length - 1; j > i; ++i) {
+                byte tmp = array[j];
+                array[j] = array[i];
+                array[i] = tmp;
+                --j;
+            }
+        }
+    }
 }
