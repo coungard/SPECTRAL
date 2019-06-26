@@ -1,13 +1,11 @@
 package ru.app.util;
 
-import com.sun.deploy.util.ArrayUtil;
 import ru.app.hardware.smartPayout.Manager;
 import ru.app.main.Settings;
 import ru.app.protocol.bne.DepositTable;
 import ru.app.protocol.cctalk.payout.EventType;
 import ru.app.protocol.cctalk.payout.StreamType;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -39,6 +37,7 @@ class ResponseHandler {
                                     int count = Integer.parseInt(Utils.toHexString(countHex), 16);
 
                                     result.append("Nominal detected : ").append(s).append(" (count = ").append(count).append(")\t");
+                                    i = i + 6; // skip unnecessary cells
                                 }
                             }
                         }
