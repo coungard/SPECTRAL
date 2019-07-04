@@ -34,7 +34,7 @@ public class Utils {
     /**
      * Перевод массива байтов в строку в шеснадцатиричном виде
      */
-    static String byteArray2HexString(byte[] buf) {
+    public static String bytes2hex(byte[] buf) {
         Formatter formatter = new Formatter();
         for (byte b : buf) formatter.format("%2X ", b);
         return formatter.toString();

@@ -3,7 +3,7 @@ package ru.app.util;
 import ru.app.listeners.AbstractManager;
 import ru.app.main.Launcher;
 import ru.app.main.Settings;
-import ru.app.protocol.bus.DeviceType;
+import ru.app.bus.DeviceType;
 import ru.app.protocol.cctalk.payout.StreamType;
 
 import java.util.Arrays;
@@ -52,7 +52,7 @@ public class Logger {
         }
 
         String log = streamType + (Settings.properties.get("logLevel.bytes") ? "BYTES:  " + Arrays.toString(buffer) + "\t" : "") +
-                (Settings.properties.get("logLevel.hex") ? "HEX:  " + Utils.byteArray2HexString((buffer)) + "\t" : "") +
+                (Settings.properties.get("logLevel.hex") ? "HEX:  " + Utils.bytes2hex((buffer)) + "\t" : "") +
                 (Settings.properties.get("logLevel.ascii") ? "ASCII:  " + ascii.toString() + "\t" : "") + type;
 
         System.out.println(log);

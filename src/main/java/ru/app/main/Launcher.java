@@ -4,7 +4,7 @@ import jssc.SerialPortList;
 import ru.app.listeners.AbstractManager;
 import ru.app.listeners.HardwareListener;
 import ru.app.listeners.PortListener;
-import ru.app.protocol.bus.DeviceType;
+import ru.app.bus.DeviceType;
 import ru.app.util.Logger;
 
 import javax.swing.*;
@@ -69,7 +69,7 @@ public class Launcher extends Thread {
         mainPanel.setVisible(true);
         mainPanel.add(label);
 
-        String[] hw = new String[]{"SMART_PAYOUT", "BNE_S110M"};
+        String[] hw = new String[]{"SMART_PAYOUT", "BNE_S110M", "EMULATOR"};
         for (int i = 0; i < hw.length; i++) {
             JButton button = new JButton(hw[i]);
             button.setFont(FONT);

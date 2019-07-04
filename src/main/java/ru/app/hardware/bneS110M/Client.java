@@ -12,7 +12,6 @@ import java.util.Calendar;
 
 public class Client extends AbstractClient {
     private SerialPort serialPort;
-    private byte deviceAddr;
     private byte[] received;
     static byte counter = 1;
 

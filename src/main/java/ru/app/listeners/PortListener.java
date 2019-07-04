@@ -3,7 +3,7 @@ package ru.app.listeners;
 import jssc.SerialPortException;
 import ru.app.main.Launcher;
 import ru.app.main.Settings;
-import ru.app.protocol.bus.DeviceType;
+import ru.app.bus.DeviceType;
 
 import javax.swing.event.MouseInputAdapter;
 import java.awt.event.MouseEvent;
@@ -17,21 +17,19 @@ public class PortListener extends MouseInputAdapter {
 
     public void mousePressed(MouseEvent e) {
         DeviceType hardware = Settings.hardware;
-        switch (hardware) {
-            case SMART_PAYOUT:
-                try {
+        try {
+            switch (hardware) {
+                case SMART_PAYOUT:
                     Launcher.defineManager(new ru.app.hardware.smartPayout.Manager(portName));
-                } catch (SerialPortException ex) {
-                    ex.printStackTrace();
-                }
-                break;
-            case BNE_S110M:
-                try {
+                    break;
+                case BNE_S110M:
                     Launcher.defineManager(new ru.app.hardware.bneS110M.Manager(portName));
-                } catch (SerialPortException ex) {
-                    ex.printStackTrace();
-                }
-                break;
+                    break;
+                case EMULATOR:
+                    Launcher.defineManager(new ru.app.hardware.emulator.Manager(portName));
+            }
+        } catch (SerialPortException ex) {
+            ex.printStackTrace();
         }
         Launcher.portsPanel.setVisible(false);
     }

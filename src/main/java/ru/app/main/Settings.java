@@ -1,12 +1,12 @@
 package ru.app.main;
 
-import ru.app.protocol.bus.DeviceType;
+import ru.app.bus.DeviceType;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class Settings {
-    static final String VERSION = "1.0";
+    static final String VERSION = "1.1";
     public static final String COUNTRY = "ITL";
     public static DeviceType hardware;
     public static Map<String, Boolean> properties = new HashMap<>();

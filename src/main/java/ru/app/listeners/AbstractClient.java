@@ -7,5 +7,4 @@ public abstract class AbstractClient {
 
     abstract public byte[] sendMessage(Command command);
     abstract public void sendBytes(byte[] bytes);
-
 }

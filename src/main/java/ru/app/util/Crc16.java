@@ -29,7 +29,6 @@ public class Crc16 {
      */
     public static int crc16(byte[] data) {
         int crc = 0;
-
         for (byte datum : data) {
             crc ^= datum & 0xFF;
             for (int j = 0; j < 8; j++) {
@@ -40,7 +39,21 @@ public class Crc16 {
                 }
             }
         }
+        return crc;
+    }
 
+    public static int checkCrc16(byte[] data, int offset, int count) {
+        int crc = 0;
+        for (int i = offset; i < count; i++) {
+            crc ^= data[i] & 0xFF;
+            for (int j = 0; j < 8; j++) {
+                if ((crc & 0x0001) != 0) {
+                    crc = 0x8408 ^ crc >>> 1;
+                } else {
+                    crc >>>= 1;
+                }
+            }
+        }
         return crc;
     }
 
