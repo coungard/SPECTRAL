@@ -27,6 +27,7 @@ public class PortListener extends MouseInputAdapter {
                     break;
                 case EMULATOR:
                     Launcher.defineManager(new ru.app.hardware.emulator.Manager(portName));
+                    break;
             }
         } catch (SerialPortException ex) {
             ex.printStackTrace();

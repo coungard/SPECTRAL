@@ -1,7 +1,7 @@
 package ru.app.hardware.smartPayout;
 
 import jssc.SerialPortException;
-import ru.app.listeners.AbstractManager;
+import ru.app.hardware.AbstractManager;
 import ru.app.protocol.cctalk.Command;
 import ru.app.protocol.cctalk.Nominal;
 import ru.app.util.Logger;
@@ -18,6 +18,7 @@ public class Manager extends AbstractManager {
     private static boolean isEnabled;
     private String[] banknotes = new String[]{"10", "20", "50", "100", "500", "1000"};
     private static final Color BACKGROUND_COLOR = new Color(107, 230, 235);
+    private Client client;
 
     public static boolean flag;
 

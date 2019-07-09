@@ -1,6 +1,6 @@
 package ru.app.util;
 
-import ru.app.listeners.AbstractManager;
+import ru.app.hardware.AbstractManager;
 import ru.app.main.Launcher;
 import ru.app.main.Settings;
 import ru.app.bus.DeviceType;
@@ -40,7 +40,7 @@ public class Logger {
         switch (Settings.hardware) {
             case SMART_PAYOUT:
                 if (streamType.toString().contains("OUTPUT")) {
-                    type = manager.client.currentCommand.commandType.toString();
+//                    type = manager.client.currentCommand.commandType.toString();
                 } else {
                     type = ResponseHandler.parseResponse(streamType, buffer);
                 }

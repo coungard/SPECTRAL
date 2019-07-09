@@ -1,4 +1,4 @@
-package ru.app.listeners;
+package ru.app.hardware;
 
 import ru.app.main.Launcher;
 import ru.app.util.Utils;
@@ -12,7 +12,7 @@ import java.io.IOException;
 
 public abstract class AbstractManager extends JLayeredPane {
     public volatile JTextArea textArea;
-    public AbstractClient client;
+//    public AbstractClient client;
 
     public abstract void struct();
 

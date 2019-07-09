@@ -1,7 +1,7 @@
 package ru.app.hardware.bneS110M;
 
 import jssc.SerialPortException;
-import ru.app.listeners.AbstractManager;
+import ru.app.hardware.AbstractManager;
 import ru.app.util.Crc16;
 import ru.app.util.Logger;
 
@@ -12,6 +12,7 @@ import java.awt.event.MouseEvent;
 
 public class Manager extends AbstractManager {
     private static final Color BACKGROUND_COLOR = new Color(175, 198, 170);
+    private Client client;
 
     public Manager(String port) throws SerialPortException {
         setSize(1020, 600);

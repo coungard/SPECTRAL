@@ -1,7 +1,6 @@
 package ru.app.hardware.emulator;
 
 import jssc.*;
-import ru.app.listeners.AbstractClient;
 import ru.app.main.Settings;
 import ru.app.protocol.ccnet.CommandType;
 import ru.app.protocol.cctalk.Command;
@@ -9,7 +8,7 @@ import ru.app.util.Utils;
 
 import java.util.Date;
 
-public class Client extends AbstractClient {
+public class Client {
     private SerialPort serialPort;
     private byte[] received;
     private final byte SYNC = (byte) 0x02;
@@ -36,13 +35,11 @@ public class Client extends AbstractClient {
         }
     }
 
-    @Override
     public byte[] sendMessage(Command command) {
         return new byte[0];
     }
 
-    @Override
-    synchronized public void sendBytes(byte[] bytes) {
+    private synchronized void sendBytes(byte[] bytes) {
         try {
             serialPort.writeBytes(bytes);
         } catch (SerialPortException ex) {

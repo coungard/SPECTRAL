@@ -1,7 +1,7 @@
 package ru.app.main;
 
 import jssc.SerialPortList;
-import ru.app.listeners.AbstractManager;
+import ru.app.hardware.AbstractManager;
 import ru.app.listeners.HardwareListener;
 import ru.app.listeners.PortListener;
 import ru.app.bus.DeviceType;

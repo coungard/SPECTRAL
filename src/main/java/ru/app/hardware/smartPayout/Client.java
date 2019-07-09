@@ -4,7 +4,6 @@ import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
-import ru.app.listeners.AbstractClient;
 import ru.app.protocol.cctalk.Command;
 import ru.app.util.BNVEncode;
 import ru.app.util.Crc16;
@@ -15,7 +14,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Calendar;
 
-public class Client extends AbstractClient {
+public class Client {
     private SerialPort serialPort;
     private byte deviceAddr;
     private byte[] received;
@@ -37,7 +36,7 @@ public class Client extends AbstractClient {
 
     synchronized public byte[] sendMessage(Command command) {
         byte[] result = new byte[0];
-        currentCommand = command;
+//        currentCommand = command;
         byte[] crcPacket = formPacket(command.commandType.getCode(), command.getData());
         try {
             serialPort.writeBytes(crcPacket);
@@ -59,7 +58,6 @@ public class Client extends AbstractClient {
         return result;
     }
 
-    @Override
     synchronized public void sendBytes(byte[] bytes) {
         try {
             Logger.console(Arrays.toString(bytes));

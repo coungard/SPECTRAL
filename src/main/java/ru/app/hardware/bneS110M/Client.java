@@ -4,13 +4,12 @@ import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
-import ru.app.listeners.AbstractClient;
 import ru.app.protocol.cctalk.Command;
 import ru.app.util.Logger;
 
 import java.util.Calendar;
 
-public class Client extends AbstractClient {
+public class Client {
     private SerialPort serialPort;
     private byte[] received;
     static byte counter = 1;
@@ -29,14 +28,12 @@ public class Client extends AbstractClient {
         System.out.println("Initialization port " + portName + " was succesfull!");
     }
 
-    @Override
     synchronized public byte[] sendMessage(Command command) {
         counter++;
         return new byte[0];
     }
 
-    @Override
-    synchronized public void sendBytes(byte[] bytes) {
+    synchronized void sendBytes(byte[] bytes) {
         try {
             counter++;
             Logger.logOutput(bytes, null);

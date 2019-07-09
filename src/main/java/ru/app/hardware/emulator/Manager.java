@@ -1,7 +1,7 @@
 package ru.app.hardware.emulator;
 
 import jssc.SerialPortException;
-import ru.app.listeners.AbstractManager;
+import ru.app.hardware.AbstractManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,6 +9,7 @@ import java.awt.*;
 public class Manager extends AbstractManager {
     private static boolean isEnabled;
     private static final Color BACKGROUND_COLOR = new Color(205, 186, 116);
+    private Client client;
 
     public static boolean flag;
 
