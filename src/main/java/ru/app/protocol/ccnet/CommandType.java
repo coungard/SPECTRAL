@@ -11,7 +11,7 @@ public enum CommandType {
 	
 	ACK((byte)0x00),
 	NAK((byte)0xFF),
-	ILLEGAL_COMMAND((byte)0x30),
+//	ILLEGAL_COMMAND((byte)0x30),
 	Reset((byte)0x30),
 	GetStatus((byte)0x31),
 	SetSecurity((byte)0x32),
