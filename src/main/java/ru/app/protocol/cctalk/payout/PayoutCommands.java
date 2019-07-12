@@ -35,8 +35,6 @@ public enum PayoutCommands implements CCTalkCommand {
 
     public String toString() {
         return this.name();
-//                '(' + ru.app.util.Utils.getByteValue(code) + ')';
-//        return String.valueOf(code);
     }
 
     /**

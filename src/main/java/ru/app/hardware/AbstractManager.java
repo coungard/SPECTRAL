@@ -12,7 +12,6 @@ import java.io.IOException;
 
 public abstract class AbstractManager extends JLayeredPane {
     public volatile JTextArea textArea;
-//    public AbstractClient client;
 
     public abstract void struct();
 

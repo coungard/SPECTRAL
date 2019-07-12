@@ -1,4 +1,4 @@
-package ru.app.protocol.cctalk.payout;
+package ru.app.util;
 
 public enum StreamType {
     OUTPUT,

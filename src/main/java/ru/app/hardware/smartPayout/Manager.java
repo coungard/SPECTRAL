@@ -70,7 +70,7 @@ public class Manager extends AbstractManager {
                         pause();
 
                         isEnabled = true;
-//                        while (isEnabled && !flag) {
+//                        while (isEnable && !flag) {
                         while (isEnabled) {
                             byte[] res = client.sendMessage(new Command(RequestStatus));
                             pause();
@@ -102,7 +102,7 @@ public class Manager extends AbstractManager {
             @Override
             public void mousePressed(MouseEvent e) {
                 Logger.console("Bill accepting stopped!");
-//                isEnabled = false;
+//                isEnable = false;
                 client.sendMessage(new Command(ModifyMasterInhibit, new byte[]{(byte) 0x00}));
             }
         });

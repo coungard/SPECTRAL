@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 
 public class Client {
+    public static Command currentCommand;
     private SerialPort serialPort;
     private byte deviceAddr;
     private byte[] received;
@@ -34,10 +35,10 @@ public class Client {
         System.out.println("Initialization port " + portName + " was succesfull!");
     }
 
-    synchronized public byte[] sendMessage(Command command) {
+    synchronized byte[] sendMessage(Command command) {
         byte[] result = new byte[0];
-//        currentCommand = command;
-        byte[] crcPacket = formPacket(command.commandType.getCode(), command.getData());
+        currentCommand = command;
+        byte[] crcPacket = formPacket(command.getCommandType().getCode(), command.getData());
         try {
             serialPort.writeBytes(crcPacket);
             byte[] temp = Arrays.copyOf(crcPacket, crcPacket.length);

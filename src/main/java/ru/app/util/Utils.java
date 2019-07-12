@@ -165,4 +165,12 @@ public class Utils {
         System.arraycopy(second, 0, res, first.length, second.length);
         return res;
     }
+
+    public static void pause(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

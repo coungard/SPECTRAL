@@ -7,7 +7,7 @@ package ru.app.protocol.ccnet;
  * @author denis
  *
  */
-public enum CommandType {
+public enum CommandType implements CCNetCommand {
 	
 	ACK((byte)0x00),
 	NAK((byte)0xFF),

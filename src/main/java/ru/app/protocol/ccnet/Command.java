@@ -1,4 +1,4 @@
-package ru.app.protocol.cctalk;
+package ru.app.protocol.ccnet;
 
 import ru.app.util.Utils;
 
@@ -6,24 +6,24 @@ import ru.app.util.Utils;
  * Команда протокола
  */
 public class Command {
-    private CCTalkCommand commandType;
+    private CCNetCommand getType;
     private byte[] data;
 
-    public Command(CCTalkCommand commandType) {
-        this.commandType = commandType;
+    public Command(CCNetCommand getType) {
+        this.getType = getType;
     }
 
-    public Command(CCTalkCommand commandType, byte[] data) {
-        this.commandType = commandType;
+    public Command(CCNetCommand getType, byte[] data) {
+        this.getType = getType;
         this.data = data;
     }
 
-    public CCTalkCommand getCommandType() {
-        return commandType;
+    public CCNetCommand getType() {
+        return getType;
     }
 
-    public void setCommandType(CCTalkCommand commandType) {
-        this.commandType = commandType;
+    public void setType(CCNetCommand getType) {
+        this.getType = getType;
     }
 
     public byte[] getData() {
@@ -36,7 +36,7 @@ public class Command {
 
     @Override
     public String toString() {
-        return "Command: " + (commandType != null ? commandType : "null") +
+        return "Command: " + (getType != null ? getType : "null") +
                 "; " + (data != null ? "Data: " + Utils.byteArray2String(data, 0, data.length) : "");
     }
 

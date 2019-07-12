@@ -1,10 +1,10 @@
 package ru.app.util;
 
 import ru.app.hardware.AbstractManager;
+import ru.app.hardware.smartPayout.Client;
 import ru.app.main.Launcher;
 import ru.app.main.Settings;
 import ru.app.bus.DeviceType;
-import ru.app.protocol.cctalk.payout.StreamType;
 
 import java.util.Arrays;
 
@@ -40,7 +40,7 @@ public class Logger {
         switch (Settings.hardware) {
             case SMART_PAYOUT:
                 if (streamType.toString().contains("OUTPUT")) {
-//                    type = manager.client.currentCommand.commandType.toString();
+                    type = Client.currentCommand.getCommandType().toString();
                 } else {
                     type = ResponseHandler.parseResponse(streamType, buffer);
                 }

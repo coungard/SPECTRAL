@@ -4,7 +4,6 @@ import ru.app.hardware.smartPayout.Manager;
 import ru.app.main.Settings;
 import ru.app.protocol.bne.DepositTable;
 import ru.app.protocol.cctalk.payout.EventType;
-import ru.app.protocol.cctalk.payout.StreamType;
 
 import java.util.Arrays;
 import java.util.Map;
