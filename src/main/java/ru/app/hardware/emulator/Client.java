@@ -10,6 +10,7 @@ import ru.app.util.Crc16;
 import ru.app.util.Utils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Date;
 
 class Client {
@@ -118,16 +119,21 @@ class Client {
         public void serialEvent(SerialPortEvent event) {
             if (event.getEventType() == SerialPortEvent.RXCHAR && event.getEventValue() > 0) {
                 try {
-                    int len = 6;
-                    byte[] received = serialPort.readBytes(len, 20);
-                    int newLen = received[2] - len;
-                    if (newLen > 0) {
-                        byte[] restInput = serialPort.readBytes(newLen, 50);
-                        received = Utils.concat(received, restInput);
-                    }
-                    System.out.println(Settings.dateFormat.format(new Date()) + "\tinput << " + Utils.bytes2hex(received));
-                    emulateProcess(received);
-                } catch (SerialPortException | SerialPortTimeoutException ex) {
+                    ByteArrayOutputStream response = new ByteArrayOutputStream();
+                    byte[] sync = serialPort.readBytes(1);
+                    if (sync[0] != SYNC) return; //WRONG SYNC!!
+                    response.write(sync[0]);
+                    byte[] addr = serialPort.readBytes(1);
+                    if (addr[0] != PERIPHERIAL_CODE) return; // WRONG ADDRESS!!
+                    response.write(addr[0]);
+                    byte[] length = serialPort.readBytes(1);
+                    response.write(length[0]);
+                    byte[] message = serialPort.readBytes(length[0] - response.size(), 50);
+                    response.write(message);
+
+                    System.out.println(Settings.dateFormat.format(new Date()) + "\tinput << " + Utils.bytes2hex(response.toByteArray()));
+                    emulateProcess(response.toByteArray());
+                } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
                     ex.printStackTrace();
                 }
             }
