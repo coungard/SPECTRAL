@@ -109,7 +109,7 @@ public class Client {
         Crc16 crc16 = new Crc16();
         crc16.update((byte) 0x28); // destination address
         crc16.update((byte) data.length); // data length
-        crc16.update((byte) command); // command
+        crc16.update((byte) command); // commands
         crc16.update(data); // data
 
         return crc16;

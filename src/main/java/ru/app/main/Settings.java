@@ -8,9 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Settings {
-    static final String VERSION = "1.26";
+    static final String VERSION = "1.27";
     public static final String COUNTRY = "ITL";
     public static DeviceType hardware;
+    public static String deviceForEmulator = null;
     public static Map<String, Boolean> properties = new HashMap<>();
     public static final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:S");
 

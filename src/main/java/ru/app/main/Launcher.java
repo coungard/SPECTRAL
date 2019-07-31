@@ -17,6 +17,7 @@ public class Launcher extends Thread {
     private static JFrame window = new JFrame("Spectral" + " (v." + Settings.VERSION + " )");
     public static JPanel mainPanel = new JPanel();
     public static JPanel portsPanel = new JPanel();
+    public static JPanel devicePanel = new JPanel();
     private final JPanel settingsPanel;
     public static AbstractManager currentManager;
     private static final Color BACKGROUND_COLOR = new Color(67, 159, 212);
@@ -42,6 +43,7 @@ public class Launcher extends Thread {
 
         addPanel(mainPanel);
         addPanel(portsPanel);
+        addPanel(devicePanel);
         settingsPanel = new SettingsPage();
         window.add(settingsPanel);
         init();
@@ -61,7 +63,31 @@ public class Launcher extends Thread {
 
     private void init() {
         createMainPage();
+        createDevicePage();
         createPortsPage();
+    }
+
+    private void createDevicePage() {
+        JLabel label = formLabel("Choose device for emulator", 0);
+        devicePanel.setVisible(false);
+        devicePanel.add(label);
+
+        final String[] devices = new String[]{"CCNET CASHER", "CCTALK COIN"};
+        for (int i = 0; i < devices.length; i++) {
+            JButton button = new JButton(devices[i]);
+            button.setFont(FONT);
+            button.setBounds(window.getWidth() / 2 - 160, 80 + i * 80, 320, 60);
+            final int emul = i;
+            button.addMouseListener(new MouseInputAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    Settings.deviceForEmulator = devices[emul];
+                    devicePanel.setVisible(false);
+                    portsPanel.setVisible(true);
+                }
+            });
+            devicePanel.add(button);
+        }
     }
 
     private void createMainPage() {

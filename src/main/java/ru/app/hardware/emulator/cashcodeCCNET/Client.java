@@ -1,4 +1,4 @@
-package ru.app.hardware.emulator;
+package ru.app.hardware.emulator.cashcodeCCNET;
 
 import jssc.*;
 import ru.app.main.Settings;

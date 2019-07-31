@@ -25,6 +25,12 @@ public class Logger {
         if (encrypted != null) log(encrypted, StreamType.OUTPUT_ENCRYPT);
     }
 
+    /**
+     * Логгирование входящих байтов, если не требуется логгирование расшифрованных байтов, второй параметр остается как NULL
+     *
+     * @param received input for logging
+     * @param decrypted decrypted input for logging (for smart payout)
+     */
     public static void logInput(byte[] received, byte[] decrypted) {
         log(received, StreamType.INPUT);
         if (decrypted != null) log(decrypted, StreamType.INPUT_DECRYPT);

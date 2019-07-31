@@ -1,4 +1,4 @@
-package ru.app.hardware.emulator;
+package ru.app.hardware.emulator.cashcodeCCNET;
 
 import ru.app.hardware.AbstractManager;
 import ru.app.protocol.ccnet.BillStateType;

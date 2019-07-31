@@ -16,5 +16,5 @@ public class Musor {
 //                            }
 //                        } catch (InterruptedException ex) {
 //                            ex.printStackTrace();
-//                        } todo  реализация приема банкнот для cashcode ccnet
+//                        } todo  реализация приема банкнот для cashcodeCCNET ccnet
 }

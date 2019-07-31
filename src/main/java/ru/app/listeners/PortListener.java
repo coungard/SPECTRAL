@@ -26,8 +26,15 @@ public class PortListener extends MouseInputAdapter {
                     Launcher.defineManager(new ru.app.hardware.bneS110M.Manager(portName));
                     break;
                 case EMULATOR:
-                    Launcher.defineManager(new ru.app.hardware.emulator.Manager(portName));
-                    break;
+                    switch (Settings.deviceForEmulator) {
+                        case "CCNET CASHER":
+                            Launcher.defineManager(new ru.app.hardware.emulator.cashcodeCCNET.Manager(portName));
+                            break;
+                        case "CCTALK COIN":
+                            Launcher.defineManager(new ru.app.hardware.emulator.coinCCTALK.Manager(portName));
+                            break;
+                    }
+
             }
         } catch (SerialPortException ex) {
             ex.printStackTrace();
