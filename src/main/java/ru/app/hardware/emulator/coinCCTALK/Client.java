@@ -1,16 +1,23 @@
 package ru.app.hardware.emulator.coinCCTALK;
 
 import jssc.*;
-import ru.app.protocol.ccnet.Command;
-import ru.app.protocol.cctalk.coinMachine.CommandType;
+import ru.app.protocol.cctalk.coinMachine.CCTalkCommand;
+import ru.app.protocol.cctalk.coinMachine.CCTalkCommandType;
+import ru.app.protocol.cctalk.coinMachine.CoinTable;
+import ru.app.protocol.cctalk.coinMachine.EmulatorCommand;
+import ru.app.protocol.cctalk.coinMachine.emulatorCommands.CoinID;
 import ru.app.util.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 class Client {
     private SerialPort serialPort;
-    private final byte SYNC = (byte) 0x02;
+    private static final byte MACHINE_ADDR = (byte) 0x02;
+    private static final byte COIN_ADDR = (byte) 0x01;
+    private static Map<Integer, String> coinTable;
 
     Client(String portName) {
         serialPort = new SerialPort(portName);
@@ -24,23 +31,65 @@ class Client {
             serialPort.setEventsMask(SerialPort.MASK_RXCHAR);
             serialPort.addEventListener(new PortReader());
 
+            initOther();
         } catch (SerialPortException ex) {
             ex.printStackTrace();
         }
     }
 
-    private synchronized void sendMessage(Command command) {
+    private void initOther() {
+        CoinTable table = new CoinTable();
+        coinTable = table.getTable();
+    }
+
+    private synchronized void sendMessage(EmulatorCommand command) {
         try {
             byte[] output = formPacket(command);
-            Logger.logOutput(output, null);
+            Logger.logOutput(output);
             serialPort.writeBytes(output);
         } catch (SerialPortException ex) {
             ex.printStackTrace();
         }
     }
 
-    private byte[] formPacket(Command command) {
-        return new byte[0];
+    private synchronized void sendBytes(byte[] buffer) {
+        try {
+            Logger.logOutput(buffer);
+            serialPort.writeBytes(buffer);
+        } catch (SerialPortException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Высчитать контрольную сумму у части массива байт (modulo 256)
+     *
+     * @param data - данные
+     */
+    private static byte checksum(byte[] data) {
+        int sum = 0;
+        for (byte b : data) sum += 0xff & b;
+
+        while (sum > 256)
+            sum = sum - 256;
+
+        return (byte) (256 - sum);
+    }
+
+    private byte[] formPacket(EmulatorCommand command) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            baos.write(COIN_ADDR);
+            byte[] data = command.getData();
+            baos.write((byte) data.length);
+            baos.write(MACHINE_ADDR);
+            baos.write(0); // command byte always ZERO for emulator coin
+            baos.write(data);
+            baos.write(checksum(baos.toByteArray()));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return baos.toByteArray();
     }
 
     private class PortReader implements SerialPortEventListener {
@@ -49,16 +98,25 @@ class Client {
             if (event.getEventType() == SerialPortEvent.RXCHAR && event.getEventValue() > 0) {
                 try {
                     ByteArrayOutputStream response = new ByteArrayOutputStream();
-                    byte[] sync = serialPort.readBytes(1);
-                    if (sync[0] != SYNC) return; //WRONG SYNC!!
-                    response.write(sync[0]);
+                    byte[] address = serialPort.readBytes(1);
+                    if (address[0] != MACHINE_ADDR) return; //WRONG MACHINE ADDR!!
+                    response.write(address[0]);
                     byte[] length = serialPort.readBytes(1);
                     response.write(length[0]);
                     byte[] message = serialPort.readBytes(length[0] - response.size(), 50);
+                    if (message[0] != COIN_ADDR) return; // WRONG COIN ADDRESS!
                     response.write(message);
 
-                    Logger.logInput(response.toByteArray(), null);
-                    emulateProcess(response.toByteArray());
+                    byte[] resp = response.toByteArray();
+                    CCTalkCommand command = new CCTalkCommand(CCTalkCommandType.getTypeByCode(resp[3]));
+                    ByteArrayOutputStream commandData = new ByteArrayOutputStream();
+                    for (int i = 5; i < response.size() - 1; i++) {
+                        commandData.write(resp[i]);
+                    }
+                    command.setData(commandData.toByteArray());
+
+                    Logger.logInput(resp);
+                    emulateProcess(command, resp);
                 } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
                     ex.printStackTrace();
                 }
@@ -66,18 +124,19 @@ class Client {
         }
     }
 
-    private void emulateProcess(byte[] response) {
-        CommandType command = CommandType.getTypeByCode(response[3]);
+    private void emulateProcess(CCTalkCommand command, byte[] buffer) {
         if (command == null) return;
-        switch (command) {
+        sendBytes(buffer); // send mirror response
+        switch (command.getCommandType()) {
             case RequestCoinId:
-                Logger.console("Пришла монета!!");
+                byte[] data = command.getData();
+                String ascii = coinTable.get((int) data[0]);
+                byte[] nominal = ascii.getBytes(StandardCharsets.UTF_8);
+                sendMessage(new CoinID(nominal));
                 break;
             case ReadBufferedCreditOrErrorCodes:
-                Logger.console("Идет опрос!");
                 break;
             default:
-                System.out.println("Что это такое?!");
                 break;
         }
     }

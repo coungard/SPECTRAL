@@ -1,10 +1,10 @@
 package ru.app.util;
 
+import ru.app.bus.DeviceType;
 import ru.app.hardware.AbstractManager;
 import ru.app.hardware.smartPayout.Client;
 import ru.app.main.Launcher;
 import ru.app.main.Settings;
-import ru.app.bus.DeviceType;
 
 import java.util.Arrays;
 
@@ -20,17 +20,19 @@ public class Logger {
         manager.textArea.setText(manager.textArea.getText() + text + "\n");
     }
 
+    public static void logOutput(byte[] transmitted) {
+        log(transmitted, StreamType.OUTPUT);
+    }
+
+    public static void logInput(byte[] received) {
+        log(received, StreamType.INPUT);
+    }
+
     public static void logOutput(byte[] transmitted, byte[] encrypted) {
         log(transmitted, StreamType.OUTPUT);
         if (encrypted != null) log(encrypted, StreamType.OUTPUT_ENCRYPT);
     }
 
-    /**
-     * Логгирование входящих байтов, если не требуется логгирование расшифрованных байтов, второй параметр остается как NULL
-     *
-     * @param received input for logging
-     * @param decrypted decrypted input for logging (for smart payout)
-     */
     public static void logInput(byte[] received, byte[] decrypted) {
         log(received, StreamType.INPUT);
         if (decrypted != null) log(decrypted, StreamType.INPUT_DECRYPT);

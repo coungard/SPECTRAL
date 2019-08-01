@@ -2,7 +2,7 @@ package ru.app.protocol.cctalk.coinMachine.commands;
 
 
 import ru.app.protocol.cctalk.coinMachine.Command;
-import ru.app.protocol.cctalk.coinMachine.CommandType;
+import ru.app.protocol.cctalk.coinMachine.CCTalkCommandType;
 
 public class RequestCoinID implements Command {
 
@@ -10,7 +10,7 @@ public class RequestCoinID implements Command {
         return null;
     }
 
-    public CommandType getCommandType() {
-        return CommandType.RequestCoinId;
+    public CCTalkCommandType getCommandType() {
+        return CCTalkCommandType.RequestCoinId;
     }
 }

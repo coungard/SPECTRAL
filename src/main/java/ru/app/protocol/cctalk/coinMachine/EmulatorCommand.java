@@ -1,7 +1,5 @@
 package ru.app.protocol.cctalk.coinMachine;
 
-public interface Command {
-
+public interface EmulatorCommand {
     byte[] getData();
-    CCTalkCommandType getCommandType();
 }

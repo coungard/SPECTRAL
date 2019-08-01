@@ -1,13 +1,13 @@
 package ru.app.protocol.cctalk.coinMachine;
 
-public enum CommandType {
+public enum CCTalkCommandType {
 
     RequestCoinId((byte) 0xB8),
     ReadBufferedCreditOrErrorCodes((byte) 0xE5);
 
     private byte code;
 
-    CommandType(byte code) {
+    CCTalkCommandType(byte code) {
         this.code = code;
     }
 
@@ -15,8 +15,8 @@ public enum CommandType {
         return code;
     }
 
-    public static CommandType getTypeByCode(byte code) {
-        for (CommandType obj : CommandType.values()) {
+    public static CCTalkCommandType getTypeByCode(byte code) {
+        for (CCTalkCommandType obj : CCTalkCommandType.values()) {
             if (obj.getCode() == code)
                 return obj;
         }

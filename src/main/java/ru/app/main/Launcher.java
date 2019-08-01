@@ -68,7 +68,7 @@ public class Launcher extends Thread {
     }
 
     private void createDevicePage() {
-        JLabel label = formLabel("Choose device for emulator", 0);
+        JLabel label = formLabel("Choose device for emulatorCommands", 0);
         devicePanel.setVisible(false);
         devicePanel.add(label);
 
