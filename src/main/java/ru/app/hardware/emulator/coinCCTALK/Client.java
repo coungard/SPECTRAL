@@ -5,6 +5,8 @@ import ru.app.protocol.cctalk.coinMachine.CCTalkCommand;
 import ru.app.protocol.cctalk.coinMachine.CCTalkCommandType;
 import ru.app.protocol.cctalk.coinMachine.CoinTable;
 import ru.app.protocol.cctalk.coinMachine.EmulatorCommand;
+import ru.app.protocol.cctalk.coinMachine.emulatorCommands.ACK;
+import ru.app.protocol.cctalk.coinMachine.emulatorCommands.BufferCredit;
 import ru.app.protocol.cctalk.coinMachine.emulatorCommands.CoinID;
 import ru.app.util.Logger;
 
@@ -18,6 +20,10 @@ class Client {
     private static final byte MACHINE_ADDR = (byte) 0x02;
     private static final byte COIN_ADDR = (byte) 0x01;
     private static Map<Integer, String> coinTable;
+    private boolean enable = false;
+
+    private byte currentCounter;
+    private byte[] currentBuffer;
 
     Client(String portName) {
         serialPort = new SerialPort(portName);
@@ -40,6 +46,9 @@ class Client {
     private void initOther() {
         CoinTable table = new CoinTable();
         coinTable = table.getTable();
+        enable = false;
+        currentCounter = (byte) 0x01;
+        currentBuffer = new byte[]{0, (byte) 0x14, 0, (byte) 0x14, 0, (byte) 0x14, 0, (byte) 0x14, 0, (byte) 0x14};
     }
 
     private synchronized void sendMessage(EmulatorCommand command) {
@@ -92,32 +101,43 @@ class Client {
         return baos.toByteArray();
     }
 
+    boolean isEnabled() {
+        return enable;
+    }
+
     private class PortReader implements SerialPortEventListener {
         @Override
         public void serialEvent(SerialPortEvent event) {
             if (event.getEventType() == SerialPortEvent.RXCHAR && event.getEventValue() > 0) {
                 try {
                     ByteArrayOutputStream response = new ByteArrayOutputStream();
-                    byte[] address = serialPort.readBytes(1);
-                    if (address[0] != MACHINE_ADDR) return; //WRONG MACHINE ADDR!!
-                    response.write(address[0]);
-                    byte[] length = serialPort.readBytes(1);
-                    response.write(length[0]);
-                    byte[] message = serialPort.readBytes(length[0] - response.size(), 50);
-                    if (message[0] != COIN_ADDR) return; // WRONG COIN ADDRESS!
-                    response.write(message);
+                    byte machine = serialPort.readBytes(1)[0];
+                    if (machine != MACHINE_ADDR) return; //WRONG MACHINE ADDR!!
+                    response.write(machine);
+                    byte length = serialPort.readBytes(1)[0];
+                    response.write(length);
+                    byte coin = serialPort.readBytes(1)[0];
+                    response.write(coin);
+                    if (coin != COIN_ADDR) return; // WRONG COIN ADDRESS!
+                    byte command = serialPort.readBytes(1)[0];
+                    response.write(command);
+                    byte[] data = serialPort.readBytes(length, 5);
+
+                    ByteArrayOutputStream commandData = new ByteArrayOutputStream();
+                    for (byte b : data) {
+                        commandData.write(b);
+                        response.write(b);
+                    }
+                    CCTalkCommand ccTalkCommand = new CCTalkCommand(CCTalkCommandType.getTypeByCode(command));
+                    ccTalkCommand.setData(commandData.toByteArray());
+
+                    byte checksum = serialPort.readBytes(1)[0];
+                    response.write(checksum);
 
                     byte[] resp = response.toByteArray();
-                    CCTalkCommand command = new CCTalkCommand(CCTalkCommandType.getTypeByCode(resp[3]));
-                    ByteArrayOutputStream commandData = new ByteArrayOutputStream();
-                    for (int i = 5; i < response.size() - 1; i++) {
-                        commandData.write(resp[i]);
-                    }
-                    command.setData(commandData.toByteArray());
-
                     Logger.logInput(resp);
-                    emulateProcess(command, resp);
-                } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
+                    emulateProcess(ccTalkCommand, resp);
+                } catch (SerialPortException | SerialPortTimeoutException ex) {
                     ex.printStackTrace();
                 }
             }
@@ -125,19 +145,42 @@ class Client {
     }
 
     private void emulateProcess(CCTalkCommand command, byte[] buffer) {
-        if (command == null) return;
+        if (command.getCommandType() == null) return;
+        byte[] data = command.getData();
         sendBytes(buffer); // send mirror response
         switch (command.getCommandType()) {
             case RequestCoinId:
-                byte[] data = command.getData();
                 String ascii = coinTable.get((int) data[0]);
                 byte[] nominal = ascii.getBytes(StandardCharsets.UTF_8);
                 sendMessage(new CoinID(nominal));
                 break;
             case ReadBufferedCreditOrErrorCodes:
+                sendMessage(new BufferCredit(currentCounter, currentBuffer));
+                break;
+            case ModifyInhibitStatus:
+                enable = (data[0] == (byte) 0xFF);
+                sendMessage(new ACK());
                 break;
             default:
+                sendMessage(new ACK());
                 break;
         }
+    }
+
+    void incrementCounter(int iter) {
+        currentCounter = (byte) (currentCounter + iter);
+        if (currentCounter == 0) currentCounter++;
+    }
+
+    byte[] getCurrentBuffer() {
+        return currentBuffer;
+    }
+
+    void setCurrentBuffer(byte[] buffer) {
+        currentBuffer = buffer;
+    }
+
+    byte getCurrentCounter() {
+        return currentCounter;
     }
 }

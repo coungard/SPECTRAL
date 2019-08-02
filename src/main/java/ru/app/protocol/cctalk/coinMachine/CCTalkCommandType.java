@@ -3,7 +3,8 @@ package ru.app.protocol.cctalk.coinMachine;
 public enum CCTalkCommandType {
 
     RequestCoinId((byte) 0xB8),
-    ReadBufferedCreditOrErrorCodes((byte) 0xE5);
+    ReadBufferedCreditOrErrorCodes((byte) 0xE5),
+    ModifyInhibitStatus((byte) 0xE7);
 
     private byte code;
 

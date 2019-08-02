@@ -3,7 +3,6 @@ package ru.app.util;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.util.Arrays;
 import java.util.Formatter;
 import java.util.List;
 
@@ -154,13 +153,12 @@ public class Utils {
     /**
      * concatinate two byte arrays
      *
-     * @param first array A
+     * @param first  array A
      * @param second array B
      * @return new byte array
      */
     public static byte[] concat(byte[] first, byte[] second) {
         byte[] res = new byte[first.length + second.length];
-        System.out.println("first : " + Arrays.toString(first) + " second : " + Arrays.toString(second));
         System.arraycopy(first, 0, res, 0, first.length);
         System.arraycopy(second, 0, res, first.length, second.length);
         return res;

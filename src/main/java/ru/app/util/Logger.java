@@ -7,6 +7,7 @@ import ru.app.main.Launcher;
 import ru.app.main.Settings;
 
 import java.util.Arrays;
+import java.util.Date;
 
 public class Logger {
     private static AbstractManager manager;
@@ -59,7 +60,8 @@ public class Logger {
                 }
         }
 
-        String log = streamType + (Settings.properties.get("logLevel.bytes") ? "BYTES:  " + Arrays.toString(buffer) + "\t" : "") +
+        String log = Settings.dateFormat.format(new Date()) + "\t" + streamType + (Settings.properties.get("logLevel.bytes") ? "BYTES:  " +
+                Arrays.toString(buffer) + "\t" : "") +
                 (Settings.properties.get("logLevel.hex") ? "HEX:  " + Utils.bytes2hex((buffer)) + "\t" : "") +
                 (Settings.properties.get("logLevel.ascii") ? "ASCII:  " + ascii.toString() + "\t" : "") + type;
 

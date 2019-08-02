@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Settings {
-    static final String VERSION = "1.27";
+    static final String VERSION = "1.30";
     public static final String COUNTRY = "ITL";
     public static DeviceType hardware;
     public static String deviceForEmulator = null;
