@@ -206,7 +206,23 @@ class Client {
                 rxThread.setStatus(BillStateType.Stacking, 1000);
                 break;
             case Poll:
-                sendMessage(new Command(rxThread.getStatus()));
+                switch (rxThread.getStatus()) {
+                    case Accepting:
+                        sendMessage(new Command(BillStateType.Accepting));
+                        break;
+                    case BillStacked:
+                        sendMessage(new Command(BillStateType.BillStacked, currentDenom));
+                        break;
+                    case Initialize:
+                        sendMessage(new Command(BillStateType.Initialize));
+                        break;
+                    case Idling:
+                        sendMessage(new Command(BillStateType.Idling));
+                        break;
+                    case UnitDisabled:
+                        sendMessage(new Command(BillStateType.UnitDisabled));
+                        break;
+                }
                 break;
             case EnableBillTypes:
                 boolean idling = received[5] == (byte) 0xFF;
