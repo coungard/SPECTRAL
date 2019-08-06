@@ -40,7 +40,6 @@ public class Manager extends AbstractManager {
         verboseLog = new JCheckBox("verbose Log");
         verboseLog.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
         verboseLog.setBounds(getWidth() - 160, 20, 150, 50);
-        verboseLog.setSelected(true);
         add(verboseLog);
 
         final Map<String, byte[]> table = new BillTable().getTable();
@@ -77,7 +76,7 @@ public class Manager extends AbstractManager {
     }
 
     static boolean isVerboseLog() {
-        return verboseLog.isSelected();
+        return (verboseLog == null || verboseLog.isSelected());
     }
 
     @Override

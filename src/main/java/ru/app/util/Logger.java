@@ -17,6 +17,7 @@ public class Logger {
     }
 
     public static void console(String text) {
+        if (manager == null) return;
         System.out.println(text);
         manager.textArea.setText(manager.textArea.getText() + text + "\n");
     }

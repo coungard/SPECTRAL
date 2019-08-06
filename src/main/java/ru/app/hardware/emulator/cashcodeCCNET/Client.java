@@ -11,9 +11,11 @@ import ru.app.protocol.ccnet.emulator.response.TakeBillTable;
 import ru.app.util.Crc16;
 import ru.app.util.Logger;
 import ru.app.util.StreamType;
+import ru.app.util.Utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 
 
@@ -29,7 +31,6 @@ class Client {
     private volatile long casherStateTime;
     private CommandType currentCommand;
 
-    private long logDelay = 10000;
     private long activityDate;
     private byte[] inputBuffer = null;
     private byte[] outputBuffer = null;
@@ -116,28 +117,42 @@ class Client {
         }
     }
 
-    private boolean accessLog(byte[] buffer, StreamType type) {
-        if (Manager.isVerboseLog()) return true;
-        if (currentCommand == CommandType.ACK) return false;
+    synchronized private boolean accessLog(byte[] buffer, StreamType type) {
+        Logger.console("access log started");
+        if (Manager.isVerboseLog()) {
+            Logger.console("is verbose");
+            return true;
+        }
+        if (currentCommand == CommandType.ACK) {
+            Logger.console("ACK no log");
+            return false;
+        }
 
         switch (type) {
             case INPUT:
-                if (buffer != inputBuffer) {
+                Logger.console("see the input");
+                if (!Arrays.equals(buffer, inputBuffer)) {
+                    Logger.console("buffer: " + Utils.bytes2hex(buffer) + " oldInputBuffer: " + Utils.bytes2hex(inputBuffer));
                     inputBuffer = buffer;
                     return true;
                 }
             case OUTPUT:
-                if (buffer != outputBuffer) {
+                Logger.console("see the output");
+                if (!Arrays.equals(buffer, outputBuffer)) {
+                    Logger.console("buffer: " + Utils.bytes2hex(buffer) + " oldOutputBuffer: " + Utils.bytes2hex(outputBuffer));
                     outputBuffer = buffer;
                     return true;
                 }
         }
 
         long timestamp = System.currentTimeMillis();
+        long logDelay = 10000;
         if (timestamp - activityDate > logDelay) {
+            Logger.console("activity date");
             activityDate = timestamp;
             return true;
         }
+        Logger.console("Return false ");
         return false;
     }
 
