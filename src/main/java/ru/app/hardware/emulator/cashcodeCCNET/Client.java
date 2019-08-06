@@ -10,6 +10,7 @@ import ru.app.protocol.ccnet.emulator.response.SetStatus;
 import ru.app.protocol.ccnet.emulator.response.TakeBillTable;
 import ru.app.util.Crc16;
 import ru.app.util.Logger;
+import ru.app.util.StreamType;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,6 +31,8 @@ class Client {
 
     private long logDelay = 10000;
     private long activityDate;
+    private byte[] inputBuffer = null;
+    private byte[] outputBuffer = null;
 
     void setCurrentDenom(byte[] currentDenom) {
         this.currentDenom = currentDenom;
@@ -105,7 +108,7 @@ class Client {
     private synchronized void sendMessage(Command command) {
         try {
             byte[] output = formPacket(command);
-            if (accessLog(output))
+            if (accessLog(output, StreamType.OUTPUT))
                 Logger.logOutput(output);
             serialPort.writeBytes(output);
         } catch (SerialPortException ex) {
@@ -113,9 +116,22 @@ class Client {
         }
     }
 
-    private boolean accessLog(byte[] buffer) {
+    private boolean accessLog(byte[] buffer, StreamType type) {
         if (Manager.isVerboseLog()) return true;
         if (currentCommand == CommandType.ACK) return false;
+
+        switch (type) {
+            case INPUT:
+                if (buffer != inputBuffer) {
+                    inputBuffer = buffer;
+                    return true;
+                }
+            case OUTPUT:
+                if (buffer != outputBuffer) {
+                    outputBuffer = buffer;
+                    return true;
+                }
+        }
 
         long timestamp = System.currentTimeMillis();
         if (timestamp - activityDate > logDelay) {
@@ -154,7 +170,7 @@ class Client {
                     byte[] message = serialPort.readBytes(length[0] - response.size(), 50);
                     response.write(message);
 
-                    if (accessLog(response.toByteArray()))
+                    if (accessLog(response.toByteArray(), StreamType.INPUT))
                         Logger.logInput(response.toByteArray());
                     emulateProcess(response.toByteArray());
                 } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
