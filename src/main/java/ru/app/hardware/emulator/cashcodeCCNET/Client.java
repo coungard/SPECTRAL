@@ -102,11 +102,17 @@ class Client {
     private synchronized void sendMessage(Command command) {
         try {
             byte[] output = formPacket(command);
-            Logger.logOutput(output);
+            if (accessLog(output))
+                Logger.logOutput(output);
             serialPort.writeBytes(output);
         } catch (SerialPortException ex) {
             ex.printStackTrace();
         }
+    }
+
+    private boolean accessLog(byte[] buffer) {
+        if (Manager.isVerboseLog()) return true;
+        return currentCommand != CommandType.ACK;
     }
 
     private synchronized void sendBytes(byte[] bytes) {
@@ -169,26 +175,6 @@ class Client {
             case Poll:
                 sendMessage(new Command(rxThread.getStatus()));
                 break;
-                /**
-                switch (rxThread.getStatus()) {
-                    case Accepting:
-                        sendMessage(new Command(BillStateType.Accepting));
-                        return;
-                    case BillStacked:
-                        sendMessage(new Command(BillStateType.BillStacked, currentDenom));
-                        return;
-                    case Initialize:
-                        sendMessage(new Command(BillStateType.Initialize));
-                        return;
-                    case Idling:
-                        sendMessage(new Command(BillStateType.Idling));
-                        return;
-                    case UnitDisabled:
-                        sendMessage(new Command(BillStateType.UnitDisabled));
-                        return;
-                }
-                break;
-                 **/
             case EnableBillTypes:
                 boolean idling = received[5] == (byte) 0xFF;
                 rxThread.setStatus(idling ? BillStateType.Idling : BillStateType.UnitDisabled);

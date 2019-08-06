@@ -16,7 +16,7 @@ public class Manager extends AbstractManager {
     private static final Color BACKGROUND_COLOR = new Color(205, 186, 116);
     private JPanel paymentPanel;
     private Client client;
-    private JCheckBox verboseLog;
+    private static JCheckBox verboseLog;
 
     public Manager(String port) {
         setSize(1020, 600);
@@ -76,7 +76,7 @@ public class Manager extends AbstractManager {
         paymentPanel.add(bill);
     }
 
-    public boolean isVerboseLog() {
+    static boolean isVerboseLog() {
         return verboseLog.isSelected();
     }
 
