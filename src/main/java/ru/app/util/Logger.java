@@ -58,6 +58,11 @@ public class Logger {
                 if (streamType == StreamType.INPUT) {
                     type = ResponseHandler.parseResponse(streamType, buffer);
                 }
+                break;
+            case EMULATOR:
+                if (streamType.toString().contains("INPUT")) {
+                    type = manager.getCurrentCommand();
+                }
         }
 
         String log = Settings.dateFormat.format(new Date()) + "\t" + streamType + (Settings.properties.get("logLevel.bytes") ? "BYTES:  " +

@@ -76,4 +76,8 @@ public abstract class AbstractManager extends JLayeredPane {
 
         return label;
     }
+
+    public String getCurrentCommand() {
+        return "";
+    }
 }

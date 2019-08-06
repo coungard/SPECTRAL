@@ -27,7 +27,7 @@ public enum CommandType implements CCNetCommand {
 	GetCRC32OfTheCode((byte)0x51),
 	Download((byte)0x50),
 	RequestStatistics((byte)0x60);
-	
+
 	private byte code;
 	
 	CommandType(byte code) {

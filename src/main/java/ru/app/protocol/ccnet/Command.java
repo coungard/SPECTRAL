@@ -8,6 +8,11 @@ import ru.app.util.Utils;
 public class Command {
     private CCNetCommand getType;
     private byte[] data;
+    private boolean emulator;
+
+    public Command() {
+        emulator = true;
+    }
 
     public Command(CCNetCommand getType) {
         this.getType = getType;
@@ -32,6 +37,10 @@ public class Command {
 
     public void setData(byte[] data) {
         this.data = data;
+    }
+
+    public boolean isEmulator() {
+        return emulator;
     }
 
     @Override

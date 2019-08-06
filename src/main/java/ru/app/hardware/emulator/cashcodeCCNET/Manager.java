@@ -2,7 +2,9 @@ package ru.app.hardware.emulator.cashcodeCCNET;
 
 import ru.app.hardware.AbstractManager;
 import ru.app.protocol.ccnet.BillStateType;
+import ru.app.protocol.ccnet.CommandType;
 import ru.app.protocol.ccnet.emulator.BillTable;
+import ru.app.util.Logger;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -14,6 +16,7 @@ public class Manager extends AbstractManager {
     private static final Color BACKGROUND_COLOR = new Color(205, 186, 116);
     private JPanel paymentPanel;
     private Client client;
+    private JCheckBox verboseLog;
 
     public Manager(String port) {
         setSize(1020, 600);
@@ -31,7 +34,14 @@ public class Manager extends AbstractManager {
         paymentPanel = new JPanel();
         paymentPanel.setBorder(BorderFactory.createTitledBorder("NOTE INSERTION COMMANDS"));
         paymentPanel.setBounds(30, 40, 500, 100);
+        paymentPanel.setBackground(new Color(7, 146, 151));
         add(paymentPanel);
+
+        verboseLog = new JCheckBox("verbose Log");
+        verboseLog.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
+        verboseLog.setBounds(getWidth() - 160, 20, 150, 50);
+        verboseLog.setSelected(true);
+        add(verboseLog);
 
         final Map<String, byte[]> table = new BillTable().getTable();
         for (String denomination : table.keySet()) {
@@ -56,7 +66,7 @@ public class Manager extends AbstractManager {
         if (client.getStatus() == BillStateType.Idling) {
             client.escrowNominal();
         } else {
-            System.out.println("can not escrow, casher not idling status now");
+            Logger.console("can not escrow, casher not idling now!");
         }
     }
 
@@ -64,5 +74,14 @@ public class Manager extends AbstractManager {
         JButton bill = new JButton(billName);
         bill.setPreferredSize(new Dimension(100, 30));
         paymentPanel.add(bill);
+    }
+
+    public boolean isVerboseLog() {
+        return verboseLog.isSelected();
+    }
+
+    @Override
+    public String getCurrentCommand() {
+        return client.getCurrentCommand() == null ? "" : client.getCurrentCommand().toString();
     }
 }

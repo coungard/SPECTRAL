@@ -5,13 +5,16 @@ import ru.app.main.Settings;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.Command;
 import ru.app.protocol.ccnet.CommandType;
-import ru.app.protocol.ccnet.emulator.ResponseType;
+import ru.app.protocol.ccnet.emulator.response.Identification;
+import ru.app.protocol.ccnet.emulator.response.SetStatus;
+import ru.app.protocol.ccnet.emulator.response.TakeBillTable;
 import ru.app.util.Crc16;
-import ru.app.util.Utils;
+import ru.app.util.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Date;
+
 
 class Client {
     private SerialPort serialPort;
@@ -23,6 +26,7 @@ class Client {
     private volatile BillStateType status = BillStateType.UnitDisabled;
     private volatile boolean change;
     private volatile long duration;
+    private CommandType currentCommand;
 
     void setCurrentDenom(byte[] currentDenom) {
         this.currentDenom = currentDenom;
@@ -59,7 +63,7 @@ class Client {
         public void run() {
             while (true) {
                 if (change) {
-                    System.out.println(Settings.dateFormat.format(new Date()) + "\tnew state : " + status);
+                    Logger.console("new state : " + status);
                     change = false;
                     long started = System.currentTimeMillis();
                     do {
@@ -67,7 +71,7 @@ class Client {
                     } while (System.currentTimeMillis() - started < duration);
 
                     if (status == BillStateType.Stacking) {
-                        System.out.println(Settings.dateFormat.format(new Date()) + "\tStatus stacking");
+                        Logger.console("Status stacking");
                         sendMessage(new Command(BillStateType.BillStacked, currentDenom));
                         status = BillStateType.BillStacked;
                         return;
@@ -98,7 +102,7 @@ class Client {
     private synchronized void sendMessage(Command command) {
         try {
             byte[] output = formPacket(command);
-            System.out.println(Settings.dateFormat.format(new Date()) + "\toutput >> " + Utils.bytes2hex(output));
+            Logger.logOutput(output);
             serialPort.writeBytes(output);
         } catch (SerialPortException ex) {
             ex.printStackTrace();
@@ -107,7 +111,7 @@ class Client {
 
     private synchronized void sendBytes(byte[] bytes) {
         try {
-            System.out.println(Settings.dateFormat.format(new Date()) + "\toutput >> " + Utils.bytes2hex(bytes));
+            Logger.logOutput(bytes);
             serialPort.writeBytes(bytes);
         } catch (SerialPortException ex) {
             ex.printStackTrace();
@@ -121,17 +125,20 @@ class Client {
                 try {
                     ByteArrayOutputStream response = new ByteArrayOutputStream();
                     byte[] sync = serialPort.readBytes(1);
-                    if (sync[0] != SYNC) return; //WRONG SYNC!!
-                    response.write(sync[0]);
+                    if (sync[0] != SYNC) return; //WRONG SYNC!!logOJChecJCheckBoxkBoxutput
+                    response.write(sync);
                     byte[] addr = serialPort.readBytes(1);
                     if (addr[0] != PERIPHERIAL_CODE) return; // WRONG ADDRESS!!
-                    response.write(addr[0]);
+                    response.write(addr);
                     byte[] length = serialPort.readBytes(1);
-                    response.write(length[0]);
+                    response.write(length);
+                    byte[] command = serialPort.readBytes(1);
+                    currentCommand = CommandType.getTypeByCode(command[0]);
+                    response.write(command);
                     byte[] message = serialPort.readBytes(length[0] - response.size(), 50);
                     response.write(message);
 
-                    System.out.println(Settings.dateFormat.format(new Date()) + "\tinput << " + Utils.bytes2hex(response.toByteArray()));
+                    Logger.logInput(response.toByteArray());
                     emulateProcess(response.toByteArray());
                 } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
                     ex.printStackTrace();
@@ -141,110 +148,64 @@ class Client {
     }
 
     private void emulateProcess(byte[] received) {
-        if (received[0] != SYNC) {
-            alertMsg();
-            return;
+        switch (currentCommand) {
+            case ACK:
+                return;
+            case Reset:
+                rxThread.setStatus(BillStateType.Initialize, 6000);
+            case GetStatus:
+                sendMessage(new SetStatus());
+                break;
+            case GetBillTable:
+                sendMessage(new TakeBillTable());
+                break;
+            case Identification:
+                sendMessage(new Identification());
+                break;
+            case Stack:
+                sendMessage(new Command(CommandType.ACK));
+                rxThread.setStatus(BillStateType.Stacking, 1000);
+                break;
+            case Poll:
+                sendMessage(new Command(rxThread.getStatus()));
+                break;
+                /**
+                switch (rxThread.getStatus()) {
+                    case Accepting:
+                        sendMessage(new Command(BillStateType.Accepting));
+                        return;
+                    case BillStacked:
+                        sendMessage(new Command(BillStateType.BillStacked, currentDenom));
+                        return;
+                    case Initialize:
+                        sendMessage(new Command(BillStateType.Initialize));
+                        return;
+                    case Idling:
+                        sendMessage(new Command(BillStateType.Idling));
+                        return;
+                    case UnitDisabled:
+                        sendMessage(new Command(BillStateType.UnitDisabled));
+                        return;
+                }
+                break;
+                 **/
+            case EnableBillTypes:
+                boolean idling = received[5] == (byte) 0xFF;
+                rxThread.setStatus(idling ? BillStateType.Idling : BillStateType.UnitDisabled);
+            default:
+                sendMessage(new Command(CommandType.ACK));
         }
-        if (received[1] != PERIPHERIAL_CODE) alertMsg();
-        int length = received[2];
-        byte command = received[3];
-//        byte[] data;
-//        if (length - 5 > 0) {
-//            data = new byte[length - 5];
-//            System.arraycopy(data, 3, data, 0, data.length);
-//        }
-//        byte checksum0 = received[length - 2];
-//        byte checksum1 = received[length - 1];
-//        int checksum = (0xff & checksum0) + ((0xff & checksum1) << 8);
-        //todo - проверка на checkSum
-
-        if (CommandType.getTypeByCode(command) == CommandType.Reset) {
-            System.out.println(Settings.dateFormat.format(new Date()) + "\tCOMMAND RESET");
-            rxThread.setStatus(BillStateType.Initialize, 6000);
-        }
-
-        if (CommandType.getTypeByCode(command) == CommandType.ACK) {
-            return;
-        }
-
-        if (CommandType.getTypeByCode(command) == CommandType.GetStatus) {
-            sendMessage(new Command(ResponseType.GetStatus, new byte[]{0, 0, 0, 0, 0, 0}));
-            return;
-        }
-
-        if (CommandType.getTypeByCode(command) == CommandType.GetBillTable) {
-            byte[] data = new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x52,
-                    (byte) 0x55, (byte) 0x53, (byte) 0x01, (byte) 0x05, (byte) 0x52, (byte) 0x55, (byte) 0x53, (byte) 0x01,
-                    (byte) 0x01, (byte) 0x52, (byte) 0x55, (byte) 0x53, (byte) 0x02, (byte) 0x05, (byte) 0x52, (byte) 0x55,
-                    (byte) 0x53, (byte) 0x02, (byte) 0x01, (byte) 0x52, (byte) 0x55, (byte) 0x53, (byte) 0x03, (byte) 0x05,
-                    (byte) 0x52, (byte) 0x55, (byte) 0x53, (byte) 0x03, (byte) 0x01, (byte) 0x52, (byte) 0x55, (byte) 0x53,
-                    (byte) 0x00, (byte) 0x02, (byte) 0x52, (byte) 0x55, (byte) 0x53, (byte) 0x00, (byte) 0x05, (byte) 0x52,
-                    (byte) 0x55, (byte) 0x53, (byte) 0x00, (byte) 0x01, (byte) 0x52, (byte) 0x55, (byte) 0x53, (byte) 0x01,
-                    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01,
-                    (byte) 0x42, (byte) 0x41, (byte) 0x52, (byte) 0x00};
-            sendMessage(new Command(ResponseType.GetBillTable, data));
-            return;
-        }
-        if (CommandType.getTypeByCode(command) == CommandType.Identification) {
-            byte[] data = new byte[]{(byte) 0x53, (byte) 0x4D, (byte) 0x2D, (byte) 0x52,
-                    (byte) 0x55, (byte) 0x31, (byte) 0x33, (byte) 0x35, (byte) 0x33, (byte) 0x20, (byte) 0x20, (byte) 0x20,
-                    (byte) 0x20, (byte) 0x20, (byte) 0x20, (byte) 0x32, (byte) 0x31, (byte) 0x4B, (byte) 0x43, (byte) 0x30, (byte) 0x37,
-                    (byte) 0x30, (byte) 0x30, (byte) 0x36, (byte) 0x38, (byte) 0x35, (byte) 0x37, (byte) 0xE7, (byte) 0x00,
-                    (byte) 0x4D, (byte) 0x53, (byte) 0x08, (byte) 0x12, (byte) 0xF0};
-            sendMessage(new Command(ResponseType.Identefication, data));
-            return;
-        }
-
-        if (CommandType.getTypeByCode(command) == CommandType.Poll) {
-            switch (rxThread.getStatus()) {
-                case Accepting:
-                    sendMessage(new Command(BillStateType.Accepting));
-                    return;
-                case BillStacked:
-                    sendMessage(new Command(BillStateType.BillStacked, currentDenom));
-                    return;
-                case Initialize:
-                    sendMessage(new Command(BillStateType.Initialize));
-                    return;
-                case Idling:
-                    sendMessage(new Command(BillStateType.Idling));
-                    return;
-                case UnitDisabled:
-                    sendMessage(new Command(BillStateType.UnitDisabled));
-                    return;
-            }
-        }
-
-        if (CommandType.getTypeByCode(command) == CommandType.EnableBillTypes) {
-            boolean idling = received[5] == (byte) 0xFF;
-            rxThread.setStatus(idling ? BillStateType.Idling : BillStateType.UnitDisabled);
-        }
-
-        if (CommandType.getTypeByCode(command) == CommandType.Stack) {
-            sendMessage(new Command(CommandType.ACK));
-            rxThread.setStatus(BillStateType.Stacking, 1000);
-            return;
-        }
-
-        sendMessage(new Command(CommandType.ACK));
     }
 
     private byte[] formPacket(Command command) {
         byte[] data = command.getData() != null ? command.getData() : new byte[0];
-        boolean responseType = command.getType() instanceof ResponseType;
+        boolean emulCommand = command.isEmulator();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(SYNC);
         baos.write(PERIPHERIAL_CODE);
         int length = 6;
-        baos.write(length + (responseType ? data.length - 1 : data.length)); // если тип команды ResponseType, в длину не входит байт команды.
-        if (!responseType) baos.write(command.getType().getCode());
+        baos.write(length + (emulCommand ? data.length - 1 : data.length)); // если тип команды ResponseType, в длину не входит байт команды.
+        if (!emulCommand) baos.write(command.getType().getCode());
         for (byte b : data) {
             baos.write(b);
         }
@@ -255,12 +216,11 @@ class Client {
         return baos.toByteArray();
     }
 
-    private void alertMsg() {
-        System.out.println(Settings.dateFormat.format(new Date()) + "\tCAN NOT EMULATE RESPONSE! WRONG DATA!");
-        throw new RuntimeException();
-    }
-
     BillStateType getStatus() {
         return rxThread.getStatus();
+    }
+
+    CommandType getCurrentCommand() {
+        return currentCommand;
     }
 }
