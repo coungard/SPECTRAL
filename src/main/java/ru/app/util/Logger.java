@@ -18,8 +18,8 @@ public class Logger {
 
     public static void console(String text) {
         if (manager == null) return;
-        System.out.println(text);
-        manager.textArea.setText(manager.textArea.getText() + text + "\n");
+        System.out.println(Settings.dateFormat.format(new Date()) + "\t" + text);
+        manager.textArea.setText(manager.textArea.getText() + Settings.dateFormat.format(new Date()) + "\t" + text + "\n");
     }
 
     public static void logOutput(byte[] transmitted) {

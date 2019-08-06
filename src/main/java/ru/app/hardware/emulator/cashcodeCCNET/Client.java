@@ -32,10 +32,6 @@ class Client {
     private byte[] inputBuffer = null;
     private byte[] outputBuffer = null;
 
-    void setCurrentDenom(byte[] currentDenom) {
-        this.currentDenom = currentDenom;
-    }
-
     Client(String portName) {
         serialPort = new SerialPort(portName);
         try {
@@ -67,7 +63,7 @@ class Client {
         public void run() {
             while (true) {
                 if (change) {
-                    Logger.console("new state : " + status);
+                    Logger.console("new state : " + status + " casher state time = " + casherStateTime);
                     change = false;
                     long started = System.currentTimeMillis();
                     do {
@@ -75,7 +71,7 @@ class Client {
                     } while (System.currentTimeMillis() - started < casherStateTime);
 
                     if (status == BillStateType.Stacking) {
-                        Logger.console("Status stacking");
+                        Logger.console("Stacking " + Arrays.toString(currentDenom));
                         sendMessage(new Command(BillStateType.BillStacked, currentDenom));
                         status = BillStateType.BillStacked;
                         return;
@@ -103,6 +99,11 @@ class Client {
         }
     }
 
+    void setCurrentDenom(byte[] currentDenom) {
+        Logger.console("current denom = " + Arrays.toString(currentDenom));
+        this.currentDenom = currentDenom;
+    }
+
     private synchronized void sendMessage(Command command) {
         try {
             byte[] output = formPacket(command);
@@ -128,11 +129,13 @@ class Client {
                     inputBuffer = buffer;
                     return true;
                 }
+                break;
             case OUTPUT:
                 if (!Arrays.equals(buffer, outputBuffer)) {
                     outputBuffer = buffer;
                     return true;
                 }
+                break;
         }
 
         long timestamp = System.currentTimeMillis();
@@ -183,7 +186,7 @@ class Client {
         }
     }
 
-    private void emulateProcess(byte[] received) {
+    synchronized private void emulateProcess(byte[] received) {
         switch (currentCommand) {
             case ACK:
                 return;
@@ -232,7 +235,7 @@ class Client {
         return baos.toByteArray();
     }
 
-    BillStateType getStatus() {
+    synchronized BillStateType getStatus() {
         return rxThread.getStatus();
     }
 
