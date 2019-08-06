@@ -25,8 +25,11 @@ class Client {
     private byte[] currentDenom;
     private volatile BillStateType status = BillStateType.UnitDisabled;
     private volatile boolean change;
-    private volatile long duration;
+    private volatile long casherStateTime;
     private CommandType currentCommand;
+
+    private long logDelay = 10000;
+    private long activityDate;
 
     void setCurrentDenom(byte[] currentDenom) {
         this.currentDenom = currentDenom;
@@ -68,7 +71,7 @@ class Client {
                     long started = System.currentTimeMillis();
                     do {
                         //todo nothing except sleep thread
-                    } while (System.currentTimeMillis() - started < duration);
+                    } while (System.currentTimeMillis() - started < casherStateTime);
 
                     if (status == BillStateType.Stacking) {
                         Logger.console("Status stacking");
@@ -86,7 +89,7 @@ class Client {
                 oldStatus = status;
             System.out.println(Settings.dateFormat.format(new Date()) + "\tset status : " + billStateType + " , ms: " + ms);
             status = billStateType;
-            duration = ms;
+            casherStateTime = ms;
             change = true;
         }
 
@@ -112,7 +115,14 @@ class Client {
 
     private boolean accessLog(byte[] buffer) {
         if (Manager.isVerboseLog()) return true;
-        return currentCommand != CommandType.ACK;
+        if (currentCommand == CommandType.ACK) return false;
+
+        long timestamp = System.currentTimeMillis();
+        if (timestamp - activityDate > logDelay) {
+            activityDate = timestamp;
+            return true;
+        }
+        return false;
     }
 
     private synchronized void sendBytes(byte[] bytes) {
@@ -144,7 +154,8 @@ class Client {
                     byte[] message = serialPort.readBytes(length[0] - response.size(), 50);
                     response.write(message);
 
-                    Logger.logInput(response.toByteArray());
+                    if (accessLog(response.toByteArray()))
+                        Logger.logInput(response.toByteArray());
                     emulateProcess(response.toByteArray());
                 } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
                     ex.printStackTrace();
