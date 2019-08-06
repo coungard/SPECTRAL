@@ -1,7 +1,6 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
 import jssc.*;
-import ru.app.main.Settings;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.Command;
 import ru.app.protocol.ccnet.CommandType;
@@ -11,12 +10,10 @@ import ru.app.protocol.ccnet.emulator.response.TakeBillTable;
 import ru.app.util.Crc16;
 import ru.app.util.Logger;
 import ru.app.util.StreamType;
-import ru.app.util.Utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Date;
 
 
 class Client {
@@ -25,7 +22,7 @@ class Client {
     private final byte PERIPHERIAL_CODE = (byte) 0x03;
 
     private RxThread rxThread;
-    private byte[] currentDenom;
+    private volatile byte[] currentDenom;
     private volatile BillStateType status = BillStateType.UnitDisabled;
     private volatile boolean change;
     private volatile long casherStateTime;
@@ -91,7 +88,7 @@ class Client {
         void setStatus(BillStateType billStateType, long ms) {
             if (status == BillStateType.UnitDisabled || status == BillStateType.Idling)
                 oldStatus = status;
-            System.out.println(Settings.dateFormat.format(new Date()) + "\tset status : " + billStateType + " , ms: " + ms);
+            Logger.console("set status : " + billStateType + " , ms: " + ms);
             status = billStateType;
             casherStateTime = ms;
             change = true;
@@ -118,28 +115,21 @@ class Client {
     }
 
     synchronized private boolean accessLog(byte[] buffer, StreamType type) {
-        Logger.console("access log started");
         if (Manager.isVerboseLog()) {
-            Logger.console("is verbose");
             return true;
         }
         if (currentCommand == CommandType.ACK) {
-            Logger.console("ACK no log");
             return false;
         }
 
         switch (type) {
             case INPUT:
-                Logger.console("see the input");
                 if (!Arrays.equals(buffer, inputBuffer)) {
-                    Logger.console("buffer: " + Utils.bytes2hex(buffer) + " oldInputBuffer: " + Utils.bytes2hex(inputBuffer));
                     inputBuffer = buffer;
                     return true;
                 }
             case OUTPUT:
-                Logger.console("see the output");
                 if (!Arrays.equals(buffer, outputBuffer)) {
-                    Logger.console("buffer: " + Utils.bytes2hex(buffer) + " oldOutputBuffer: " + Utils.bytes2hex(outputBuffer));
                     outputBuffer = buffer;
                     return true;
                 }
@@ -148,11 +138,9 @@ class Client {
         long timestamp = System.currentTimeMillis();
         long logDelay = 10000;
         if (timestamp - activityDate > logDelay) {
-            Logger.console("activity date");
             activityDate = timestamp;
             return true;
         }
-        Logger.console("Return false ");
         return false;
     }
 
