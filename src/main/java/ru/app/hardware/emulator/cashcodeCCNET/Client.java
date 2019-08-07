@@ -10,10 +10,12 @@ import ru.app.protocol.ccnet.emulator.response.TakeBillTable;
 import ru.app.util.Crc16;
 import ru.app.util.Logger;
 import ru.app.util.StreamType;
+import sun.rmi.runtime.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Objects;
 
 
 class Client {
@@ -27,6 +29,7 @@ class Client {
     private volatile boolean change;
     private volatile long casherStateTime;
     private CommandType currentCommand;
+    private String currentResponse = "";
 
     private long activityDate;
     private byte[] inputBuffer = null;
@@ -104,8 +107,14 @@ class Client {
 
     private synchronized void sendMessage(Command command) {
         try {
-            currentCommand = CommandType.getTypeByCode(command.getType().getCode());
             byte[] output = formPacket(command);
+            if (!command.isEmulator()) {
+                if (CommandType.getTypeByCode(command.getType().getCode()) == null) {
+                    currentResponse = Objects.requireNonNull(BillStateType.getTypeByCode(command.getType().getCode())).toString();
+                } else
+                    currentResponse = command.toString();
+            }
+
             if (accessLog(output, StreamType.OUTPUT))
                 Logger.logOutput(output);
             serialPort.writeBytes(output);
@@ -160,12 +169,15 @@ class Client {
             case Reset:
                 rxThread.setStatus(BillStateType.Initialize, 6000);
             case GetStatus:
+                currentResponse = "Set Status [Emulator]";
                 sendMessage(new SetStatus());
                 break;
             case GetBillTable:
+                currentResponse = "Take Bill Table [Emulator]";
                 sendMessage(new TakeBillTable());
                 break;
             case Identification:
+                currentResponse = "Identification [Emulator]";
                 sendMessage(new Identification());
                 break;
             case Stack:
@@ -253,5 +265,9 @@ class Client {
 
     CommandType getCurrentCommand() {
         return currentCommand;
+    }
+
+    String getCurrentResponse() {
+        return "Response: " + currentResponse;
     }
 }

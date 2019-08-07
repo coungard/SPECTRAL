@@ -73,6 +73,12 @@ class ResponseHandler {
                 }
             default:
                 return null;
+
+            case EMULATOR:
+                if (Settings.deviceForEmulator.equals("CASHCODE CCNET")) {
+
+                }
+                return null;
         }
     }
 }

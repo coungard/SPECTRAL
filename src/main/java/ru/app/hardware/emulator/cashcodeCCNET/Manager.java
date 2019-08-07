@@ -81,6 +81,11 @@ public class Manager extends AbstractManager {
 
     @Override
     public String getCurrentCommand() {
-        return client.getCurrentCommand() == null ? "" : client.getCurrentCommand().toString();
+        return client.getCurrentCommand() == null ? "" : "Command: " + client.getCurrentCommand().toString();
+    }
+
+    @Override
+    public String getCurrentResponse() {
+        return client.getCurrentResponse();
     }
 }

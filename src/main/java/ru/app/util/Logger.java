@@ -9,6 +9,8 @@ import ru.app.main.Settings;
 import java.util.Arrays;
 import java.util.Date;
 
+import static ru.app.util.StreamType.*;
+
 public class Logger {
     private static AbstractManager manager;
 
@@ -23,21 +25,21 @@ public class Logger {
     }
 
     public static void logOutput(byte[] transmitted) {
-        log(transmitted, StreamType.OUTPUT);
+        log(transmitted, OUTPUT);
     }
 
     public static void logInput(byte[] received) {
-        log(received, StreamType.INPUT);
+        log(received, INPUT);
     }
 
     public static void logOutput(byte[] transmitted, byte[] encrypted) {
-        log(transmitted, StreamType.OUTPUT);
-        if (encrypted != null) log(encrypted, StreamType.OUTPUT_ENCRYPT);
+        log(transmitted, OUTPUT);
+        if (encrypted != null) log(encrypted, OUTPUT_ENCRYPT);
     }
 
     public static void logInput(byte[] received, byte[] decrypted) {
-        log(received, StreamType.INPUT);
-        if (decrypted != null) log(decrypted, StreamType.INPUT_DECRYPT);
+        log(received, INPUT);
+        if (decrypted != null) log(decrypted, INPUT_DECRYPT);
     }
 
     private static void log(byte[] buffer, StreamType type) {
@@ -49,23 +51,24 @@ public class Logger {
 
         switch (Settings.hardware) {
             case SMART_PAYOUT:
-                if (type == StreamType.OUTPUT || type == StreamType.OUTPUT_ENCRYPT) {
+                if (type == OUTPUT || type == OUTPUT_ENCRYPT) {
                     commandType = Client.currentCommand.getCommandType().toString();
                 } else {
                     commandType = ResponseHandler.parseResponse(type, buffer);
                 }
                 break;
             case BNE_S110M:
-                if (type == StreamType.INPUT) {
+                if (type == INPUT) {
                     commandType = ResponseHandler.parseResponse(type, buffer);
                 }
                 break;
             case EMULATOR:
-//                if (type == StreamType.INPUT) {
-//                    commandType = manager.getCurrentCommand();
-//                }
                 if (Settings.deviceForEmulator.equals("CCNET CASHER")) {
-                    commandType = manager.getCurrentCommand();
+                    if (type == INPUT)
+                        commandType = manager.getCurrentCommand();
+                    if (type == OUTPUT) {
+                        commandType = manager.getCurrentResponse();
+                    }
                 }
         }
 

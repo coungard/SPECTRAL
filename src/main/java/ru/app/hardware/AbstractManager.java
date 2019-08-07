@@ -85,4 +85,8 @@ public abstract class AbstractManager extends JLayeredPane {
     public String getCurrentCommand() {
         return "";
     }
+
+    public String getCurrentResponse() {
+        return null;
+    }
 }
