@@ -40,36 +40,39 @@ public class Logger {
         if (decrypted != null) log(decrypted, StreamType.INPUT_DECRYPT);
     }
 
-    private static void log(byte[] buffer, StreamType streamType) {
+    private static void log(byte[] buffer, StreamType type) {
         StringBuilder ascii = new StringBuilder();
         for (byte b : buffer) {
             if (b != '\r' || Settings.hardware == DeviceType.BNE_S110M) ascii.append((char) b);
         }
-        String type = "";
+        String commandType = "";
 
         switch (Settings.hardware) {
             case SMART_PAYOUT:
-                if (streamType.toString().contains("OUTPUT")) {
-                    type = Client.currentCommand.getCommandType().toString();
+                if (type == StreamType.OUTPUT || type == StreamType.OUTPUT_ENCRYPT) {
+                    commandType = Client.currentCommand.getCommandType().toString();
                 } else {
-                    type = ResponseHandler.parseResponse(streamType, buffer);
+                    commandType = ResponseHandler.parseResponse(type, buffer);
                 }
                 break;
             case BNE_S110M:
-                if (streamType == StreamType.INPUT) {
-                    type = ResponseHandler.parseResponse(streamType, buffer);
+                if (type == StreamType.INPUT) {
+                    commandType = ResponseHandler.parseResponse(type, buffer);
                 }
                 break;
             case EMULATOR:
-                if (streamType.toString().contains("INPUT")) {
-                    type = manager.getCurrentCommand();
+//                if (type == StreamType.INPUT) {
+//                    commandType = manager.getCurrentCommand();
+//                }
+                if (Settings.deviceForEmulator.equals("CCNET CASHER")) {
+                    commandType = manager.getCurrentCommand();
                 }
         }
 
-        String log = Settings.dateFormat.format(new Date()) + "\t" + streamType + (Settings.properties.get("logLevel.bytes") ? "BYTES:  " +
+        String log = Settings.dateFormat.format(new Date()) + "\t" + type + (Settings.properties.get("logLevel.bytes") ? "BYTES:  " +
                 Arrays.toString(buffer) + "\t" : "") +
                 (Settings.properties.get("logLevel.hex") ? "HEX:  " + Utils.bytes2hex((buffer)) + "\t" : "") +
-                (Settings.properties.get("logLevel.ascii") ? "ASCII:  " + ascii.toString() + "\t" : "") + type;
+                (Settings.properties.get("logLevel.ascii") ? "ASCII:  " + ascii.toString() + "\t" : "") + commandType;
 
         System.out.println(log);
         manager.textArea.setText(manager.textArea.getText() + log + "\n");

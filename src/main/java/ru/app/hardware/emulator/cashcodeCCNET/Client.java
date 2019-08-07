@@ -63,7 +63,6 @@ class Client {
         public void run() {
             while (true) {
                 if (change) {
-                    Logger.console("new state : " + status + " casher state time = " + casherStateTime);
                     change = false;
                     long started = System.currentTimeMillis();
                     do {
@@ -100,12 +99,12 @@ class Client {
     }
 
     void setCurrentDenom(byte[] currentDenom) {
-        Logger.console("current denom = " + Arrays.toString(currentDenom));
         this.currentDenom = currentDenom;
     }
 
     private synchronized void sendMessage(Command command) {
         try {
+            currentCommand = CommandType.getTypeByCode(command.getType().getCode());
             byte[] output = formPacket(command);
             if (accessLog(output, StreamType.OUTPUT))
                 Logger.logOutput(output);
@@ -113,38 +112,6 @@ class Client {
         } catch (SerialPortException ex) {
             ex.printStackTrace();
         }
-    }
-
-    synchronized private boolean accessLog(byte[] buffer, StreamType type) {
-        if (Manager.isVerboseLog()) {
-            return true;
-        }
-        if (currentCommand == CommandType.ACK) {
-            return false;
-        }
-
-        switch (type) {
-            case INPUT:
-                if (!Arrays.equals(buffer, inputBuffer)) {
-                    inputBuffer = buffer;
-                    return true;
-                }
-                break;
-            case OUTPUT:
-                if (!Arrays.equals(buffer, outputBuffer)) {
-                    outputBuffer = buffer;
-                    return true;
-                }
-                break;
-        }
-
-        long timestamp = System.currentTimeMillis();
-        long logDelay = 10000;
-        if (timestamp - activityDate > logDelay) {
-            activityDate = timestamp;
-            return true;
-        }
-        return false;
     }
 
     private synchronized void sendBytes(byte[] bytes) {
@@ -229,6 +196,7 @@ class Client {
                 rxThread.setStatus(idling ? BillStateType.Idling : BillStateType.UnitDisabled);
             default:
                 sendMessage(new Command(CommandType.ACK));
+
         }
     }
 
@@ -249,6 +217,34 @@ class Client {
         baos.write((byte) (checksum >> 8 & 0xFF));
 
         return baos.toByteArray();
+    }
+
+    synchronized private boolean accessLog(byte[] buffer, StreamType type) {
+        if (Manager.isVerboseLog()) return true;
+        if (currentCommand == CommandType.ACK) return false;
+
+        switch (type) {
+            case INPUT:
+                if (!Arrays.equals(buffer, inputBuffer)) {
+                    inputBuffer = buffer;
+                    return true;
+                }
+                break;
+            case OUTPUT:
+                if (!Arrays.equals(buffer, outputBuffer)) {
+                    outputBuffer = buffer;
+                    return true;
+                }
+                break;
+        }
+
+        long timestamp = System.currentTimeMillis();
+        long logDelay = 10000;
+        if (timestamp - activityDate > logDelay) {
+            activityDate = timestamp;
+            return true;
+        }
+        return false;
     }
 
     synchronized BillStateType getStatus() {

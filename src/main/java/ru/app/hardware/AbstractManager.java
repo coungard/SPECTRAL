@@ -77,6 +77,11 @@ public abstract class AbstractManager extends JLayeredPane {
         return label;
     }
 
+    /**
+     * Строковое выражение текущей команды от клиента, необходимо для последующего переопределения в наследниках Manager
+     *
+     * @return current command
+     */
     public String getCurrentCommand() {
         return "";
     }
