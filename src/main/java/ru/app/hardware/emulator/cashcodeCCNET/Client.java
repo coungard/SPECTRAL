@@ -1,7 +1,6 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
 import jssc.*;
-import ru.app.main.Settings;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.Command;
 import ru.app.protocol.ccnet.CommandType;
@@ -10,10 +9,13 @@ import ru.app.protocol.ccnet.emulator.response.SetStatus;
 import ru.app.protocol.ccnet.emulator.response.TakeBillTable;
 import ru.app.util.Crc16;
 import ru.app.util.Logger;
+import ru.app.util.StreamType;
+import sun.rmi.runtime.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Date;
+import java.util.Arrays;
+import java.util.Objects;
 
 
 class Client {
@@ -22,15 +24,16 @@ class Client {
     private final byte PERIPHERIAL_CODE = (byte) 0x03;
 
     private RxThread rxThread;
-    private byte[] currentDenom;
+    private volatile byte[] currentDenom;
     private volatile BillStateType status = BillStateType.UnitDisabled;
     private volatile boolean change;
-    private volatile long duration;
+    private volatile long casherStateTime;
     private CommandType currentCommand;
+    private String currentResponse = "";
 
-    void setCurrentDenom(byte[] currentDenom) {
-        this.currentDenom = currentDenom;
-    }
+    private long activityDate;
+    private byte[] inputBuffer = null;
+    private byte[] outputBuffer = null;
 
     Client(String portName) {
         serialPort = new SerialPort(portName);
@@ -63,15 +66,14 @@ class Client {
         public void run() {
             while (true) {
                 if (change) {
-                    Logger.console("new state : " + status);
                     change = false;
                     long started = System.currentTimeMillis();
                     do {
                         //todo nothing except sleep thread
-                    } while (System.currentTimeMillis() - started < duration);
+                    } while (System.currentTimeMillis() - started < casherStateTime);
 
                     if (status == BillStateType.Stacking) {
-                        Logger.console("Status stacking");
+                        Logger.console("Stacking " + Arrays.toString(currentDenom));
                         sendMessage(new Command(BillStateType.BillStacked, currentDenom));
                         status = BillStateType.BillStacked;
                         return;
@@ -84,9 +86,9 @@ class Client {
         void setStatus(BillStateType billStateType, long ms) {
             if (status == BillStateType.UnitDisabled || status == BillStateType.Idling)
                 oldStatus = status;
-            System.out.println(Settings.dateFormat.format(new Date()) + "\tset status : " + billStateType + " , ms: " + ms);
+            Logger.console("set status : " + billStateType + " , ms: " + ms);
             status = billStateType;
-            duration = ms;
+            casherStateTime = ms;
             change = true;
         }
 
@@ -99,10 +101,22 @@ class Client {
         }
     }
 
+    void setCurrentDenom(byte[] currentDenom) {
+        this.currentDenom = currentDenom;
+    }
+
     private synchronized void sendMessage(Command command) {
         try {
             byte[] output = formPacket(command);
-            Logger.logOutput(output);
+            if (!command.isEmulator()) {
+                if (CommandType.getTypeByCode(command.getType().getCode()) == null) {
+                    currentResponse = Objects.requireNonNull(BillStateType.getTypeByCode(command.getType().getCode())).toString();
+                } else
+                    currentResponse = command.toString();
+            }
+
+            if (accessLog(output, StreamType.OUTPUT))
+                Logger.logOutput(output);
             serialPort.writeBytes(output);
         } catch (SerialPortException ex) {
             ex.printStackTrace();
@@ -138,7 +152,8 @@ class Client {
                     byte[] message = serialPort.readBytes(length[0] - response.size(), 50);
                     response.write(message);
 
-                    Logger.logInput(response.toByteArray());
+                    if (accessLog(response.toByteArray(), StreamType.INPUT))
+                        Logger.logInput(response.toByteArray());
                     emulateProcess(response.toByteArray());
                 } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
                     ex.printStackTrace();
@@ -147,19 +162,22 @@ class Client {
         }
     }
 
-    private void emulateProcess(byte[] received) {
+    synchronized private void emulateProcess(byte[] received) {
         switch (currentCommand) {
             case ACK:
                 return;
             case Reset:
                 rxThread.setStatus(BillStateType.Initialize, 6000);
             case GetStatus:
+                currentResponse = "Set Status [Emulator]";
                 sendMessage(new SetStatus());
                 break;
             case GetBillTable:
+                currentResponse = "Take Bill Table [Emulator]";
                 sendMessage(new TakeBillTable());
                 break;
             case Identification:
+                currentResponse = "Identification [Emulator]";
                 sendMessage(new Identification());
                 break;
             case Stack:
@@ -167,33 +185,30 @@ class Client {
                 rxThread.setStatus(BillStateType.Stacking, 1000);
                 break;
             case Poll:
-                sendMessage(new Command(rxThread.getStatus()));
-                break;
-                /**
                 switch (rxThread.getStatus()) {
                     case Accepting:
                         sendMessage(new Command(BillStateType.Accepting));
-                        return;
+                        break;
                     case BillStacked:
                         sendMessage(new Command(BillStateType.BillStacked, currentDenom));
-                        return;
+                        break;
                     case Initialize:
                         sendMessage(new Command(BillStateType.Initialize));
-                        return;
+                        break;
                     case Idling:
                         sendMessage(new Command(BillStateType.Idling));
-                        return;
+                        break;
                     case UnitDisabled:
                         sendMessage(new Command(BillStateType.UnitDisabled));
-                        return;
+                        break;
                 }
                 break;
-                 **/
             case EnableBillTypes:
                 boolean idling = received[5] == (byte) 0xFF;
                 rxThread.setStatus(idling ? BillStateType.Idling : BillStateType.UnitDisabled);
             default:
                 sendMessage(new Command(CommandType.ACK));
+
         }
     }
 
@@ -216,11 +231,43 @@ class Client {
         return baos.toByteArray();
     }
 
-    BillStateType getStatus() {
+    synchronized private boolean accessLog(byte[] buffer, StreamType type) {
+        if (Manager.isVerboseLog()) return true;
+        if (currentCommand == CommandType.ACK) return false;
+
+        switch (type) {
+            case INPUT:
+                if (!Arrays.equals(buffer, inputBuffer)) {
+                    inputBuffer = buffer;
+                    return true;
+                }
+                break;
+            case OUTPUT:
+                if (!Arrays.equals(buffer, outputBuffer)) {
+                    outputBuffer = buffer;
+                    return true;
+                }
+                break;
+        }
+
+        long timestamp = System.currentTimeMillis();
+        long logDelay = 10000;
+        if (timestamp - activityDate > logDelay) {
+            activityDate = timestamp;
+            return true;
+        }
+        return false;
+    }
+
+    synchronized BillStateType getStatus() {
         return rxThread.getStatus();
     }
 
     CommandType getCurrentCommand() {
         return currentCommand;
+    }
+
+    String getCurrentResponse() {
+        return "Response: " + currentResponse;
     }
 }

@@ -16,7 +16,7 @@ public class Manager extends AbstractManager {
     private static final Color BACKGROUND_COLOR = new Color(205, 186, 116);
     private JPanel paymentPanel;
     private Client client;
-    private JCheckBox verboseLog;
+    private static JCheckBox verboseLog;
 
     public Manager(String port) {
         setSize(1020, 600);
@@ -40,7 +40,6 @@ public class Manager extends AbstractManager {
         verboseLog = new JCheckBox("verbose Log");
         verboseLog.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
         verboseLog.setBounds(getWidth() - 160, 20, 150, 50);
-        verboseLog.setSelected(true);
         add(verboseLog);
 
         final Map<String, byte[]> table = new BillTable().getTable();
@@ -76,12 +75,17 @@ public class Manager extends AbstractManager {
         paymentPanel.add(bill);
     }
 
-    public boolean isVerboseLog() {
-        return verboseLog.isSelected();
+    static boolean isVerboseLog() {
+        return (verboseLog == null || verboseLog.isSelected());
     }
 
     @Override
     public String getCurrentCommand() {
-        return client.getCurrentCommand() == null ? "" : client.getCurrentCommand().toString();
+        return client.getCurrentCommand() == null ? "" : "Command: " + client.getCurrentCommand().toString();
+    }
+
+    @Override
+    public String getCurrentResponse() {
+        return client.getCurrentResponse();
     }
 }
