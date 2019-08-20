@@ -1,9 +1,9 @@
 package ru.app.listeners;
 
 import jssc.SerialPortException;
+import ru.app.bus.DeviceType;
 import ru.app.main.Launcher;
 import ru.app.main.Settings;
-import ru.app.bus.DeviceType;
 
 import javax.swing.event.MouseInputAdapter;
 import java.awt.event.MouseEvent;
@@ -39,6 +39,6 @@ public class PortListener extends MouseInputAdapter {
         } catch (SerialPortException ex) {
             ex.printStackTrace();
         }
-        Launcher.portsPanel.setVisible(false);
+        Launcher.portsPage.setVisible(false);
     }
 }

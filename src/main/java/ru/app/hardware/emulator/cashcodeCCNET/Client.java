@@ -10,7 +10,6 @@ import ru.app.protocol.ccnet.emulator.response.TakeBillTable;
 import ru.app.util.Crc16;
 import ru.app.util.Logger;
 import ru.app.util.StreamType;
-import sun.rmi.runtime.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

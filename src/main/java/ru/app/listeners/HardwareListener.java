@@ -19,8 +19,8 @@ public class HardwareListener extends MouseInputAdapter {
         Settings.hardware = hardware;
         Launcher.mainPanel.setVisible(false);
         if ("EMULATOR".equals(Settings.hardware.toString()))
-            Launcher.devicePanel.setVisible(true);
+            Launcher.devicesPage.setVisible(true);
         else
-            Launcher.portsPanel.setVisible(true);
+            Launcher.portsPage.setVisible(true);
     }
 }

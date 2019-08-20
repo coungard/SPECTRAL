@@ -1,10 +1,11 @@
 package ru.app.main;
 
-import jssc.SerialPortList;
+import ru.app.bus.DeviceType;
 import ru.app.hardware.AbstractManager;
 import ru.app.listeners.HardwareListener;
-import ru.app.listeners.PortListener;
-import ru.app.bus.DeviceType;
+import ru.app.main.pages.DevicesPage;
+import ru.app.main.pages.OptionPage;
+import ru.app.main.pages.PortsPage;
 import ru.app.util.Logger;
 
 import javax.swing.*;
@@ -16,9 +17,10 @@ import java.awt.event.MouseEvent;
 public class Launcher extends Thread {
     private static JFrame window = new JFrame("Spectral" + " (v." + Settings.VERSION + " )");
     public static JPanel mainPanel = new JPanel();
-    public static JPanel portsPanel = new JPanel();
-    public static JPanel devicePanel = new JPanel();
-    private final JPanel settingsPanel;
+    public static PortsPage portsPage = new PortsPage();
+    public static DevicesPage devicesPage = new DevicesPage();
+    public static OptionPage optionPage = new OptionPage();
+    private final JPanel settingsPage = new SettingsPage();
     public static AbstractManager currentManager;
     private static final Color BACKGROUND_COLOR = new Color(67, 159, 212);
     private static final Font FONT = new Font(Font.SANS_SERIF, Font.BOLD, 23);
@@ -39,14 +41,15 @@ public class Launcher extends Thread {
     }
 
     private Launcher() {
-        window.setSize(1020, 600);
+        window.setSize(Settings.dimension);
 
         addPanel(mainPanel);
-        addPanel(portsPanel);
-        addPanel(devicePanel);
-        settingsPanel = new SettingsPage();
-        window.add(settingsPanel);
-        init();
+        window.add(portsPage);
+        window.add(devicesPage);
+        window.add(optionPage);
+        window.add(settingsPage);
+
+        createMainPage();
 
         window.setVisible(true);
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -59,35 +62,6 @@ public class Launcher extends Thread {
         panel.setBackground(BACKGROUND_COLOR);
         panel.setVisible(false);
         window.add(panel);
-    }
-
-    private void init() {
-        createMainPage();
-        createDevicePage();
-        createPortsPage();
-    }
-
-    private void createDevicePage() {
-        JLabel label = formLabel("Choose device for emulatorCommands", 0);
-        devicePanel.setVisible(false);
-        devicePanel.add(label);
-
-        final String[] devices = new String[]{"CCNET CASHER", "CCTALK COIN"};
-        for (int i = 0; i < devices.length; i++) {
-            JButton button = new JButton(devices[i]);
-            button.setFont(FONT);
-            button.setBounds(window.getWidth() / 2 - 160, 80 + i * 80, 320, 60);
-            final int emul = i;
-            button.addMouseListener(new MouseInputAdapter() {
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    Settings.deviceForEmulator = devices[emul];
-                    devicePanel.setVisible(false);
-                    portsPanel.setVisible(true);
-                }
-            });
-            devicePanel.add(button);
-        }
     }
 
     private void createMainPage() {
@@ -113,24 +87,10 @@ public class Launcher extends Thread {
             @Override
             public void mousePressed(MouseEvent e) {
                 mainPanel.setVisible(false);
-                settingsPanel.setVisible(true);
+                settingsPage.setVisible(true);
             }
         });
         mainPanel.add(settings);
-    }
-
-    private void createPortsPage() {
-        JLabel label = formLabel("Choose port", 0);
-        portsPanel.add(label);
-
-        String[] ports = SerialPortList.getPortNames();
-        for (int i = 0; i < ports.length; i++) {
-            JButton button = new JButton(ports[i]);
-            button.setFont(FONT);
-            button.setBounds(window.getWidth() / 2 - 150, 60 + i * 60, 300, 40);
-            button.addMouseListener(new PortListener(ports[i]));
-            portsPanel.add(button);
-        }
     }
 
     private JLabel formLabel(String name, int y) {

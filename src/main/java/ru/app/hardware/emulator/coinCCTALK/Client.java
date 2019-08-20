@@ -168,8 +168,10 @@ class Client {
     }
 
     void incrementCounter(int iter) {
-        currentCounter = (byte) (currentCounter + iter);
-        if (currentCounter == 0) currentCounter++;
+        for (int i = 0; i < iter; i++) {
+            currentCounter++;
+            if (currentCounter == 0) currentCounter++;
+        }
     }
 
     byte[] getCurrentBuffer() {
