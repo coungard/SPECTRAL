@@ -1,5 +1,6 @@
 package ru.app.main.pages;
 
+import jssc.SerialPortException;
 import ru.app.main.Settings;
 import ru.app.util.ConnectionResolver;
 
@@ -60,7 +61,7 @@ public class OptionPage extends JPanel {
                             else
                                 descr.setText("PORT NOT FOUND!");
                             Thread.sleep(3000);
-                        } catch (InterruptedException ex) {
+                        } catch (InterruptedException | SerialPortException ex) {
                             ex.printStackTrace();
                         }
                         setVisible(false);
@@ -68,7 +69,14 @@ public class OptionPage extends JPanel {
                         portsPage.setVisible(true);
                     }
                 }).start();
+            }
+        });
 
+        noButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+                portsPage.setVisible(true);
             }
         });
     }

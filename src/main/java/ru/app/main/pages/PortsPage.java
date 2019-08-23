@@ -45,7 +45,6 @@ public class PortsPage extends JPanel {
     }
 
     void redraw() {
-        System.out.println("redraw start");
         casher.setVisible(false);
         for (JButton button : buttonList) {
             if (button.getText().equals(Settings.realPortForEmulator)) {
@@ -56,8 +55,6 @@ public class PortsPage extends JPanel {
                 button.setEnabled(true);
             }
         }
-        System.out.println("redraw over");
-        System.out.println("background portsPage + " + this.getBackground());
     }
 
     private JLabel formLabel(String name, int y) {

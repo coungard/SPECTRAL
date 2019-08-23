@@ -2,13 +2,13 @@ package ru.app.hardware.emulator.cashcodeCCNET;
 
 import ru.app.hardware.AbstractManager;
 import ru.app.protocol.ccnet.BillStateType;
-import ru.app.protocol.ccnet.CommandType;
 import ru.app.protocol.ccnet.emulator.BillTable;
 import ru.app.util.Logger;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.util.Map;
 
@@ -17,12 +17,14 @@ public class Manager extends AbstractManager {
     private JPanel paymentPanel;
     private Client client;
     private static JCheckBox verboseLog;
+    private boolean cassetteOut = false;
 
     public Manager(String port) {
         setSize(1020, 600);
         setOpaque(true);
         setBackground(BACKGROUND_COLOR);
         client = new Client(port);
+
         struct();
     }
 
@@ -30,6 +32,23 @@ public class Manager extends AbstractManager {
     public void struct() {
         JLabel mainLabel = formLabel("EMULATOR CASHCODE CCNET", 0);
         add(mainLabel);
+
+        final JButton encashButton = new JButton("Encashment");
+        encashButton.setBounds(550, 40, 180, 50);
+        add(encashButton);
+        encashButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cassetteOut = !cassetteOut;
+                if (cassetteOut) {
+                    client.setStatus(BillStateType.DropCassetteOutOfPosition);
+                    encashButton.setText("Connect Cassette");
+                } else {
+                    client.setStatus(BillStateType.UnitDisabled);
+                    encashButton.setText("Encashment");
+                }
+            }
+        });
 
         paymentPanel = new JPanel();
         paymentPanel.setBorder(BorderFactory.createTitledBorder("NOTE INSERTION COMMANDS"));

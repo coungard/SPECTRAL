@@ -1,6 +1,7 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
 import jssc.*;
+import ru.app.main.Settings;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.Command;
 import ru.app.protocol.ccnet.CommandType;
@@ -34,6 +35,8 @@ class Client {
     private byte[] inputBuffer = null;
     private byte[] outputBuffer = null;
 
+    private CashCodeClient cashCodeClient;
+
     Client(String portName) {
         serialPort = new SerialPort(portName);
         try {
@@ -48,14 +51,32 @@ class Client {
 
             rxThread = new RxThread();
             rxThread.start();
+
+
         } catch (SerialPortException ex) {
             ex.printStackTrace();
         }
+
+        if (Settings.realPortForEmulator != null)
+            cashCodeClient = new CashCodeClient(Settings.realPortForEmulator, this);
     }
 
     void escrowNominal() {
-        rxThread.setStatus(BillStateType.Accepting, 1000);
-        rxThread.setStatus(BillStateType.BillStacked, 1000);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                CashCodeClient old = cashCodeClient;
+                cashCodeClient = null;
+                rxThread.setStatus(BillStateType.Accepting, 1000);
+                rxThread.setStatus(BillStateType.BillStacked, 1000);
+                try {
+                    Thread.sleep(4000);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+                cashCodeClient = old;
+            }
+        }).start();
     }
 
     private class RxThread extends Thread {
@@ -122,7 +143,7 @@ class Client {
         }
     }
 
-    private synchronized void sendBytes(byte[] bytes) {
+    synchronized void sendBytes(byte[] bytes) {
         try {
             Logger.logOutput(bytes);
             serialPort.writeBytes(bytes);
@@ -138,7 +159,7 @@ class Client {
                 try {
                     ByteArrayOutputStream response = new ByteArrayOutputStream();
                     byte[] sync = serialPort.readBytes(1);
-                    if (sync[0] != SYNC) return; //WRONG SYNC!!logOJChecJCheckBoxkBoxutput
+                    if (sync[0] != SYNC) return; //WRONG SYNC!!
                     response.write(sync);
                     byte[] addr = serialPort.readBytes(1);
                     if (addr[0] != PERIPHERIAL_CODE) return; // WRONG ADDRESS!!
@@ -153,7 +174,10 @@ class Client {
 
                     if (accessLog(response.toByteArray(), StreamType.INPUT))
                         Logger.logInput(response.toByteArray());
-                    emulateProcess(response.toByteArray());
+                    if (cashCodeClient != null)
+                        cashCodeClient.sendBytes(response.toByteArray());
+                    else
+                        emulateProcess(response.toByteArray());
                 } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
                     ex.printStackTrace();
                 }
@@ -260,6 +284,10 @@ class Client {
 
     synchronized BillStateType getStatus() {
         return rxThread.getStatus();
+    }
+
+    synchronized void setStatus(BillStateType status) {
+        rxThread.setStatus(status);
     }
 
     CommandType getCurrentCommand() {

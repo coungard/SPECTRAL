@@ -1,7 +1,6 @@
 package ru.app.util;
 
 import jssc.*;
-import ru.app.protocol.ccnet.BillStateType;
 
 import java.util.Arrays;
 
@@ -14,7 +13,7 @@ public class ConnectionResolver {
         serialPorts = getPorts();
     }
 
-    public String findCCNetPort() {
+    public String findCCNetPort() throws SerialPortException {
         String portName = null;
         for (String port : serialPorts) {
             final SerialPort serialPort = new SerialPort(port);
@@ -53,6 +52,9 @@ public class ConnectionResolver {
                 }
             } catch (SerialPortException | InterruptedException ex) {
                 ex.printStackTrace();
+            } finally {
+                if (serialPort.isOpened())
+                    serialPort.closePort();
             }
         }
         return portName;

@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Settings {
-    static final String VERSION = "1.35";
+    static final String VERSION = "1.36";
     public static final Dimension dimension = new Dimension(1020, 600);
     public static final String COUNTRY = "ITL";
     public static DeviceType hardware;

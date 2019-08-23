@@ -6,6 +6,7 @@ import ru.app.listeners.HardwareListener;
 import ru.app.main.pages.DevicesPage;
 import ru.app.main.pages.OptionPage;
 import ru.app.main.pages.PortsPage;
+import ru.app.main.pages.SettingsPage;
 import ru.app.util.Logger;
 
 import javax.swing.*;

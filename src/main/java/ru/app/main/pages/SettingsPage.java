@@ -1,4 +1,6 @@
-package ru.app.main;
+package ru.app.main.pages;
+
+import ru.app.main.Settings;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -7,13 +9,13 @@ import java.awt.event.MouseEvent;
 
 import static ru.app.main.Launcher.mainPanel;
 
-class SettingsPage extends JPanel {
+public class SettingsPage extends JPanel {
     private static final Font FONT = new Font(Font.SANS_SERIF, Font.BOLD, 23);
     private JCheckBox hexLog;
     private JCheckBox bytesLog;
     private JCheckBox asciiLog;
 
-    SettingsPage() {
+    public SettingsPage() {
         setSize(1020, 600);
         setLayout(null);
         setVisible(false);
