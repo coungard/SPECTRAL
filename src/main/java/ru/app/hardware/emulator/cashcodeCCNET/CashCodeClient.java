@@ -44,24 +44,9 @@ class CashCodeClient {
         public void serialEvent(SerialPortEvent event) {
             if (event.getEventType() == SerialPortEvent.RXCHAR && event.getEventValue() > 0) {
                 try {
-                    ByteArrayOutputStream response = new ByteArrayOutputStream();
-                    byte[] sync = serialPort.readBytes(1);
-                    if (sync[0] != SYNC) return; //WRONG SYNC!!logOJChecJCheckBoxkBoxutput
-                    response.write(sync);
-                    byte[] addr = serialPort.readBytes(1);
-                    if (addr[0] != PERIPHERIAL_CODE) return; // WRONG ADDRESS!!
-                    response.write(addr);
-                    byte[] length = serialPort.readBytes(1);
-                    response.write(length);
-                    byte[] command = serialPort.readBytes(1);
-                    response.write(command);
-                    byte[] message = serialPort.readBytes(length[0] - response.size(), 50);
-                    response.write(message);
-
-//                    Logger.logInput(response.toByteArray());
-                    client.sendBytes(response.toByteArray());
-
-                } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
+                    byte[] response = serialPort.readBytes();
+                    client.sendBytes(response);
+                } catch (SerialPortException ex) {
                     ex.printStackTrace();
                 }
             }

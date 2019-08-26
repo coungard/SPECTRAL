@@ -78,6 +78,7 @@ public class Logger {
                 (Settings.properties.get("logLevel.ascii") ? "ASCII:  " + ascii.toString() + "\t" : "") + commandType;
 
         System.out.println(log);
-        manager.textArea.setText(manager.textArea.getText() + log + "\n");
+        if (manager != null)
+            manager.textArea.setText(manager.textArea.getText() + log + "\n");
     }
 }

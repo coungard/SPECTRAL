@@ -224,6 +224,9 @@ class Client {
                     case UnitDisabled:
                         sendMessage(new Command(BillStateType.UnitDisabled));
                         break;
+                    case DropCassetteOutOfPosition:
+                        sendMessage(new Command(BillStateType.DropCassetteOutOfPosition));
+                        break;
                 }
                 break;
             case EnableBillTypes:
@@ -280,6 +283,10 @@ class Client {
             return true;
         }
         return false;
+    }
+
+    boolean readDeviceConnected() {
+        return cashCodeClient != null;
     }
 
     synchronized BillStateType getStatus() {

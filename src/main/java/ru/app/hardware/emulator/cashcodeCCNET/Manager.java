@@ -81,7 +81,7 @@ public class Manager extends AbstractManager {
     }
 
     private void sendEscrowPosition() {
-        if (client.getStatus() == BillStateType.Idling) {
+        if (client.getStatus() == BillStateType.Idling || client.readDeviceConnected()) {
             client.escrowNominal();
         } else {
             Logger.console("can not escrow, casher not idling now!");
