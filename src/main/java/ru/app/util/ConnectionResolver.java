@@ -44,8 +44,8 @@ public class ConnectionResolver {
                     if (response == null)
                         Thread.sleep(10);
                 } while (System.currentTimeMillis() - started < 1600 && response == null);
-                if (response != null && response.length > 5) {
-                    System.out.println("Portname = " + port + " Response = " + Arrays.toString(response));
+                System.out.println("Portname = " + port + " Response = " + Arrays.toString(response));
+                if (response != null && response.length > 5 && response.length < 10) {
 
                     portName = port;
                     break;
@@ -53,8 +53,9 @@ public class ConnectionResolver {
             } catch (SerialPortException | InterruptedException ex) {
                 ex.printStackTrace();
             } finally {
-                if (serialPort.isOpened())
+                if (serialPort.isOpened()) {
                     serialPort.closePort();
+                }
             }
         }
         return portName;

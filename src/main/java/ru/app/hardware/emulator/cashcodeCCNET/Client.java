@@ -36,6 +36,7 @@ class Client {
     private byte[] outputBuffer = null;
 
     private CashCodeClient cashCodeClient;
+    private CashCodeClient tempClient;
 
     Client(String portName) {
         serialPort = new SerialPort(portName);
@@ -65,16 +66,8 @@ class Client {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                CashCodeClient old = cashCodeClient;
-                cashCodeClient = null;
                 rxThread.setStatus(BillStateType.Accepting, 1000);
                 rxThread.setStatus(BillStateType.BillStacked, 1000);
-                try {
-                    Thread.sleep(4000);
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace();
-                }
-                cashCodeClient = old;
             }
         }).start();
     }
@@ -230,8 +223,8 @@ class Client {
                 }
                 break;
             case EnableBillTypes:
-                boolean idling = received[5] == (byte) 0xFF;
-                rxThread.setStatus(idling ? BillStateType.Idling : BillStateType.UnitDisabled);
+                boolean disabled = received[5] == (byte) 0x00;
+                rxThread.setStatus(disabled ? BillStateType.UnitDisabled : BillStateType.Idling);
             default:
                 sendMessage(new Command(CommandType.ACK));
 
@@ -303,5 +296,16 @@ class Client {
 
     String getCurrentResponse() {
         return "Response: " + currentResponse;
+    }
+
+    void activateCashcode(boolean enable) {
+        System.out.println("activate cashcode = " + enable);
+        if (enable && cashCodeClient == null) {
+            cashCodeClient = tempClient;
+        }
+        if (!enable) {
+            tempClient = cashCodeClient;
+            cashCodeClient = null;
+        }
     }
 }

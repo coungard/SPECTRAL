@@ -10,6 +10,8 @@ import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class Manager extends AbstractManager {
@@ -18,6 +20,11 @@ public class Manager extends AbstractManager {
     private Client client;
     private static JCheckBox verboseLog;
     private boolean cassetteOut = false;
+    private JLabel emul;
+    private JLabel casher;
+    private JLabel modeLabel = new JLabel("change mode -->>");
+    private List<JButton> billButtons = new ArrayList<>();
+    private JButton encashButton;
 
     public Manager(String port) {
         setSize(1020, 600);
@@ -33,17 +40,38 @@ public class Manager extends AbstractManager {
         JLabel mainLabel = formLabel("EMULATOR CASHCODE CCNET", 0);
         add(mainLabel);
 
-        final JButton encashButton = new JButton("Encashment");
+        emul = new JLabel();
+        emul.setIcon(new ImageIcon("src/main/resources/emulator.gif"));
+        emul.setSize(emul.getIcon().getIconWidth(), emul.getIcon().getIconHeight());
+        emul.setLocation(865, 70);
+        emul.setVisible(false);
+        add(emul);
+
+        casher = new JLabel();
+        casher.setIcon(new ImageIcon("src/main/resources/casher.gif"));
+        casher.setSize(emul.getIcon().getIconWidth(), emul.getIcon().getIconHeight());
+        casher.setLocation(885, 70);
+        casher.setVisible(false);
+        add(casher);
+
+        modeLabel.setBounds(700, 80, 200, 100);
+        modeLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        add(modeLabel);
+
+        encashButton = new JButton("Encashment");
         encashButton.setBounds(550, 40, 180, 50);
+        encashButton.setBackground(new Color(233, 217, 182));
         add(encashButton);
         encashButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cassetteOut = !cassetteOut;
                 if (cassetteOut) {
+                    encashButton.setBackground(new Color(107, 233, 159));
                     client.setStatus(BillStateType.DropCassetteOutOfPosition);
                     encashButton.setText("Connect Cassette");
                 } else {
+                    encashButton.setBackground(new Color(233, 217, 182));
                     client.setStatus(BillStateType.UnitDisabled);
                     encashButton.setText("Encashment");
                 }
@@ -58,7 +86,7 @@ public class Manager extends AbstractManager {
 
         verboseLog = new JCheckBox("verbose Log");
         verboseLog.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
-        verboseLog.setBounds(getWidth() - 160, 20, 150, 50);
+        verboseLog.setBounds(getWidth() - 160, 10, 150, 50);
         add(verboseLog);
 
         final Map<String, byte[]> table = new BillTable().getTable();
@@ -78,6 +106,36 @@ public class Manager extends AbstractManager {
                 });
             }
         }
+
+        if (client.readDeviceConnected()) {
+            activateEmulator(false);
+            emul.addMouseListener(new MouseInputAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    activateEmulator(false);
+                }
+            });
+            casher.addMouseListener(new MouseInputAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    activateEmulator(true);
+                }
+            });
+        }
+        else {
+            modeLabel.setVisible(false);
+            emul.setVisible(true);
+        }
+    }
+
+    private void activateEmulator(boolean activate) {
+        emul.setVisible(activate);
+        casher.setVisible(!activate);
+        encashButton.setEnabled(activate);
+
+        for (JButton btn : billButtons)
+            btn.setEnabled(activate);
+        client.activateCashcode(!activate);
     }
 
     private void sendEscrowPosition() {
@@ -92,6 +150,7 @@ public class Manager extends AbstractManager {
         JButton bill = new JButton(billName);
         bill.setPreferredSize(new Dimension(100, 30));
         paymentPanel.add(bill);
+        billButtons.add(bill);
     }
 
     static boolean isVerboseLog() {

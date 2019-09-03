@@ -63,6 +63,8 @@ public class Logger {
                 }
                 break;
             case EMULATOR:
+                if (manager == null)
+                    return;
                 if (Settings.deviceForEmulator.equals("CCNET CASHER")) {
                     if (type == INPUT)
                         commandType = manager.getCurrentCommand();

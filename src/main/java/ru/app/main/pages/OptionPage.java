@@ -12,7 +12,7 @@ import static ru.app.main.Launcher.portsPage;
 
 public class OptionPage extends JPanel {
     private JLabel descr = new JLabel("DESCRIPTION");
-    private JButton okayButton = new JButton("OK");
+    private JButton okayButton = new JButton("YES");
     private JButton noButton = new JButton("NO");
     private volatile JLabel loading = new JLabel();
 
