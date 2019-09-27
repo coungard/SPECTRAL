@@ -14,7 +14,7 @@ public class Requester {
     public void check() {
         BufferedReader reader;
         String line;
-        StringBuffer responseContent = new StringBuffer();
+        StringBuilder responseContent = new StringBuilder();
         try {
             URL url = new URL("http://192.168.15.121:8080/ussdWww/");
             connection = (HttpURLConnection) url.openConnection(); // открываем соединение по этому адресу

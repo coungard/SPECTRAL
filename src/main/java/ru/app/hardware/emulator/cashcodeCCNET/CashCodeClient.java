@@ -1,10 +1,10 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
-import jssc.*;
+import jssc.SerialPort;
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
 import ru.app.util.Logger;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 class CashCodeClient {
     private SerialPort serialPort;

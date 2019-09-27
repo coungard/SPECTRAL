@@ -23,11 +23,7 @@ class Client {
     private final byte SYNC = (byte) 0x02;
     private final byte PERIPHERIAL_CODE = (byte) 0x03;
 
-    private RxThread rxThread;
     private volatile byte[] currentDenom;
-    private volatile BillStateType status = BillStateType.UnitDisabled;
-    private volatile boolean change;
-    private volatile long casherStateTime;
     private CommandType currentCommand;
     private String currentResponse = "";
 
@@ -37,6 +33,7 @@ class Client {
 
     private CashCodeClient cashCodeClient;
     private CashCodeClient tempClient;
+    private volatile BillStateType status;
 
     Client(String portName) {
         serialPort = new SerialPort(portName);
@@ -50,10 +47,6 @@ class Client {
             serialPort.setEventsMask(SerialPort.MASK_RXCHAR);
             serialPort.addEventListener(new PortReader());
 
-            rxThread = new RxThread();
-            rxThread.start();
-
-
         } catch (SerialPortException ex) {
             ex.printStackTrace();
         }
@@ -66,52 +59,9 @@ class Client {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                rxThread.setStatus(BillStateType.Accepting, 1000);
-                rxThread.setStatus(BillStateType.BillStacked, 1000);
+                changeStatus(1000, BillStateType.Accepting, BillStateType.BillStacked);
             }
         }).start();
-    }
-
-    private class RxThread extends Thread {
-        BillStateType oldStatus = null;
-
-        @Override
-        public void run() {
-            while (true) {
-                if (change) {
-                    change = false;
-                    long started = System.currentTimeMillis();
-                    do {
-                        //todo nothing except sleep thread
-                    } while (System.currentTimeMillis() - started < casherStateTime);
-
-                    if (status == BillStateType.Stacking) {
-                        Logger.console("Stacking " + Arrays.toString(currentDenom));
-                        sendMessage(new Command(BillStateType.BillStacked, currentDenom));
-                        status = BillStateType.BillStacked;
-                        return;
-                    }
-                    status = oldStatus;
-                }
-            }
-        }
-
-        void setStatus(BillStateType billStateType, long ms) {
-            if (status == BillStateType.UnitDisabled || status == BillStateType.Idling)
-                oldStatus = status;
-            Logger.console("set status : " + billStateType + " , ms: " + ms);
-            status = billStateType;
-            casherStateTime = ms;
-            change = true;
-        }
-
-        void setStatus(BillStateType billStateType) {
-            status = billStateType;
-        }
-
-        BillStateType getStatus() {
-            return status;
-        }
     }
 
     void setCurrentDenom(byte[] currentDenom) {
@@ -183,7 +133,7 @@ class Client {
             case ACK:
                 return;
             case Reset:
-                rxThread.setStatus(BillStateType.Initialize, 6000);
+                changeStatus(6000, BillStateType.Initialize);
             case GetStatus:
                 currentResponse = "Set Status [Emulator]";
                 sendMessage(new SetStatus());
@@ -198,10 +148,10 @@ class Client {
                 break;
             case Stack:
                 sendMessage(new Command(CommandType.ACK));
-                rxThread.setStatus(BillStateType.Stacking, 1000);
+                changeStatus(1000, BillStateType.Stacking);
                 break;
             case Poll:
-                switch (rxThread.getStatus()) {
+                switch (getStatus()) {
                     case Accepting:
                         sendMessage(new Command(BillStateType.Accepting));
                         break;
@@ -224,7 +174,7 @@ class Client {
                 break;
             case EnableBillTypes:
                 boolean disabled = received[5] == (byte) 0x00;
-                rxThread.setStatus(disabled ? BillStateType.UnitDisabled : BillStateType.Idling);
+                setStatus(disabled ? BillStateType.UnitDisabled : BillStateType.Idling);
             default:
                 sendMessage(new Command(CommandType.ACK));
 
@@ -282,12 +232,30 @@ class Client {
         return cashCodeClient != null;
     }
 
+    synchronized private void changeStatus(final long ms, final BillStateType... types) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                BillStateType oldStatus = getStatus();
+                try {
+                    for (BillStateType type : types) {
+                        setStatus(type);
+                        Thread.sleep(ms);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                setStatus(oldStatus);
+            }
+        }).start();
+    }
+
     synchronized BillStateType getStatus() {
-        return rxThread.getStatus();
+        return status;
     }
 
     synchronized void setStatus(BillStateType status) {
-        rxThread.setStatus(status);
+        this.status = status;
     }
 
     CommandType getCurrentCommand() {
@@ -299,7 +267,7 @@ class Client {
     }
 
     void activateCashcode(boolean enable) {
-        System.out.println("activate cashcode = " + enable);
+        Logger.console("activate cashcode = " + enable);
         if (enable && cashCodeClient == null) {
             cashCodeClient = tempClient;
         }
