@@ -26,7 +26,7 @@ public class Launcher extends Thread {
     private static final Color BACKGROUND_COLOR = new Color(67, 159, 212);
     private static final Font FONT = new Font(Font.SANS_SERIF, Font.BOLD, 23);
 
-    public static void main(String args) throws UnsupportedLookAndFeelException {
+    public static void main(String[] args) throws UnsupportedLookAndFeelException {
         UIManager.setLookAndFeel(new NimbusLookAndFeel());
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {

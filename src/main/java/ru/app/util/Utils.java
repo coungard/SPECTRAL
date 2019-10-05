@@ -3,6 +3,7 @@ package ru.app.util;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 
@@ -165,11 +166,19 @@ public class Utils {
         return res;
     }
 
-    public static void pause(long ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+    public static List<Integer> calculatePayment(int sum) {
+        int[] nominals = new int[]{10, 50, 100, 500, 1000, 5000};
+        List<Integer> result = new ArrayList<>();
+        int rest = sum;
+        while (rest > 0) {
+            for (int i = nominals.length - 1; i >= 0; i--) {
+                if (rest >= nominals[i]) {
+                    result.add(nominals[i]);
+                    rest = rest - nominals[i];
+                    i++;
+                }
+            }
         }
+        return result;
     }
 }

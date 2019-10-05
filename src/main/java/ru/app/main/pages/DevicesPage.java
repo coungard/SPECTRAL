@@ -33,7 +33,7 @@ public class DevicesPage extends JPanel {
                     Settings.deviceForEmulator = devices[emul];
                     if (emul == 0) {
                         setVisible(false);
-                        optionPage.setDescription("Connect the real cashcode machine?");
+                        optionPage.setDescription("Connect the real cashcode machine (Bridge mode) ?");
                         optionPage.setVisible(true);
                     } else {
                         setVisible(false);

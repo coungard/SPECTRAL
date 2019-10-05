@@ -1,49 +1,54 @@
 package ru.app.network;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class Requester {
 
-    private HttpURLConnection connection;
+    private String url;
 
-    public Requester() {
+    public Requester(String url) {
+        this.url = url;
     }
 
-    public void check() {
-        BufferedReader reader;
-        String line;
-        StringBuilder responseContent = new StringBuilder();
-        try {
-            URL url = new URL("http://192.168.15.121:8080/ussdWww/");
-            connection = (HttpURLConnection) url.openConnection(); // открываем соединение по этому адресу
+    public static void main(String[] args) throws IOException {
+        Requester requester = new Requester("http://192.168.15.121:8080/ussdWww/");
+        System.out.println(requester.check());
+    }
 
-            // Request setup
-            connection.setRequestMethod("POST");
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
+    public String check() throws IOException {
+        HttpURLConnection conn = HttpURLConnectionFactory.getHttpConnection(url);
+        conn.setUseCaches(false);
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
 
-            int status = connection.getResponseCode();
+        conn.addRequestProperty("Content-Type", "text/plain; charset=WINDOWS-1251");
 
-            if (status > 299) {
-                reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                while ((line = reader.readLine()) != null) {
-                    responseContent.append(line);
-                }
-                reader.close();
-            } else {
-                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                while ((line = reader.readLine()) != null) {
-                    responseContent.append(line);
-                }
-                reader.close();
-            }
-            System.out.println(responseContent.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            connection.disconnect();
+        String request = "<request>\n" +
+                "  <imei>357829072172464</imei>\n" +
+                "  <login>samsung</login>\n" +
+                "  <sign>21da91fd6534c5c21114d820763dbf10</sign>\n" +
+                "  <type>command</type>\n" +
+                "</request>";
+        byte[] data = request.getBytes("CP1251");
+        OutputStream os = conn.getOutputStream();
+        os.write(data, 0, data.length);
+        os.close();
+
+        return new String(read(conn.getInputStream()), StandardCharsets.UTF_8);
+    }
+
+    private byte[] read(InputStream is) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int nRead;
+        byte[] data = new byte[1024];
+        while ((nRead = is.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
         }
+        return buffer.toByteArray();
     }
 }

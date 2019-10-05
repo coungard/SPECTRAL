@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Settings {
-    static final String VERSION = "1.40";
+    static final String VERSION = "1.41";
     public static final Dimension dimension = new Dimension(1020, 600);
     public static final String COUNTRY = "ITL";
     public static DeviceType hardware;
@@ -18,6 +18,7 @@ public class Settings {
     public static Map<String, Boolean> properties = new HashMap<>();
     public static final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:S");
 
+    // свойства по умолчанию
     static {
         properties.put("logLevel.hex", true);
         properties.put("logLevel.bytes", false);

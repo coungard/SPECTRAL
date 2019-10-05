@@ -33,7 +33,7 @@ class Client {
 
     private CashCodeClient cashCodeClient;
     private CashCodeClient tempClient;
-    private volatile BillStateType status;
+    private volatile BillStateType status = BillStateType.UnitDisabled;
 
     Client(String portName) {
         serialPort = new SerialPort(portName);
@@ -56,12 +56,7 @@ class Client {
     }
 
     void escrowNominal() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                changeStatus(1000, BillStateType.Accepting, BillStateType.BillStacked);
-            }
-        }).start();
+        changeStatus(1000, BillStateType.Accepting, BillStateType.BillStacked);
     }
 
     void setCurrentDenom(byte[] currentDenom) {
@@ -177,7 +172,6 @@ class Client {
                 setStatus(disabled ? BillStateType.UnitDisabled : BillStateType.Idling);
             default:
                 sendMessage(new Command(CommandType.ACK));
-
         }
     }
 
@@ -245,17 +239,19 @@ class Client {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                Logger.console("set status old = " + oldStatus);
                 setStatus(oldStatus);
             }
         }).start();
     }
 
-    synchronized BillStateType getStatus() {
-        return status;
+    synchronized void setStatus(BillStateType status) {
+        Logger.console("set status new = " + status);
+        this.status = status;
     }
 
-    synchronized void setStatus(BillStateType status) {
-        this.status = status;
+    synchronized BillStateType getStatus() {
+        return status;
     }
 
     CommandType getCurrentCommand() {

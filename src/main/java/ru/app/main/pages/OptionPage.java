@@ -18,12 +18,12 @@ public class OptionPage extends JPanel {
 
     public OptionPage() {
         setLayout(null);
-        setBackground(Color.BLACK);
+        setBackground(new Color(99, 165, 225));
         setSize(Settings.dimension);
         setVisible(false);
 
         descr.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 23));
-        descr.setForeground(Color.WHITE);
+        descr.setForeground(Color.BLACK);
         descr.setHorizontalAlignment(SwingConstants.CENTER);
         descr.setBounds(0, 0, getWidth(), 100);
         add(descr);
@@ -31,17 +31,25 @@ public class OptionPage extends JPanel {
         add(okayButton);
         add(noButton);
 
-        okayButton.setBounds(200, 400, 200, 70);
+        okayButton.setBounds(200, 150, 200, 70);
         okayButton.setFont(descr.getFont());
-        noButton.setBounds(620, 400, 200, 70);
+        okayButton.setBackground(new Color(143, 224, 225));
+        noButton.setBounds(620, 150, 200, 70);
         noButton.setFont(descr.getFont());
+        noButton.setBackground(new Color(253, 185, 255));
 
         loading.setIcon(new ImageIcon("src/main/resources/loading.gif"));
         loading.setOpaque(false);
         loading.setSize(loading.getIcon().getIconWidth(), loading.getIcon().getIconHeight());
-        loading.setLocation(getWidth() / 2 - loading.getWidth() / 2, 150);
+        loading.setLocation(getWidth() / 2 - loading.getWidth() / 2, 240);
         loading.setVisible(false);
         add(loading);
+
+        final JLabel nullCabel = new JLabel();
+        nullCabel.setIcon(new ImageIcon("src/main/resources/null.png"));
+        nullCabel.setSize(nullCabel.getIcon().getIconWidth(), nullCabel.getIcon().getIconHeight());
+        nullCabel.setLocation(250, 220);
+        add(nullCabel);
 
         okayButton.addActionListener(new AbstractAction() {
             @Override
@@ -53,11 +61,12 @@ public class OptionPage extends JPanel {
                             descr.setText("WAIT CONNECTION RESOLVER...");
                             okayButton.setEnabled(false);
                             noButton.setEnabled(false);
+                            nullCabel.setVisible(false);
                             loading.setVisible(true);
                             ConnectionResolver resolver = new ConnectionResolver();
                             Settings.realPortForEmulator = resolver.findCCNetPort();
                             if (Settings.realPortForEmulator != null)
-                                descr.setText("PORT FOUND!");
+                                descr.setText("PORT FOUND! " + Settings.realPortForEmulator);
                             else
                                 descr.setText("PORT NOT FOUND!");
                             Thread.sleep(3000);

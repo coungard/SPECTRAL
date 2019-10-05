@@ -1,19 +1,28 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
 import ru.app.hardware.AbstractManager;
+import ru.app.network.Requester;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.emulator.BillTable;
 import ru.app.util.Logger;
+import ru.app.util.Utils;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+
+/**
+ * <p>Менеджер для работы с эмулятором купюроприемника по протоколу CCNET.</p> <br> В данный менеджер заложены эмуляции вставки банкнот, снятие
+ * кассеты (инкассация) и специальный параметр для эмулятора - переход между обычным режимом и мостом, если bridge mode был заранее активирован.
+ */
 public class Manager extends AbstractManager {
     private static final Color BACKGROUND_COLOR = new Color(205, 186, 116);
     private JPanel paymentPanel;
@@ -23,16 +32,73 @@ public class Manager extends AbstractManager {
     private JLabel emul;
     private JLabel casher;
     private JLabel modeLabel = new JLabel("change mode -->>");
+    private Map<String, byte[]> billTable;
     private List<JButton> billButtons = new ArrayList<>();
     private JButton encashButton;
+    private Requester requester;
+    private static final String URL = "http://192.168.15.121:8080/ussdWww/";
 
     public Manager(String port) {
         setSize(1020, 600);
         setOpaque(true);
         setBackground(BACKGROUND_COLOR);
         client = new Client(port);
-
+        requester = new Requester(URL);
+        billTable = new BillTable().getTable();
         struct();
+        requestLoop();
+    }
+
+    private void requestLoop() {
+        while (true) {
+            try {
+                Thread.sleep(1000);
+                String request = requester.check();
+                boolean payment = request != null && request.contains("command");
+
+                if (payment) {
+                    Logger.console("Request payment:\n" + request);
+                    if (!emul.isVisible()) {
+                        Logger.console("Can not start payment procedure, emulator is not activated!");
+                        return;
+                    }
+                    int sum = getSumFromRequest(request);
+                    if (sum > 0) {
+                        Logger.console("Starting payment operation from server...");
+                        for (JButton billButton : billButtons)
+                            billButton.setEnabled(false);
+
+                        List<Integer> nominals = Utils.calculatePayment(sum);
+                        for (Integer nominal : nominals) {
+                            Thread.sleep(4000);
+                            String bill = nominal + " RUB";
+                            billAcceptance(billTable.get(bill));
+                        }
+                        Thread.sleep(2000);
+                    }
+                }
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+                Logger.console("REQUESTER IS CRASHED!");
+                break;
+            } finally {
+                for (JButton billButton : billButtons)
+                    billButton.setEnabled(true);
+            }
+        }
+    }
+
+    private int getSumFromRequest(String req) {
+        String[] nums = req.split("\\*");
+        if (nums.length > 2) {
+            try {
+                return Integer.parseInt(nums[2]);
+            } catch (NumberFormatException ex) {
+                ex.printStackTrace();
+                return 0;
+            }
+        } else
+            return 0;
     }
 
     @Override
@@ -89,8 +155,7 @@ public class Manager extends AbstractManager {
         verboseLog.setBounds(getWidth() - 160, 10, 150, 50);
         add(verboseLog);
 
-        final Map<String, byte[]> table = new BillTable().getTable();
-        for (String denomination : table.keySet()) {
+        for (String denomination : billTable.keySet()) {
             addBill(denomination);
         }
 
@@ -99,9 +164,8 @@ public class Manager extends AbstractManager {
                 component.addMouseListener(new MouseInputAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        byte[] denomination = table.get(((JButton) component).getText());
-                        client.setCurrentDenom(denomination);
-                        sendEscrowPosition();
+                        byte[] denomination = billTable.get(((JButton) component).getText());
+                        billAcceptance(denomination);
                     }
                 });
             }
@@ -121,11 +185,25 @@ public class Manager extends AbstractManager {
                     activateEmulator(true);
                 }
             });
-        }
-        else {
+        } else {
             modeLabel.setVisible(false);
             emul.setVisible(true);
         }
+    }
+
+    /**
+     * Эмуляция вставки банкноты по ее номиналу
+     *
+     * @param denomination - байт номинала банкноты (смотреть BillTable)
+     */
+    private void billAcceptance(byte[] denomination) {
+        for (Map.Entry<String, byte[]> entry : billTable.entrySet()) {
+            if (Arrays.equals(entry.getValue(), denomination)) {
+                Logger.console("bill accept : " + entry.getKey());
+            }
+        }
+        client.setCurrentDenom(denomination);
+        sendEscrowPosition();
     }
 
     private void activateEmulator(boolean activate) {
