@@ -11,7 +11,7 @@ import java.util.List;
 
 public class PortsPage extends JPanel {
     private final JLabel casher;
-    private static final String cashCodeImgPath = "src/main/resources/cashcode.png";
+    private static final String cashCodeImgPath = "src/main/resources/graphic/cashcode.png";
     private List<JButton> buttonList = new ArrayList<>();
 
     public PortsPage() {

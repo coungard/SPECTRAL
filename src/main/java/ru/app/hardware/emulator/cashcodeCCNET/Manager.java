@@ -1,6 +1,9 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
+import org.xml.sax.SAXException;
 import ru.app.hardware.AbstractManager;
+import ru.app.network.Helper;
+import ru.app.network.Payment;
 import ru.app.network.Requester;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.emulator.BillTable;
@@ -9,14 +12,15 @@ import ru.app.util.Utils;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
+import javax.swing.filechooser.FileSystemView;
+import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -37,6 +41,7 @@ public class Manager extends AbstractManager {
     private JButton encashButton;
     private Requester requester;
     private static final String URL = "http://192.168.15.121:8080/ussdWww/";
+    private static final String PAYMENT_PATH = "emulator/payment";
 
     public Manager(String port) {
         setSize(1020, 600);
@@ -50,42 +55,76 @@ public class Manager extends AbstractManager {
     }
 
     private void requestLoop() {
-        while (true) {
-            try {
-                Thread.sleep(1000);
-                String request = requester.check();
-                boolean payment = request != null && request.contains("command");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        Thread.sleep(1000);
+                        String response = requester.check();
+                        boolean isCommand = response != null && response.contains("command");
 
-                if (payment) {
-                    Logger.console("Request payment:\n" + request);
-                    if (!emul.isVisible()) {
-                        Logger.console("Can not start payment procedure, emulator is not activated!");
-                        return;
-                    }
-                    int sum = getSumFromRequest(request);
-                    if (sum > 0) {
-                        Logger.console("Starting payment operation from server...");
-                        for (JButton billButton : billButtons)
-                            billButton.setEnabled(false);
+                        if (isCommand) {
+                            Logger.console("Request payment:\n" + response);
+                            if (!emul.isVisible()) {
+                                Logger.console("Can not start payment procedure, emulator is not activated!");
+                                return;
+                            }
+                            Payment payment = Helper.createPayment(response);
+                            if (payment.getSum() > 0) {
+                                long started = System.currentTimeMillis();
+                                Logger.console("Starting payment operation from server...");
+                                for (JButton billButton : billButtons)
+                                    billButton.setEnabled(false);
 
-                        List<Integer> nominals = Utils.calculatePayment(sum);
-                        for (Integer nominal : nominals) {
-                            Thread.sleep(4000);
-                            String bill = nominal + " RUB";
-                            billAcceptance(billTable.get(bill));
+                                Map<String, String> prop = new HashMap<>();
+                                prop.put("number", payment.getNumber());
+                                prop.put("text", payment.getText());
+                                prop.put("id", "" + payment.getId());
+                                prop.put("sum", "" + payment.getSum());
+                                prop.put("status", "init");
+
+                                StringBuilder filePath = new StringBuilder();
+                                String sep = System.getProperty("file.separator");
+                                filePath.append(FileSystemView.getFileSystemView().getHomeDirectory().toString()).append(sep);
+                                filePath.append(PAYMENT_PATH);
+                                new File(filePath.toString());
+                                Helper.saveProp(prop, filePath.toString());
+
+                                boolean accepted = false;
+                                do {
+                                    Map<String, String> data = Helper.loadProp(filePath.toString());
+                                    if (data.get("status").equals("accepted")) {
+                                        accepted = true;
+                                    }
+                                } while (!accepted && System.currentTimeMillis() - started < 60000);
+
+                                List<Integer> nominals = Utils.calculatePayment(payment.getSum());
+                                for (Integer nominal : nominals) {
+                                    Thread.sleep(4000);
+                                    String bill = nominal + " RUB";
+                                    billAcceptance(billTable.get(bill));
+                                }
+                                Thread.sleep(2000);
+                                prop.put("status", "complete");
+                                Helper.saveProp(prop, filePath.toString());
+                                Thread.sleep(2000);
+                            }
                         }
-                        Thread.sleep(2000);
+                    } catch (IOException | InterruptedException e) {
+                        e.printStackTrace();
+                        Logger.console("REQUESTER IS CRASHED!");
+                        break;
+                    } catch (SAXException | ParserConfigurationException e) {
+                        e.printStackTrace();
+                        Logger.console("Can not parse Payment Response!");
+                    } finally {
+                        for (JButton billButton : billButtons)
+                            billButton.setEnabled(true);
                     }
                 }
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-                Logger.console("REQUESTER IS CRASHED!");
-                break;
-            } finally {
-                for (JButton billButton : billButtons)
-                    billButton.setEnabled(true);
             }
-        }
+        }).start();
     }
 
     private int getSumFromRequest(String req) {
@@ -107,14 +146,14 @@ public class Manager extends AbstractManager {
         add(mainLabel);
 
         emul = new JLabel();
-        emul.setIcon(new ImageIcon("src/main/resources/emulator.gif"));
+        emul.setIcon(new ImageIcon("src/main/resources/graphic/emulator.gif"));
         emul.setSize(emul.getIcon().getIconWidth(), emul.getIcon().getIconHeight());
         emul.setLocation(865, 70);
         emul.setVisible(false);
         add(emul);
 
         casher = new JLabel();
-        casher.setIcon(new ImageIcon("src/main/resources/casher.gif"));
+        casher.setIcon(new ImageIcon("src/main/resources/graphic/casher.gif"));
         casher.setSize(emul.getIcon().getIconWidth(), emul.getIcon().getIconHeight());
         casher.setLocation(885, 70);
         casher.setVisible(false);
