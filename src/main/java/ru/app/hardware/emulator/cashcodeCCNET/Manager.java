@@ -5,6 +5,7 @@ import ru.app.hardware.AbstractManager;
 import ru.app.network.Helper;
 import ru.app.network.Payment;
 import ru.app.network.Requester;
+import ru.app.network.Status;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.emulator.BillTable;
 import ru.app.util.Logger;
@@ -19,8 +20,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 
 /**
@@ -42,6 +43,7 @@ public class Manager extends AbstractManager {
     private Requester requester;
     private static final String URL = "http://192.168.15.121:8080/ussdWww/";
     private static final String PAYMENT_PATH = "emulator/payment";
+    private static final int TIME_OUT = 60000 * 5;
 
     public Manager(String port) {
         setSize(1020, 600);
@@ -72,7 +74,7 @@ public class Manager extends AbstractManager {
                             }
                             Payment payment = Helper.createPayment(response);
                             if (payment.getSum() > 0) {
-                                long started = System.currentTimeMillis();
+                                long activity = System.currentTimeMillis();
                                 Logger.console("Starting payment operation from server...");
                                 for (JButton billButton : billButtons)
                                     billButton.setEnabled(false);
@@ -82,7 +84,7 @@ public class Manager extends AbstractManager {
                                 prop.put("text", payment.getText());
                                 prop.put("id", "" + payment.getId());
                                 prop.put("sum", "" + payment.getSum());
-                                prop.put("status", "init");
+                                prop.put("status", "ACCEPTED");
 
                                 StringBuilder filePath = new StringBuilder();
                                 String sep = System.getProperty("file.separator");
@@ -91,14 +93,27 @@ public class Manager extends AbstractManager {
                                 new File(filePath.toString());
                                 Helper.saveProp(prop, filePath.toString());
 
-                                boolean accepted = false;
+                                Status status = Status.ACCEPTED;
+                                String old = "";
                                 do {
+                                    Thread.sleep(400);
                                     Map<String, String> data = Helper.loadProp(filePath.toString());
-                                    if (data.get("status").equals("accepted")) {
-                                        accepted = true;
+                                    String current = data.get("status");
+                                    if (current != null) {
+                                        status = Status.fromString(current);
+                                        if (!current.equals(old)) {
+                                            activity = System.currentTimeMillis();
+                                            Logger.console("Current Payment Status : " + status.toString());
+                                        }
                                     }
-                                } while (!accepted && System.currentTimeMillis() - started < 60000);
+                                    old = current;
+                                } while (status != Status.COMPLETED && System.currentTimeMillis() - activity < TIME_OUT || status != Status.ERROR);
 
+                                if (status == Status.ERROR) {
+                                    Logger.console("Received Error STatus! Break Requster for " + TIME_OUT / 1000 + " seconds");
+                                    Thread.sleep(TIME_OUT);
+                                    continue;
+                                }
                                 List<Integer> nominals = Utils.calculatePayment(payment.getSum());
                                 for (Integer nominal : nominals) {
                                     Thread.sleep(4000);
@@ -106,7 +121,7 @@ public class Manager extends AbstractManager {
                                     billAcceptance(billTable.get(bill));
                                 }
                                 Thread.sleep(2000);
-                                prop.put("status", "complete");
+                                prop.put("status", Status.STACKED.toString());
                                 Helper.saveProp(prop, filePath.toString());
                                 Thread.sleep(2000);
                             }
@@ -125,19 +140,6 @@ public class Manager extends AbstractManager {
                 }
             }
         }).start();
-    }
-
-    private int getSumFromRequest(String req) {
-        String[] nums = req.split("\\*");
-        if (nums.length > 2) {
-            try {
-                return Integer.parseInt(nums[2]);
-            } catch (NumberFormatException ex) {
-                ex.printStackTrace();
-                return 0;
-            }
-        } else
-            return 0;
     }
 
     @Override

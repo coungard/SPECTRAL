@@ -20,6 +20,10 @@ public class Requester {
         System.out.println(requester.check());
     }
 
+    public void sendStatus() {
+
+    }
+
     public String check() throws IOException {
         HttpURLConnection conn = HttpURLConnectionFactory.getHttpConnection(url);
         conn.setUseCaches(false);
