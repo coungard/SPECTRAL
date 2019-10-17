@@ -2,6 +2,7 @@ package ru.app.hardware.emulator.cashcodeCCNET;
 
 import org.xml.sax.SAXException;
 import ru.app.hardware.AbstractManager;
+import ru.app.main.Settings;
 import ru.app.network.Helper;
 import ru.app.network.Payment;
 import ru.app.network.Requester;
@@ -13,13 +14,14 @@ import ru.app.util.Utils;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
-import javax.swing.filechooser.FileSystemView;
 import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
 
@@ -42,8 +44,8 @@ public class Manager extends AbstractManager {
     private JButton encashButton;
     private Requester requester;
     private static final String URL = "http://192.168.15.121:8080/ussdWww/";
-    private static final String PAYMENT_PATH = "emulator/payment";
     private static final int TIME_OUT = 60000 * 5;
+    private static final int ERROR_TIME_OUT = 60000 * 60;
 
     public Manager(String port) {
         setSize(1020, 600);
@@ -53,13 +55,13 @@ public class Manager extends AbstractManager {
         requester = new Requester(URL);
         billTable = new BillTable().getTable();
         struct();
-        requestLoop();
     }
 
     private void requestLoop() {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                Logger.console("Request loop started");
                 while (true) {
                     try {
                         Thread.sleep(1000);
@@ -79,25 +81,22 @@ public class Manager extends AbstractManager {
                                 for (JButton billButton : billButtons)
                                     billButton.setEnabled(false);
 
-                                Map<String, String> prop = new HashMap<>();
-                                prop.put("number", payment.getNumber());
-                                prop.put("text", payment.getText());
-                                prop.put("id", "" + payment.getId());
-                                prop.put("sum", "" + payment.getSum());
-                                prop.put("status", "ACCEPTED");
+                                Map<String, String> payProperties = new HashMap<>();
+                                payProperties.put("number", payment.getNumber());
+                                payProperties.put("text", payment.getText());
+                                payProperties.put("sum", "" + payment.getSum());
+                                payProperties.put("status", "ACCEPTED");
 
-                                StringBuilder filePath = new StringBuilder();
-                                String sep = System.getProperty("file.separator");
-                                filePath.append(FileSystemView.getFileSystemView().getHomeDirectory().toString()).append(sep);
-                                filePath.append(PAYMENT_PATH);
-                                new File(filePath.toString());
-                                Helper.saveProp(prop, filePath.toString());
+                                File payFile = new File(Settings.paymentPath);
+                                Helper.saveProp(payProperties, payFile);
 
                                 Status status = Status.ACCEPTED;
                                 String old = "";
+                                // Как только создается payment файл, начинается работа бота, из другого ПО
+                                // нужно дождаться статуса COMPLETED, который уведомляет о том, что мы находимся на странице платежа.
                                 do {
                                     Thread.sleep(400);
-                                    Map<String, String> data = Helper.loadProp(filePath.toString());
+                                    Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
                                     String current = data.get("status");
                                     if (current != null) {
                                         status = Status.fromString(current);
@@ -107,10 +106,13 @@ public class Manager extends AbstractManager {
                                         }
                                     }
                                     old = current;
-                                } while (status != Status.COMPLETED && System.currentTimeMillis() - activity < TIME_OUT || status != Status.ERROR);
+                                    if (status == Status.ERROR)
+                                        break;
+                                } while (status != Status.COMPLETED && System.currentTimeMillis() - activity < TIME_OUT);
 
                                 if (status == Status.ERROR) {
-                                    Logger.console("Received Error STatus! Break Requster for " + TIME_OUT / 1000 + " seconds");
+                                    Logger.console("Received Error Status! Requster stop for " + ERROR_TIME_OUT / 60000 + " minutes");
+                                    requester.sendStatus(payment, Status.ERROR);
                                     Thread.sleep(TIME_OUT);
                                     continue;
                                 }
@@ -120,16 +122,45 @@ public class Manager extends AbstractManager {
                                     String bill = nominal + " RUB";
                                     billAcceptance(billTable.get(bill));
                                 }
-                                Thread.sleep(2000);
-                                prop.put("status", Status.STACKED.toString());
-                                Helper.saveProp(prop, filePath.toString());
-                                Thread.sleep(2000);
+                                Thread.sleep(1000);
+                                payProperties.put("status", Status.STACKED.toString());
+                                old = payProperties.get("status");
+                                Helper.saveProp(payProperties, payFile);
+                                do {
+                                    Thread.sleep(400);
+                                    Map<String, String> data = Helper.loadProp(payFile);
+                                    String current = data.get("status");
+                                    if (current != null) {
+                                        status = Status.fromString(current);
+                                        if (!current.equals(old)) {
+                                            activity = System.currentTimeMillis();
+                                            Logger.console("Current Payment Status : " + status.toString());
+                                        }
+                                    }
+                                    if (status == Status.ERROR)
+                                        break;
+                                } while (status != Status.SUCCESS && System.currentTimeMillis() - activity < TIME_OUT / 5);
+                                Thread.sleep(1000);
+                                if (status == Status.SUCCESS) {
+                                    Logger.console("Payment successfully complete!");
+                                    Helper.saveFile(payment, status);
+                                    requester.sendStatus(payment, Status.SUCCESS);
+                                } else {
+                                    Logger.console("Payment error!");
+                                    Helper.saveFile(payment, status);
+                                    requester.sendStatus(payment, status);
+                                }
+                                Thread.sleep(1000);
                             }
                         }
                     } catch (IOException | InterruptedException e) {
                         e.printStackTrace();
-                        Logger.console("REQUESTER IS CRASHED!");
-                        break;
+                        Logger.console("Requester is crashed! Perhaps problems with network...check please");
+                        try {
+                            Thread.sleep(60000);
+                        } catch (InterruptedException ex) {
+                            ex.printStackTrace();
+                        }
                     } catch (SAXException | ParserConfigurationException e) {
                         e.printStackTrace();
                         Logger.console("Can not parse Payment Response!");
@@ -230,6 +261,19 @@ public class Manager extends AbstractManager {
             modeLabel.setVisible(false);
             emul.setVisible(true);
         }
+
+        try {
+            if (Files.notExists(Paths.get(Settings.paymentsDir))) {
+                Files.createDirectory(Paths.get(Settings.paymentsDir));
+            }
+        } catch (IOException ex) {
+            Logger.console("Can not create emul directory: " + ex);
+        }
+    }
+
+    @Override
+    public void redraw() {
+        requestLoop();
     }
 
     /**

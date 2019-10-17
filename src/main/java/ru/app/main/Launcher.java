@@ -39,6 +39,7 @@ public class Launcher extends Thread {
         currentManager = manager;
         Logger.init();
         window.add(manager);
+        manager.redraw();
     }
 
     private Launcher() {

@@ -179,6 +179,11 @@ public class Manager extends AbstractManager {
         add(testButton);
     }
 
+    @Override
+    public void redraw() {
+        setVisible(true);
+    }
+
     private byte[] formPacket(byte[] data) {
         byte[] res = new byte[data.length + 2];
         data[20] = Client.counter;

@@ -1,9 +1,6 @@
 package ru.app.network;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 
@@ -15,14 +12,53 @@ public class Requester {
         this.url = url;
     }
 
-    public static void main(String[] args) throws IOException {
-        Requester requester = new Requester("http://192.168.15.121:8080/ussdWww/");
-        System.out.println(requester.check());
+    public void sendStatus(Payment payment, Status status) throws IOException {
+        HttpURLConnection conn = HttpURLConnectionFactory.getHttpConnection(url);
+        conn.setUseCaches(false);
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+
+        conn.addRequestProperty("Content-Type", "text/plain; charset=WINDOWS-1251");
+        boolean success = status == Status.SUCCESS;
+
+        StringBuilder request = new StringBuilder();
+        request.append("<request>\n").append("  <type>result</type>\n").append("  <login>android</login>\n").append("  <imei>745646</imei>\n")
+                .append("  <result>\n")
+                .append("    <command_id>").append(payment.getId()).append("</command_id>\n")
+                .append("    <status>")
+                .append(success ? "ok" : "error")
+                .append("    </status>\n");
+        if (success) {
+            request.append("    <data>\n").append("    \t<answer>")
+                    .append("Пополнение ").append(payment.getNumber()).append(" на ").append(payment.getSum()).append(" рублей")
+                    .append("</ansver>\n").append("    </data>\n");
+        } else
+            request.append("    <data></data>\n");
+        request.append("  </result>\n").append("  <sign>iyewtr97y66ytq65rgeorrdgh346</sign>\n").append("</request>");
+
+        byte[] data = request.toString().getBytes("CP1251");
+        OutputStream os = conn.getOutputStream();
+        os.write(data, 0, data.length);
+        os.close();
     }
 
-    public void sendStatus() {
-
-    }
+    /**
+     * //3.0 запрос об удачном результате выполнения
+     * // <data> может быть пустым или содержать <answer>
+     * <request>
+     * <type>result</type>
+     * <login>android</login>
+     * <imei>745646</imei>
+     * <result>
+     * <command_id>444</command_id>
+     * <status>ok</status>
+     * <data>
+     * <answer>ваш баланс 100 рублей.</ansver>
+     * </data>
+     * </result>
+     * <sign>iyewtr97y66ytq65rgeorrdgh346</sign>
+     * </request>
+     */
 
     public String check() throws IOException {
         HttpURLConnection conn = HttpURLConnectionFactory.getHttpConnection(url);

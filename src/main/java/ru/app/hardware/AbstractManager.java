@@ -15,6 +15,8 @@ public abstract class AbstractManager extends JLayeredPane {
 
     public abstract void struct();
 
+    public abstract void redraw();
+
     protected AbstractManager() {
         textArea = new JTextArea();
         textArea.setWrapStyleWord(true);

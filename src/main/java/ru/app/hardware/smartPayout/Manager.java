@@ -151,6 +151,11 @@ public class Manager extends AbstractManager {
         add(requestHopper);
     }
 
+    @Override
+    public void redraw() {
+        setVisible(true);
+    }
+
     private void pause() {
         try {
             Thread.sleep(500);

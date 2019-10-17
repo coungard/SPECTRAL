@@ -127,6 +127,11 @@ public class Manager extends AbstractManager {
         }
     }
 
+    @Override
+    public void redraw() {
+        setVisible(true);
+    }
+
 
     private void changeCreditBuffer(int value) {
         byte[] current = client.getCurrentBuffer();
