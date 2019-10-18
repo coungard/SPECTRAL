@@ -18,8 +18,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -44,7 +46,7 @@ public class Manager extends AbstractManager {
     private JButton encashButton;
     private Requester requester;
     private static final String URL = "http://192.168.15.121:8080/ussdWww/";
-    private static final int TIME_OUT = 60000 * 5;
+    private static final int TIME_OUT = 60000 * 20;
     private static final int ERROR_TIME_OUT = 60000 * 60;
 
     public Manager(String port) {
@@ -110,9 +112,9 @@ public class Manager extends AbstractManager {
                                         break;
                                 } while (status != Status.COMPLETED && System.currentTimeMillis() - activity < TIME_OUT);
 
-                                if (status == Status.ERROR) {
-                                    Logger.console("Received Error Status! Requster stop for " + ERROR_TIME_OUT / 60000 + " minutes");
-                                    requester.sendStatus(payment, Status.ERROR);
+                                if (status != Status.COMPLETED) {
+                                    Logger.console("Payment Status not Completed!");
+                                    requester.sendStatus(payment, status);
                                     Thread.sleep(TIME_OUT);
                                     continue;
                                 }
@@ -179,14 +181,15 @@ public class Manager extends AbstractManager {
         add(mainLabel);
 
         emul = new JLabel();
-        emul.setIcon(new ImageIcon("src/main/resources/graphic/emulator.gif"));
+        emul.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/emulator.gif"))));
+
         emul.setSize(emul.getIcon().getIconWidth(), emul.getIcon().getIconHeight());
         emul.setLocation(865, 70);
         emul.setVisible(false);
         add(emul);
 
         casher = new JLabel();
-        casher.setIcon(new ImageIcon("src/main/resources/graphic/casher.gif"));
+        casher.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/casher.gif"))));
         casher.setSize(emul.getIcon().getIconWidth(), emul.getIcon().getIconHeight());
         casher.setLocation(885, 70);
         casher.setVisible(false);
@@ -262,12 +265,22 @@ public class Manager extends AbstractManager {
             emul.setVisible(true);
         }
 
+        createCatalogPayments();
+    }
+
+    private void createCatalogPayments() {
         try {
             if (Files.notExists(Paths.get(Settings.paymentsDir))) {
                 Files.createDirectory(Paths.get(Settings.paymentsDir));
             }
+            if (Files.notExists(Paths.get(Settings.successDir))) {
+                Files.createDirectory(Paths.get(Settings.successDir));
+            }
+            if (Files.notExists(Paths.get(Settings.errorDir))) {
+                Files.createDirectory(Paths.get(Settings.errorDir));
+            }
         } catch (IOException ex) {
-            Logger.console("Can not create emul directory: " + ex);
+            Logger.console("Can not create payment directory: " + ex);
         }
     }
 

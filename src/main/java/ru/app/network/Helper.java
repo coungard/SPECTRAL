@@ -65,17 +65,14 @@ public class Helper {
 
     public static void saveFile(Payment payment, Status status) throws IOException {
         Logger.console("Save file operation started : " + payment + "\t" + status);
-        String paymentsDir = Settings.paymentsDir + "payment";
-        String successDir = Settings.paymentsDir + "success" + Settings.separator;
-        String errorDir = Settings.paymentsDir + "error" + Settings.separator;
 
         long id = payment.getId();
-        Path payFile = Paths.get(paymentsDir + "payment");
+        Path payFile = Paths.get(Settings.paymentPath);
         if (!Files.exists(payFile)) {
             Logger.console("PAYMENT FILE NOT EXISTS!");
             return;
         }
-        Path target = Paths.get((status == Status.SUCCESS ? successDir : errorDir) + "payment_" + id);
+        Path target = Paths.get((status == Status.SUCCESS ? Settings.successDir : Settings.errorDir) + "payment_" + id);
         Files.copy(payFile, target);
         Files.delete(payFile);
         Logger.console("payment file successfully copied and deleted");

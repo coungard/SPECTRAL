@@ -7,6 +7,7 @@ import ru.app.util.ConnectionResolver;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.Objects;
 
 import static ru.app.main.Launcher.portsPage;
 
@@ -38,7 +39,7 @@ public class OptionPage extends JPanel {
         noButton.setFont(descr.getFont());
         noButton.setBackground(new Color(253, 185, 255));
 
-        loading.setIcon(new ImageIcon("src/main/resources/graphic/loading.gif"));
+        loading.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/loading.gif"))));
         loading.setOpaque(false);
         loading.setSize(loading.getIcon().getIconWidth(), loading.getIcon().getIconHeight());
         loading.setLocation(getWidth() / 2 - loading.getWidth() / 2, 240);
@@ -46,7 +47,7 @@ public class OptionPage extends JPanel {
         add(loading);
 
         final JLabel nullCabel = new JLabel();
-        nullCabel.setIcon(new ImageIcon("src/main/resources/graphic/null.png"));
+        nullCabel.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/null.png"))));
         nullCabel.setSize(nullCabel.getIcon().getIconWidth(), nullCabel.getIcon().getIconHeight());
         nullCabel.setLocation(250, 220);
         add(nullCabel);

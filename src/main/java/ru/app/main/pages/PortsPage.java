@@ -8,11 +8,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class PortsPage extends JPanel {
     private final JLabel casher;
-    private static final String cashCodeImgPath = "src/main/resources/graphic/cashcode.png";
+    private JLabel mainLabel;
     private List<JButton> buttonList = new ArrayList<>();
+    private JLabel sorry = new JLabel();
 
     public PortsPage() {
         setLayout(null);
@@ -20,20 +22,30 @@ public class PortsPage extends JPanel {
         setSize(Settings.dimension);
         setBackground(new Color(67, 159, 212));
 
-        JLabel label = formLabel("Choose port", 0);
-        add(label);
+        mainLabel = formLabel("Choose port", 0);
+        add(mainLabel);
 
         casher = new JLabel();
-        casher.setIcon(new ImageIcon(cashCodeImgPath));
+        casher.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/cashcode.png"))));
         casher.setSize(casher.getIcon().getIconWidth(), casher.getIcon().getIconHeight());
         casher.setVisible(false);
         add(casher);
+
+        sorry.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/sorry.png"))));
+        sorry.setSize(sorry.getIcon().getIconWidth(), sorry.getIcon().getIconHeight());
+        sorry.setLocation(getWidth() / 2 - sorry.getWidth() / 2, 300);
+        sorry.setVisible(false);
+        add(sorry);
 
         init();
     }
 
     private void init() {
         String[] ports = SerialPortList.getPortNames();
+        if (ports.length == 0) {
+            sorry.setVisible(true);
+            mainLabel.setText("Sorry, you don't have a com-ports");
+        }
         for (int i = 0; i < ports.length; i++) {
             JButton button = new JButton(ports[i]);
             button.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 23));
