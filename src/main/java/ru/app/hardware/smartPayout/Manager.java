@@ -1,10 +1,11 @@
 package ru.app.hardware.smartPayout;
 
 import jssc.SerialPortException;
+import org.apache.log4j.Logger;
 import ru.app.hardware.AbstractManager;
 import ru.app.protocol.cctalk.Command;
 import ru.app.protocol.cctalk.Nominal;
-import ru.app.util.Logger;
+import ru.app.util.LogCreator;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -15,6 +16,7 @@ import static ru.app.protocol.cctalk.hopper.HopperCommands.RequestHopperCoin;
 import static ru.app.protocol.cctalk.payout.PayoutCommands.*;
 
 public class Manager extends AbstractManager {
+    private static final Logger LOGGER = Logger.getLogger(Manager.class);
     private static boolean isEnabled;
     private String[] banknotes = new String[]{"10", "20", "50", "100", "500", "1000"};
     private static final Color BACKGROUND_COLOR = new Color(107, 230, 235);
@@ -40,13 +42,13 @@ public class Manager extends AbstractManager {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (isEnabled) {
-                    Logger.console("cashmachine is already enabled\n");
+                    LOGGER.info(LogCreator.console("cashmachine is already enabled\n"));
                     return;
                 }
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        Logger.console("ENABLE CASHMACHINE PROCESS STARTED:\n");
+                        LOGGER.info(LogCreator.console("ENABLE CASHMACHINE PROCESS STARTED:\n"));
                         client.sendMessage(new Command(SimplePoll));
                         pause();
                         client.sendMessage(new Command(RequestStatus));
@@ -70,7 +72,6 @@ public class Manager extends AbstractManager {
                         pause();
 
                         isEnabled = true;
-//                        while (isEnable && !flag) {
                         while (isEnabled) {
                             byte[] res = client.sendMessage(new Command(RequestStatus));
                             pause();
@@ -91,7 +92,7 @@ public class Manager extends AbstractManager {
         resetButton.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                Logger.console("Start reseting device!");
+                LOGGER.info(LogCreator.console("Start reseting device!"));
                 client.sendMessage(new Command(ResetDevice));
             }
         });
@@ -101,8 +102,7 @@ public class Manager extends AbstractManager {
         disableButton.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                Logger.console("Bill accepting stopped!");
-//                isEnable = false;
+                LOGGER.info(LogCreator.console("Bill accepting stopped!"));
                 client.sendMessage(new Command(ModifyMasterInhibit, new byte[]{(byte) 0x00}));
             }
         });
@@ -159,8 +159,8 @@ public class Manager extends AbstractManager {
     private void pause() {
         try {
             Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException ex) {
+            LOGGER.error(ex.getMessage(), ex);
         }
     }
 }

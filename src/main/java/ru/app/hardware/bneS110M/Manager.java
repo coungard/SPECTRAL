@@ -1,9 +1,10 @@
 package ru.app.hardware.bneS110M;
 
 import jssc.SerialPortException;
+import org.apache.log4j.Logger;
 import ru.app.hardware.AbstractManager;
 import ru.app.util.Crc16;
-import ru.app.util.Logger;
+import ru.app.util.LogCreator;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -11,6 +12,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 
 public class Manager extends AbstractManager {
+    private static final Logger LOGGER = Logger.getLogger(Manager.class);
     private static final Color BACKGROUND_COLOR = new Color(175, 198, 170);
     private Client client;
 
@@ -173,7 +175,7 @@ public class Manager extends AbstractManager {
             @Override
             public void mousePressed(MouseEvent e) {
                 // zdes mojet bit vasha reklama
-                Logger.console("BUTTON TEST PRESSED");
+                LOGGER.info(LogCreator.console("BUTTON TEST PRESSED"));
             }
         });
         add(testButton);

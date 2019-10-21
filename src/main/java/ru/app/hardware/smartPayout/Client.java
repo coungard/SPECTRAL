@@ -4,10 +4,11 @@ import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
+import org.apache.log4j.Logger;
 import ru.app.protocol.cctalk.Command;
 import ru.app.util.BNVEncode;
 import ru.app.util.Crc16;
-import ru.app.util.Logger;
+import ru.app.util.LogCreator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 
 public class Client {
+    private static final Logger LOGGER = Logger.getLogger(Client.class);
     public static Command currentCommand;
     private SerialPort serialPort;
     private byte deviceAddr;
@@ -43,7 +45,7 @@ public class Client {
             serialPort.writeBytes(crcPacket);
             byte[] temp = Arrays.copyOf(crcPacket, crcPacket.length);
             byte[] encrypt = encryptPacket(crcPacket);
-            Logger.logOutput(temp, encrypt);
+            LOGGER.info(LogCreator.logOutput(temp, encrypt));
             serialPort.writeBytes(encrypt);
 
             long start = Calendar.getInstance().getTimeInMillis();
@@ -54,21 +56,21 @@ public class Client {
                     result = received;
             } while (Calendar.getInstance().getTimeInMillis() - start < 1200 && received == null);
         } catch (SerialPortException | InterruptedException ex) {
-            ex.printStackTrace();
+            LOGGER.error(LogCreator.console(ex.getMessage()));
         }
         return result;
     }
 
     synchronized public void sendBytes(byte[] bytes) {
         try {
-            Logger.console(Arrays.toString(bytes));
+            LOGGER.debug(LogCreator.console(Arrays.toString(bytes)));
             serialPort.writeBytes(bytes);
             long start = Calendar.getInstance().getTimeInMillis();
             do {
                 if (received == null) Thread.sleep(10);
             } while (Calendar.getInstance().getTimeInMillis() - start < 1200 && received == null);
-        } catch (SerialPortException | InterruptedException e) {
-            e.printStackTrace();
+        } catch (SerialPortException | InterruptedException ex) {
+            LOGGER.error(LogCreator.console(ex.getMessage()));
         }
     }
 
@@ -125,12 +127,12 @@ public class Client {
                     byte[] temp = Arrays.copyOf(received, received.length);
                     if (received.length >= 5) {
                         byte[] decrypt = decryptPacket(received);
-                        Logger.logInput(temp, decrypt);
+                        LOGGER.debug(LogCreator.logInput(temp, decrypt));
                     } else {
-                        Logger.console(Arrays.toString(received));
+                        LOGGER.debug(LogCreator.console(Arrays.toString(received)));
                     }
                 } catch (InterruptedException | SerialPortException ex) {
-                    ex.printStackTrace();
+                    LOGGER.error(LogCreator.console(ex.getMessage()));
                 }
             }
         }

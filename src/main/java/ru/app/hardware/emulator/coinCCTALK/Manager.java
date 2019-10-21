@@ -1,7 +1,8 @@
 package ru.app.hardware.emulator.coinCCTALK;
 
+import org.apache.log4j.Logger;
 import ru.app.hardware.AbstractManager;
-import ru.app.util.Logger;
+import ru.app.util.LogCreator;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -11,6 +12,7 @@ import java.awt.event.AWTEventListener;
 import java.awt.event.MouseEvent;
 
 public class Manager extends AbstractManager {
+    private static final Logger LOGGER = Logger.getLogger(Manager.class);
     private static final Color BACKGROUND_COLOR = new Color(107, 225, 224);
     private Client client;
     private JPanel coinsPanel;
@@ -103,7 +105,7 @@ public class Manager extends AbstractManager {
                     @Override
                     public void mousePressed(MouseEvent e) {
                         if (!client.isEnabled()) {
-                            Logger.console("Coin Machine is disabled!");
+                            LOGGER.info(LogCreator.console("Coin Machine is disabled!"));
                         } else {
                             String nominal = ((JButton) component).getText().split(" ")[1];
                             switch (nominal) {

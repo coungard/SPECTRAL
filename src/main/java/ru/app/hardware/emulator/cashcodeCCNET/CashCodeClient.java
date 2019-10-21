@@ -4,9 +4,11 @@ import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
-import ru.app.util.Logger;
+import org.apache.log4j.Logger;
+import ru.app.util.LogCreator;
 
 class CashCodeClient {
+    private static final Logger LOGGER = Logger.getLogger(CashCodeClient.class);
     private SerialPort serialPort;
     private final byte SYNC = (byte) 0x02;
     private final byte PERIPHERIAL_CODE = (byte) 0x03;
@@ -26,16 +28,16 @@ class CashCodeClient {
             serialPort.addEventListener(new PortReader());
 
         } catch (SerialPortException ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex.getMessage(), ex);
         }
     }
 
     void sendBytes(byte[] buffer) {
         try {
-            Logger.logOutput(buffer);
+            LOGGER.debug(LogCreator.logOutput(buffer));
             serialPort.writeBytes(buffer);
         } catch (SerialPortException ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex.getMessage(), ex);
         }
     }
 
@@ -47,7 +49,7 @@ class CashCodeClient {
                     byte[] response = serialPort.readBytes();
                     client.sendBytes(response);
                 } catch (SerialPortException ex) {
-                    ex.printStackTrace();
+                    LOGGER.error(ex.getMessage(), ex);
                 }
             }
         }

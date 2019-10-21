@@ -1,6 +1,7 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
 import jssc.*;
+import org.apache.log4j.Logger;
 import ru.app.main.Settings;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.Command;
@@ -9,7 +10,7 @@ import ru.app.protocol.ccnet.emulator.response.Identification;
 import ru.app.protocol.ccnet.emulator.response.SetStatus;
 import ru.app.protocol.ccnet.emulator.response.TakeBillTable;
 import ru.app.util.Crc16;
-import ru.app.util.Logger;
+import ru.app.util.LogCreator;
 import ru.app.util.StreamType;
 
 import java.io.ByteArrayOutputStream;
@@ -19,6 +20,8 @@ import java.util.Objects;
 
 
 class Client {
+    private static final Logger LOGGER = Logger.getLogger(Client.class);
+
     private SerialPort serialPort;
     private final byte SYNC = (byte) 0x02;
     private final byte PERIPHERIAL_CODE = (byte) 0x03;
@@ -48,7 +51,7 @@ class Client {
             serialPort.addEventListener(new PortReader());
 
         } catch (SerialPortException ex) {
-            ex.printStackTrace();
+            LOGGER.error(LogCreator.console(ex.getMessage()));
         }
 
         if (Settings.realPortForEmulator != null)
@@ -74,19 +77,19 @@ class Client {
             }
 
             if (accessLog(output, StreamType.OUTPUT))
-                Logger.logOutput(output);
+                LOGGER.info(LogCreator.logOutput(output));
             serialPort.writeBytes(output);
         } catch (SerialPortException ex) {
-            ex.printStackTrace();
+            LOGGER.error(LogCreator.console(ex.getMessage()));
         }
     }
 
     synchronized void sendBytes(byte[] bytes) {
         try {
-            Logger.logOutput(bytes);
+            LOGGER.debug(LogCreator.logOutput(bytes));
             serialPort.writeBytes(bytes);
         } catch (SerialPortException ex) {
-            ex.printStackTrace();
+            LOGGER.error(LogCreator.console(ex.getMessage()));
         }
     }
 
@@ -111,13 +114,13 @@ class Client {
                     response.write(message);
 
                     if (accessLog(response.toByteArray(), StreamType.INPUT))
-                        Logger.logInput(response.toByteArray());
+                        LOGGER.info(LogCreator.logInput(response.toByteArray()));
                     if (cashCodeClient != null)
                         cashCodeClient.sendBytes(response.toByteArray());
                     else
                         emulateProcess(response.toByteArray());
                 } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
-                    ex.printStackTrace();
+                    LOGGER.error(LogCreator.console(ex.getMessage()));
                 }
             }
         }
@@ -236,17 +239,17 @@ class Client {
                         setStatus(type);
                         Thread.sleep(ms);
                     }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                } catch (InterruptedException ex) {
+                    LOGGER.error(LogCreator.console(ex.getMessage()));
                 }
-                Logger.console("set status old = " + oldStatus);
+                LOGGER.info(LogCreator.console("set status old = " + oldStatus));
                 setStatus(oldStatus);
             }
         }).start();
     }
 
     synchronized void setStatus(BillStateType status) {
-        Logger.console("set status new = " + status);
+        LOGGER.info(LogCreator.console("set status new = " + status));
         this.status = status;
     }
 
@@ -263,7 +266,7 @@ class Client {
     }
 
     void activateCashcode(boolean enable) {
-        Logger.console("activate cashcode = " + enable);
+        LOGGER.info(LogCreator.console("activate cashcode = " + enable));
         if (enable && cashCodeClient == null) {
             cashCodeClient = tempClient;
         }

@@ -1,10 +1,11 @@
 package ru.app.network;
 
+import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import ru.app.main.Settings;
-import ru.app.util.Logger;
+import ru.app.util.LogCreator;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Properties;
 
 public class Helper {
+    private static final Logger LOGGER = Logger.getLogger(Helper.class);
 
     public static Payment createPayment(String response) throws IOException, SAXException, ParserConfigurationException {
         DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -64,18 +66,16 @@ public class Helper {
     }
 
     public static void saveFile(Payment payment, Status status) throws IOException {
-        Logger.console("Save file operation started : " + payment + "\t" + status);
-
         long id = payment.getId();
         Path payFile = Paths.get(Settings.paymentPath);
         if (!Files.exists(payFile)) {
-            Logger.console("PAYMENT FILE NOT EXISTS!");
+            LOGGER.error(LogCreator.console("PAYMENT FILE NOT EXISTS!"));
             return;
         }
         Path target = Paths.get((status == Status.SUCCESS ? Settings.successDir : Settings.errorDir) + "payment_" + id);
         Files.copy(payFile, target);
         Files.delete(payFile);
-        Logger.console("payment file successfully copied and deleted");
+        LOGGER.info(LogCreator.console("payment file + " + target.toString() + " successfully removed"));
     }
 
     /**

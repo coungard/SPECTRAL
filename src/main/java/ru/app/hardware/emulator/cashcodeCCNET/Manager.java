@@ -1,5 +1,6 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
+import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import ru.app.hardware.AbstractManager;
 import ru.app.main.Settings;
@@ -9,7 +10,7 @@ import ru.app.network.Requester;
 import ru.app.network.Status;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.emulator.BillTable;
-import ru.app.util.Logger;
+import ru.app.util.LogCreator;
 import ru.app.util.Utils;
 
 import javax.swing.*;
@@ -18,10 +19,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -33,6 +32,7 @@ import java.util.*;
  * кассеты (инкассация) и специальный параметр для эмулятора - переход между обычным режимом и мостом, если bridge mode был заранее активирован.
  */
 public class Manager extends AbstractManager {
+    private static final Logger LOGGER = Logger.getLogger(Manager.class);
     private static final Color BACKGROUND_COLOR = new Color(205, 186, 116);
     private JPanel paymentPanel;
     private Client client;
@@ -63,23 +63,23 @@ public class Manager extends AbstractManager {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Logger.console("Request loop started");
+                LOGGER.info(LogCreator.console("Request loop started"));
                 while (true) {
                     try {
                         Thread.sleep(1000);
-                        String response = requester.check();
+                        String response = requester.checkPayment();
                         boolean isCommand = response != null && response.contains("command");
 
                         if (isCommand) {
-                            Logger.console("Request payment:\n" + response);
+                            LOGGER.info(LogCreator.console("Request payment:\n" + response));
                             if (!emul.isVisible()) {
-                                Logger.console("Can not start payment procedure, emulator is not activated!");
+                                LOGGER.info(LogCreator.console("Can not start payment procedure, emulator is not activated!"));
                                 return;
                             }
                             Payment payment = Helper.createPayment(response);
                             if (payment.getSum() > 0) {
                                 long activity = System.currentTimeMillis();
-                                Logger.console("Starting payment operation from server...");
+                                LOGGER.info(LogCreator.console("Starting payment operation from server..."));
                                 for (JButton billButton : billButtons)
                                     billButton.setEnabled(false);
 
@@ -104,7 +104,7 @@ public class Manager extends AbstractManager {
                                         status = Status.fromString(current);
                                         if (!current.equals(old)) {
                                             activity = System.currentTimeMillis();
-                                            Logger.console("Current Payment Status : " + status.toString());
+                                            LOGGER.info(LogCreator.console("Current Payment Status : " + status.toString()));
                                         }
                                     }
                                     old = current;
@@ -113,8 +113,9 @@ public class Manager extends AbstractManager {
                                 } while (status != Status.COMPLETED && System.currentTimeMillis() - activity < TIME_OUT);
 
                                 if (status != Status.COMPLETED) {
-                                    Logger.console("Payment Status not Completed!");
-                                    requester.sendStatus(payment, status);
+                                    LOGGER.error(LogCreator.console("Payment Status not Completed!"));
+                                    String req = requester.sendStatus(payment, status);
+                                    LOGGER.info(LogCreator.console("Error payment! Req = " + req));
                                     Thread.sleep(TIME_OUT);
                                     continue;
                                 }
@@ -124,7 +125,7 @@ public class Manager extends AbstractManager {
                                     String bill = nominal + " RUB";
                                     billAcceptance(billTable.get(bill));
                                 }
-                                Thread.sleep(1000);
+                                Thread.sleep(5000);
                                 payProperties.put("status", Status.STACKED.toString());
                                 old = payProperties.get("status");
                                 Helper.saveProp(payProperties, payFile);
@@ -136,36 +137,40 @@ public class Manager extends AbstractManager {
                                         status = Status.fromString(current);
                                         if (!current.equals(old)) {
                                             activity = System.currentTimeMillis();
-                                            Logger.console("Current Payment Status : " + status.toString());
+                                            LOGGER.info(LogCreator.console("Current Payment Status : " + status.toString()));
                                         }
                                     }
-                                    if (status == Status.ERROR)
+                                    if (status == Status.ERROR) {
+                                        LOGGER.error(LogCreator.console("Error bot status!"));
                                         break;
+                                    }
                                 } while (status != Status.SUCCESS && System.currentTimeMillis() - activity < TIME_OUT / 5);
                                 Thread.sleep(1000);
                                 if (status == Status.SUCCESS) {
-                                    Logger.console("Payment successfully complete!");
+                                    LOGGER.info(LogCreator.console("Payment successfully complete!"));
                                     Helper.saveFile(payment, status);
-                                    requester.sendStatus(payment, Status.SUCCESS);
+                                    String request = requester.sendStatus(payment, Status.SUCCESS);
+                                    LOGGER.info(LogCreator.console("Request status : " + request));
                                 } else {
-                                    Logger.console("Payment error!");
+                                    LOGGER.info(LogCreator.console("Payment error!"));
                                     Helper.saveFile(payment, status);
-                                    requester.sendStatus(payment, status);
+                                    String requestErr = requester.sendStatus(payment, status);
+                                    LOGGER.info(LogCreator.console("Request status : " + requestErr));
                                 }
                                 Thread.sleep(1000);
                             }
                         }
-                    } catch (IOException | InterruptedException e) {
-                        e.printStackTrace();
-                        Logger.console("Requester is crashed! Perhaps problems with network...check please");
+                    } catch (IOException | InterruptedException ex) {
+                        LOGGER.error(ex.getMessage(), ex);
+                        LOGGER.info(LogCreator.console("Requester is crashed! Perhaps problems with network...checkPayment please"));
                         try {
                             Thread.sleep(60000);
-                        } catch (InterruptedException ex) {
-                            ex.printStackTrace();
+                        } catch (InterruptedException exx) {
+                            LOGGER.error(exx.getMessage(), exx);
                         }
-                    } catch (SAXException | ParserConfigurationException e) {
-                        e.printStackTrace();
-                        Logger.console("Can not parse Payment Response!");
+                    } catch (SAXException | ParserConfigurationException ex) {
+                        LOGGER.error(ex.getMessage(), ex);
+                        LOGGER.info(LogCreator.console("Can not parse Payment Response!"));
                     } finally {
                         for (JButton billButton : billButtons)
                             billButton.setEnabled(true);
@@ -280,7 +285,8 @@ public class Manager extends AbstractManager {
                 Files.createDirectory(Paths.get(Settings.errorDir));
             }
         } catch (IOException ex) {
-            Logger.console("Can not create payment directory: " + ex);
+            LOGGER.error(ex.getMessage(), ex);
+            LOGGER.info(LogCreator.console("Can not create payment directory: "));
         }
     }
 
@@ -297,7 +303,7 @@ public class Manager extends AbstractManager {
     private void billAcceptance(byte[] denomination) {
         for (Map.Entry<String, byte[]> entry : billTable.entrySet()) {
             if (Arrays.equals(entry.getValue(), denomination)) {
-                Logger.console("bill accept : " + entry.getKey());
+                LOGGER.info(LogCreator.console("bill accept : " + entry.getKey()));
             }
         }
         client.setCurrentDenom(denomination);
@@ -318,7 +324,7 @@ public class Manager extends AbstractManager {
         if (client.getStatus() == BillStateType.Idling || client.readDeviceConnected()) {
             client.escrowNominal();
         } else {
-            Logger.console("can not escrow, casher not idling now!");
+            LOGGER.info(LogCreator.console("can not escrow, casher not idling now!"));
         }
     }
 

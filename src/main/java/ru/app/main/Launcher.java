@@ -1,5 +1,6 @@
 package ru.app.main;
 
+import org.apache.log4j.xml.DOMConfigurator;
 import ru.app.bus.DeviceType;
 import ru.app.hardware.AbstractManager;
 import ru.app.listeners.HardwareListener;
@@ -7,7 +8,7 @@ import ru.app.main.pages.DevicesPage;
 import ru.app.main.pages.OptionPage;
 import ru.app.main.pages.PortsPage;
 import ru.app.main.pages.SettingsPage;
-import ru.app.util.Logger;
+import ru.app.util.LogCreator;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -37,12 +38,13 @@ public class Launcher extends Thread {
 
     public static void defineManager(AbstractManager manager) {
         currentManager = manager;
-        Logger.init();
+        LogCreator.init();
         window.add(manager);
         manager.redraw();
     }
 
     private Launcher() {
+        DOMConfigurator.configure("src/log4j.xml");
         window.setSize(Settings.dimension);
 
         addPanel(mainPanel);

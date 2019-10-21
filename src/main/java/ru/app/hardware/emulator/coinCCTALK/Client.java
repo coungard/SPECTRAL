@@ -1,6 +1,7 @@
 package ru.app.hardware.emulator.coinCCTALK;
 
 import jssc.*;
+import org.apache.log4j.Logger;
 import ru.app.protocol.cctalk.coinMachine.CCTalkCommand;
 import ru.app.protocol.cctalk.coinMachine.CCTalkCommandType;
 import ru.app.protocol.cctalk.coinMachine.CoinTable;
@@ -8,7 +9,7 @@ import ru.app.protocol.cctalk.coinMachine.EmulatorCommand;
 import ru.app.protocol.cctalk.coinMachine.emulatorCommands.ACK;
 import ru.app.protocol.cctalk.coinMachine.emulatorCommands.BufferCredit;
 import ru.app.protocol.cctalk.coinMachine.emulatorCommands.CoinID;
-import ru.app.util.Logger;
+import ru.app.util.LogCreator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 class Client {
+    private static final Logger LOGGER = Logger.getLogger(Client.class);
     private SerialPort serialPort;
     private static final byte MACHINE_ADDR = (byte) 0x02;
     private static final byte COIN_ADDR = (byte) 0x01;
@@ -39,7 +41,7 @@ class Client {
 
             initOther();
         } catch (SerialPortException ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex.getMessage(), ex);
         }
     }
 
@@ -54,19 +56,19 @@ class Client {
     private synchronized void sendMessage(EmulatorCommand command) {
         try {
             byte[] output = formPacket(command);
-            Logger.logOutput(output);
+            LOGGER.info(LogCreator.logOutput(output));
             serialPort.writeBytes(output);
         } catch (SerialPortException ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex.getMessage(), ex);
         }
     }
 
     private synchronized void sendBytes(byte[] buffer) {
         try {
-            Logger.logOutput(buffer);
+            LOGGER.debug(LogCreator.logOutput(buffer));
             serialPort.writeBytes(buffer);
         } catch (SerialPortException ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex.getMessage(), ex);
         }
     }
 
@@ -96,7 +98,7 @@ class Client {
             baos.write(data);
             baos.write(checksum(baos.toByteArray()));
         } catch (IOException ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex.getMessage(), ex);
         }
         return baos.toByteArray();
     }
@@ -135,10 +137,10 @@ class Client {
                     response.write(checksum);
 
                     byte[] resp = response.toByteArray();
-                    Logger.logInput(resp);
+                    LOGGER.info(LogCreator.logInput(resp));
                     emulateProcess(ccTalkCommand, resp);
                 } catch (SerialPortException | SerialPortTimeoutException ex) {
-                    ex.printStackTrace();
+                    LOGGER.error(ex.getMessage(), ex);
                 }
             }
         }

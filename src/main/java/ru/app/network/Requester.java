@@ -1,10 +1,14 @@
 package ru.app.network;
 
+import org.apache.log4j.Logger;
+import ru.app.util.LogCreator;
+
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 
 public class Requester {
+    private static final Logger LOGGER = Logger.getLogger(Requester.class);
 
     private String url;
 
@@ -12,7 +16,8 @@ public class Requester {
         this.url = url;
     }
 
-    public void sendStatus(Payment payment, Status status) throws IOException {
+    public String sendStatus(Payment payment, Status status) throws IOException {
+        LOGGER.info(LogCreator.console("send status : " + status + " for " + payment));
         HttpURLConnection conn = HttpURLConnectionFactory.getHttpConnection(url);
         conn.setUseCaches(false);
         conn.setDoInput(true);
@@ -40,6 +45,8 @@ public class Requester {
         OutputStream os = conn.getOutputStream();
         os.write(data, 0, data.length);
         os.close();
+
+        return new String(read(conn.getInputStream()), StandardCharsets.UTF_8);
     }
 
     /**
@@ -60,7 +67,7 @@ public class Requester {
      * </request>
      */
 
-    public String check() throws IOException {
+    public String checkPayment() throws IOException {
         HttpURLConnection conn = HttpURLConnectionFactory.getHttpConnection(url);
         conn.setUseCaches(false);
         conn.setDoInput(true);

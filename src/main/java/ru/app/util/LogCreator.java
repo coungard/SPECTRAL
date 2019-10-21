@@ -11,38 +11,40 @@ import java.util.Date;
 
 import static ru.app.util.StreamType.*;
 
-public class Logger {
+public class LogCreator {
     private static AbstractManager manager;
 
     public static void init() {
         manager = Launcher.currentManager;
     }
 
-    public static void console(String text) {
-        if (manager == null) return;
-        System.out.println(Settings.dateFormat.format(new Date()) + "\t" + text);
+    public static String console(String text) {
+        if (manager == null) return null;
         manager.textArea.setText(manager.textArea.getText() + Settings.dateFormat.format(new Date()) + "\t" + text + "\n");
+        return text;
     }
 
-    public static void logOutput(byte[] transmitted) {
-        log(transmitted, OUTPUT);
+    public static String logOutput(byte[] transmitted) {
+        return log(transmitted, OUTPUT);
     }
 
-    public static void logInput(byte[] received) {
-        log(received, INPUT);
+    public static String logInput(byte[] received) {
+        return log(received, INPUT);
     }
 
-    public static void logOutput(byte[] transmitted, byte[] encrypted) {
-        log(transmitted, OUTPUT);
-        if (encrypted != null) log(encrypted, OUTPUT_ENCRYPT);
+    public static String logOutput(byte[] transmitted, byte[] encrypted) {
+        String res = log(transmitted, OUTPUT);
+        if (encrypted != null) res += log(encrypted, OUTPUT_ENCRYPT);
+        return res;
     }
 
-    public static void logInput(byte[] received, byte[] decrypted) {
-        log(received, INPUT);
-        if (decrypted != null) log(decrypted, INPUT_DECRYPT);
+    public static String logInput(byte[] received, byte[] decrypted) {
+        String res = log(received, INPUT);
+        if (decrypted != null) res += log(decrypted, INPUT_DECRYPT);
+        return res;
     }
 
-    private static void log(byte[] buffer, StreamType type) {
+    private static String log(byte[] buffer, StreamType type) {
         StringBuilder ascii = new StringBuilder();
         for (byte b : buffer) {
             if (b != '\r' || Settings.hardware == DeviceType.BNE_S110M) ascii.append((char) b);
@@ -64,7 +66,7 @@ public class Logger {
                 break;
             case EMULATOR:
                 if (manager == null)
-                    return;
+                    return null;
                 if (Settings.deviceForEmulator.equals("CCNET CASHER")) {
                     if (type == INPUT)
                         commandType = manager.getCurrentCommand();
@@ -74,13 +76,12 @@ public class Logger {
                 }
         }
 
-        String log = Settings.dateFormat.format(new Date()) + "\t" + type + (Settings.properties.get("logLevel.bytes") ? "BYTES:  " +
-                Arrays.toString(buffer) + "\t" : "") +
+        String log = type + (Settings.properties.get("logLevel.bytes") ? "BYTES:  " + Arrays.toString(buffer) + "\t" : "") +
                 (Settings.properties.get("logLevel.hex") ? "HEX:  " + Utils.bytes2hex((buffer)) + "\t" : "") +
                 (Settings.properties.get("logLevel.ascii") ? "ASCII:  " + ascii.toString() + "\t" : "") + commandType;
 
-        System.out.println(log);
         if (manager != null)
             manager.textArea.setText(manager.textArea.getText() + log + "\n");
+        return log;
     }
 }

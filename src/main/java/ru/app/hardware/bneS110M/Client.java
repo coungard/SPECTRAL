@@ -4,12 +4,14 @@ import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
+import org.apache.log4j.Logger;
 import ru.app.protocol.cctalk.Command;
-import ru.app.util.Logger;
+import ru.app.util.LogCreator;
 
 import java.util.Calendar;
 
 public class Client {
+    private static final Logger LOGGER = Logger.getLogger(Client.class);
     private SerialPort serialPort;
     private byte[] received;
     static byte counter = 1;
@@ -36,7 +38,7 @@ public class Client {
     synchronized void sendBytes(byte[] bytes) {
         try {
             counter++;
-            Logger.logOutput(bytes, null);
+            LOGGER.debug(LogCreator.logOutput(bytes, null));
             serialPort.writeBytes(bytes);
             long start = Calendar.getInstance().getTimeInMillis();
             do {
@@ -54,7 +56,7 @@ public class Client {
                 try {
                     Thread.sleep(400);
                     received = serialPort.readBytes();
-                    Logger.logInput(received, null);
+                    LOGGER.debug(LogCreator.logInput(received, null));
                 } catch (InterruptedException | SerialPortException ex) {
                     ex.printStackTrace();
                 }
