@@ -14,9 +14,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 public class Helper {
     private static final Logger LOGGER = Logger.getLogger(Helper.class);
@@ -41,27 +39,25 @@ public class Helper {
         return payment;
     }
 
-    public static Map<String, String> loadProp(File payFile) throws IOException {
-        Map<String, String> result = new HashMap<>();
-        Properties p = new Properties();
-        p.load(new FileReader(payFile));
-        for (String key : p.stringPropertyNames()) {
-            result.put(key, p.getProperty(key));
+    public static Map<String, String> loadProp(File payFile) {
+        String text = null;
+        try {
+            byte[] encoded = Files.readAllBytes(Paths.get(payFile.toURI()));
+            text = new String(encoded);
+        } catch (IOException ex) {
+            LOGGER.error(ex.getMessage(), ex);
         }
-        return result;
+        return JsonHelper.jsonToMapStringString(text);
     }
 
     public static void saveProp(Map<String, String> prms, File payFile) {
         try {
-            Properties prop = new Properties();
-            for (Map.Entry<String, String> e : prms.entrySet()) {
-                prop.setProperty(e.getKey(), e.getValue());
-            }
-            OutputStream os = new FileOutputStream(payFile);
-            prop.store(os, null);
-            os.close();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            String prop = JsonHelper.mapStringStringToJson(prms);
+            PrintWriter printWriter = new PrintWriter(payFile);
+            printWriter.write(prop);
+            printWriter.close();
+        } catch (FileNotFoundException ex) {
+            LOGGER.error(ex.getMessage(), ex);
         }
     }
 

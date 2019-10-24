@@ -64,9 +64,10 @@ public class Manager extends AbstractManager {
             @Override
             public void run() {
                 LOGGER.info(LogCreator.console("Request loop started"));
+                startBot();
                 while (true) {
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(3000);
                         String response = requester.checkPayment();
                         boolean isCommand = response != null && response.contains("command");
 
@@ -180,10 +181,28 @@ public class Manager extends AbstractManager {
         }).start();
     }
 
+    private void startBot() {
+        try {
+            Runtime.getRuntime().exec("bot/starterPy.bat");
+        } catch (IOException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+        }
+    }
+
     @Override
     public void struct() {
         JLabel mainLabel = formLabel("EMULATOR CASHCODE CCNET", 0);
         add(mainLabel);
+
+        JButton test = new JButton("test");
+        test.setBounds(740, 90, 120, 40);
+        test.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                Requester.goPay();
+            }
+        });
+        add(test);
 
         emul = new JLabel();
         emul.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/emulator.gif"))));

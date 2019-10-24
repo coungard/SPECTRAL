@@ -1,5 +1,6 @@
 package ru.app.main;
 
+import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import ru.app.bus.DeviceType;
 import ru.app.hardware.AbstractManager;
@@ -17,6 +18,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 
 public class Launcher extends Thread {
+    private static final Logger LOGGER = Logger.getLogger(Launcher.class);
     private static JFrame window = new JFrame("Spectral" + " (v." + Settings.VERSION + " )");
     public static JPanel mainPanel = new JPanel();
     public static PortsPage portsPage = new PortsPage();
@@ -45,6 +47,7 @@ public class Launcher extends Thread {
 
     private Launcher() {
         DOMConfigurator.configure("src/log4j.xml");
+        LOGGER.info(LogCreator.console("Emulator started"));
         window.setSize(Settings.dimension);
 
         addPanel(mainPanel);

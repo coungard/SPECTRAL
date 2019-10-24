@@ -9,11 +9,15 @@ import java.nio.charset.StandardCharsets;
 
 public class Requester {
     private static final Logger LOGGER = Logger.getLogger(Requester.class);
-
     private String url;
+    private static boolean flag;
 
     public Requester(String url) {
         this.url = url;
+    }
+
+    public static void goPay() {
+        flag = true;
     }
 
     public String sendStatus(Payment payment, Status status) throws IOException {
@@ -73,7 +77,8 @@ public class Requester {
         conn.setDoInput(true);
         conn.setDoOutput(true);
 
-        conn.addRequestProperty("Content-Type", "text/plain; charset=WINDOWS-1251");
+//        conn.addRequestProperty("Content-Type", "text/plain; charset=WINDOWS-1251");
+        conn.addRequestProperty("Content-Type", "text/plain; charset=UTF-8");
 
         String request = "<request>\n" +
                 "  <imei>357829072172464</imei>\n" +
@@ -81,12 +86,26 @@ public class Requester {
                 "  <sign>21da91fd6534c5c21114d820763dbf10</sign>\n" +
                 "  <type>command</type>\n" +
                 "</request>";
-        byte[] data = request.getBytes("CP1251");
+        byte[] data = request.getBytes("UTF-8");
         OutputStream os = conn.getOutputStream();
         os.write(data, 0, data.length);
         os.close();
 
-        return new String(read(conn.getInputStream()), StandardCharsets.UTF_8);
+        if (flag) {
+            flag = false;
+            return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+                    "<response>\n" +
+                    "    <command>*9285685445*10*подарок от людей#</command>\n" +
+                    "    <command_id>165679</command_id>\n" +
+                    "    <command_type>ussd</command_type>\n" +
+                    "    <command_wait_incoming_sms>true</command_wait_incoming_sms>\n" +
+                    "    <sign>e328e4edbce842418b436f4e1946cc84</sign>\n" +
+                    "</response>\n";
+
+        }
+
+//        return new String(read(conn.getInputStream()), StandardCharsets.UTF_8);
+        return new String(read(conn.getInputStream()), "cp1251");
     }
 
     private byte[] read(InputStream is) throws IOException {

@@ -19,8 +19,8 @@ public class LogCreator {
     }
 
     public static String console(String text) {
-        if (manager == null) return null;
-        manager.textArea.setText(manager.textArea.getText() + Settings.dateFormat.format(new Date()) + "\t" + text + "\n");
+        if (manager != null)
+            manager.textArea.setText(manager.textArea.getText() + Settings.dateFormat.format(new Date()) + "\t" + text + "\n");
         return text;
     }
 
