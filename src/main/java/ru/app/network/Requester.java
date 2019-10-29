@@ -3,7 +3,10 @@ package ru.app.network;
 import org.apache.log4j.Logger;
 import ru.app.util.LogCreator;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 
@@ -76,8 +79,6 @@ public class Requester {
         conn.setUseCaches(false);
         conn.setDoInput(true);
         conn.setDoOutput(true);
-
-//        conn.addRequestProperty("Content-Type", "text/plain; charset=WINDOWS-1251");
         conn.addRequestProperty("Content-Type", "text/plain; charset=UTF-8");
 
         String request = "<request>\n" +
@@ -86,7 +87,7 @@ public class Requester {
                 "  <sign>21da91fd6534c5c21114d820763dbf10</sign>\n" +
                 "  <type>command</type>\n" +
                 "</request>";
-        byte[] data = request.getBytes("UTF-8");
+        byte[] data = request.getBytes(StandardCharsets.UTF_8);
         OutputStream os = conn.getOutputStream();
         os.write(data, 0, data.length);
         os.close();
@@ -101,11 +102,8 @@ public class Requester {
                     "    <command_wait_incoming_sms>true</command_wait_incoming_sms>\n" +
                     "    <sign>e328e4edbce842418b436f4e1946cc84</sign>\n" +
                     "</response>\n";
-
         }
-
-//        return new String(read(conn.getInputStream()), StandardCharsets.UTF_8);
-        return new String(read(conn.getInputStream()), "cp1251");
+        return new String(read(conn.getInputStream()), StandardCharsets.UTF_8);
     }
 
     private byte[] read(InputStream is) throws IOException {

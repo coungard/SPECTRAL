@@ -184,6 +184,7 @@ public class Manager extends AbstractManager {
     private void startBot() {
         try {
             Runtime.getRuntime().exec("bot/starterPy.bat");
+            LOGGER.info(LogCreator.console("bot started.."));
         } catch (IOException ex) {
             LOGGER.error(ex.getMessage(), ex);
         }

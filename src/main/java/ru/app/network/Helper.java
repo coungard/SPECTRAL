@@ -53,11 +53,13 @@ public class Helper {
     public static void saveProp(Map<String, String> prms, File payFile) {
         try {
             String prop = JsonHelper.mapStringStringToJson(prms);
-            PrintWriter printWriter = new PrintWriter(payFile);
+            PrintWriter printWriter = new PrintWriter(payFile, "cp1251");
             printWriter.write(prop);
             printWriter.close();
         } catch (FileNotFoundException ex) {
             LOGGER.error(ex.getMessage(), ex);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
     }
 
