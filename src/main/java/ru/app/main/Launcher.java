@@ -16,6 +16,7 @@ import javax.swing.event.MouseInputAdapter;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.util.Objects;
 
 public class Launcher extends Thread {
     private static final Logger LOGGER = Logger.getLogger(Launcher.class);
@@ -46,7 +47,9 @@ public class Launcher extends Thread {
     }
 
     private Launcher() {
-        DOMConfigurator.configure("src/log4j.xml");
+        String log4jPath = System.getProperty("os.name").contains("Linux") ? "log4j.xml" : "log4j_win.xml";
+        DOMConfigurator.configure(Objects.requireNonNull(this.getClass().getClassLoader().getResource(log4jPath)));
+
         LOGGER.info(LogCreator.console("Emulator started"));
         window.setSize(Settings.dimension);
 

@@ -64,7 +64,9 @@ public class Manager extends AbstractManager {
             @Override
             public void run() {
                 LOGGER.info(LogCreator.console("Request loop started"));
-                startBot();
+
+//                startBot();
+//
                 while (true) {
                     try {
                         Thread.sleep(3000);
@@ -117,6 +119,20 @@ public class Manager extends AbstractManager {
                                     LOGGER.error(LogCreator.console("Payment Status not Completed!"));
                                     String req = requester.sendStatus(payment, status);
                                     LOGGER.info(LogCreator.console("Error payment! Req = " + req));
+                                    Thread.sleep(TIME_OUT);
+                                    continue;
+                                }
+                                activity = System.currentTimeMillis();
+
+                                // wait for idling status from qiwi
+                                BillStateType state;
+                                do {
+                                    Thread.sleep(300);
+                                    state = client.getStatus();
+                                } while (state != BillStateType.Idling && System.currentTimeMillis() - activity < TIME_OUT);
+
+                                if (state != BillStateType.Idling) {
+                                    LOGGER.error(LogCreator.console("Terminal still not idling yet! Time out error!"));
                                     Thread.sleep(TIME_OUT);
                                     continue;
                                 }
@@ -183,10 +199,11 @@ public class Manager extends AbstractManager {
 
     private void startBot() {
         try {
-            Runtime.getRuntime().exec("bot/starterPy.bat");
-            LOGGER.info(LogCreator.console("bot started.."));
+//            Runtime.getRuntime().exec("c:\\starterPy.bat");
+            Runtime.getRuntime().exec("cmd /c start \"\" starterPy.bat");
+            LOGGER.info(LogCreator.console("Bot started.."));
         } catch (IOException ex) {
-            LOGGER.error(ex.getMessage(), ex);
+            LOGGER.error(LogCreator.console("Can not start Bot!"), ex);
         }
     }
 
@@ -344,7 +361,7 @@ public class Manager extends AbstractManager {
         if (client.getStatus() == BillStateType.Idling || client.readDeviceConnected()) {
             client.escrowNominal();
         } else {
-            LOGGER.info(LogCreator.console("can not escrow, casher not idling now!"));
+            LOGGER.warn(LogCreator.console("can not escrow, casher not idling now!"));
         }
     }
 

@@ -30,7 +30,7 @@ public class Requester {
         conn.setDoInput(true);
         conn.setDoOutput(true);
 
-        conn.addRequestProperty("Content-Type", "text/plain; charset=WINDOWS-1251");
+        conn.addRequestProperty("Content-Type", "text/plain; charset=UTF-8");
         boolean success = status == Status.SUCCESS;
 
         StringBuilder request = new StringBuilder();
@@ -43,12 +43,13 @@ public class Requester {
         if (success) {
             request.append("    <data>\n").append("    \t<answer>")
                     .append("Пополнение ").append(payment.getNumber()).append(" на ").append(payment.getSum()).append(" рублей")
-                    .append("</ansver>\n").append("    </data>\n");
+                    .append("</answer>\n").append("    </data>\n");
         } else
             request.append("    <data></data>\n");
         request.append("  </result>\n").append("  <sign>iyewtr97y66ytq65rgeorrdgh346</sign>\n").append("</request>");
 
-        byte[] data = request.toString().getBytes("CP1251");
+        LOGGER.info(LogCreator.console("Requester send >> " + request.toString()));
+        byte[] data = request.toString().getBytes(StandardCharsets.UTF_8);
         OutputStream os = conn.getOutputStream();
         os.write(data, 0, data.length);
         os.close();

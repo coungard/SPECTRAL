@@ -1,5 +1,7 @@
 package ru.app.util;
 
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -8,6 +10,7 @@ import java.util.Formatter;
 import java.util.List;
 
 public class Utils {
+    private static final Logger LOGGER = Logger.getLogger(Utils.class);
     /**
      * Переводим значение байта в лонг
      */
@@ -170,7 +173,8 @@ public class Utils {
         int[] nominals = new int[]{10, 50, 100, 500, 1000, 5000};
         List<Integer> result = new ArrayList<>();
         int rest = sum;
-        while (rest > 0) {
+//        while (rest > 0) {
+        while (rest > 9) {
             for (int i = nominals.length - 1; i >= 0; i--) {
                 if (rest >= nominals[i]) {
                     result.add(nominals[i]);
@@ -178,6 +182,9 @@ public class Utils {
                     i++;
                 }
             }
+        }
+        if (rest > 0) {
+            LOGGER.warn("Warn! Rest from payment: " + rest + " rub");
         }
         return result;
     }

@@ -70,10 +70,11 @@ public class Helper {
             LOGGER.error(LogCreator.console("PAYMENT FILE NOT EXISTS!"));
             return;
         }
-        Path target = Paths.get((status == Status.SUCCESS ? Settings.successDir : Settings.errorDir) + "payment_" + id);
+        long timestamp = System.currentTimeMillis();
+        Path target = Paths.get((status == Status.SUCCESS ? Settings.successDir : Settings.errorDir) + "payment_" + id + "_t" + timestamp);
         Files.copy(payFile, target);
         Files.delete(payFile);
-        LOGGER.info(LogCreator.console("payment file + " + target.toString() + " successfully removed"));
+        LOGGER.info(LogCreator.console("payment file: " + target.toString() + " successfully saved"));
     }
 
     /**
