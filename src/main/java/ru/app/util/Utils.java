@@ -11,6 +11,7 @@ import java.util.List;
 
 public class Utils {
     private static final Logger LOGGER = Logger.getLogger(Utils.class);
+
     /**
      * Переводим значение байта в лонг
      */
@@ -170,11 +171,11 @@ public class Utils {
     }
 
     public static List<Integer> calculatePayment(int sum) {
-        int[] nominals = new int[]{10, 50, 100, 500, 1000, 5000};
+        int[] nominals = new int[]{1, 2, 5, 10, 50, 100, 500, 1000, 5000};
         List<Integer> result = new ArrayList<>();
         int rest = sum;
-//        while (rest > 0) {
-        while (rest > 9) {
+        long start = System.currentTimeMillis();
+        while (rest > 0 && System.currentTimeMillis() - start < 10000) {
             for (int i = nominals.length - 1; i >= 0; i--) {
                 if (rest >= nominals[i]) {
                     result.add(nominals[i]);

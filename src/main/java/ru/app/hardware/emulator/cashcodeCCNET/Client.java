@@ -217,8 +217,7 @@ class Client {
         }
 
         long timestamp = System.currentTimeMillis();
-        long logDelay = 10000;
-        if (timestamp - activityDate > logDelay) {
+        if (timestamp - activityDate > 10000) {
             activityDate = timestamp;
             return true;
         }
