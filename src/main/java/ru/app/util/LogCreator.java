@@ -74,6 +74,7 @@ public class LogCreator {
                         commandType = manager.getCurrentResponse();
                     }
                 }
+                break;
         }
 
         String log = type + (Settings.properties.get("logLevel.bytes") ? "BYTES:  " + Arrays.toString(buffer) + "\t" : "") +

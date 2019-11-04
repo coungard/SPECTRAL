@@ -16,6 +16,7 @@ public class BillTable {
         table.put("1 RUB", new byte[]{(byte) 0x08});
         table.put("2 RUB", new byte[]{(byte) 0x09});
         table.put("5 RUB", new byte[]{(byte) 0x10});
+//        table.put("10 RUB", new byte[]{(byte) 0x11}); // coin
         table.put("200 RUB", new byte[]{(byte) 0x12});
         table.put("2000 RUB", new byte[]{(byte) 0x13});
     }

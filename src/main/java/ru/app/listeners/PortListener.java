@@ -1,6 +1,7 @@
 package ru.app.listeners;
 
 import jssc.SerialPortException;
+import org.apache.log4j.Logger;
 import ru.app.bus.DeviceType;
 import ru.app.main.Launcher;
 import ru.app.main.Settings;
@@ -9,6 +10,7 @@ import javax.swing.event.MouseInputAdapter;
 import java.awt.event.MouseEvent;
 
 public class PortListener extends MouseInputAdapter {
+    private static final Logger LOGGER = Logger.getLogger(PortListener.class);
     private String portName;
 
     public PortListener(String portName) {
@@ -34,10 +36,12 @@ public class PortListener extends MouseInputAdapter {
                             Launcher.defineManager(new ru.app.hardware.emulator.coinCCTALK.Manager(portName));
                             break;
                     }
-
+                case UCS:
+                    Launcher.defineManager(new ru.app.hardware.ucs.Manager(portName));
+                    break;
             }
         } catch (SerialPortException ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex.getMessage(), ex);
         }
         Launcher.portsPage.setVisible(false);
     }

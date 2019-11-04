@@ -79,12 +79,12 @@ public class Launcher extends Thread {
         mainPanel.setVisible(true);
         mainPanel.add(label);
 
-        String[] hw = new String[]{"SMART_PAYOUT", "BNE_S110M", "EMULATOR"};
+        DeviceType[] hw = DeviceType.values();
         for (int i = 0; i < hw.length; i++) {
-            JButton button = new JButton(hw[i]);
+            JButton button = new JButton(hw[i].name());
             button.setFont(FONT);
             button.setBounds(window.getWidth() / 2 - 160, 80 + i * 80, 320, 60);
-            button.addMouseListener(new HardwareListener(DeviceType.valueOf(hw[i])));
+            button.addMouseListener(new HardwareListener(hw[i]));
             mainPanel.add(button);
         }
 
