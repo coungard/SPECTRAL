@@ -385,4 +385,9 @@ public class Manager extends AbstractManager {
     public String getCurrentResponse() {
         return client.getCurrentResponse();
     }
+
+    @Override
+    protected void closeAll() {
+
+    }
 }

@@ -156,6 +156,11 @@ public class Manager extends AbstractManager {
         setVisible(true);
     }
 
+    @Override
+    protected void closeAll() {
+
+    }
+
     private void pause() {
         try {
             Thread.sleep(500);

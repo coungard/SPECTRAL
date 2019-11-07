@@ -200,5 +200,10 @@ public class Manager extends AbstractManager {
 
         return res;
     }
+
+    @Override
+    protected void closeAll() {
+
+    }
 }
 
