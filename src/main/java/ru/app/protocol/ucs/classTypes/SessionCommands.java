@@ -4,11 +4,12 @@ import ru.app.protocol.ucs.ClassType;
 
 public class SessionCommands implements ClassType {
 
-    private static byte code;
     private Operation operation;
+    private byte operationCode;
 
     public SessionCommands(Operation operation) {
         this.operation = operation;
+        this.operationCode = operation.code;
     }
 
     public enum Operation {
@@ -21,12 +22,10 @@ public class SessionCommands implements ClassType {
         ResponseInformation((byte) 0x00),   // получение информации от кассы
         RequestInformation((byte) 0x00);    // отправка информации на кассу
 
-        Operation(byte code) {
-            SessionCommands.code = code;
-        }
+        private final byte code;
 
-        public byte getCode() {
-            return code;
+        Operation(byte code) {
+            this.code = code;
         }
     }
 
@@ -37,14 +36,14 @@ public class SessionCommands implements ClassType {
 
     @Override
     public byte getOperationCode() {
-        return code;
+        return operationCode;
     }
 
     @Override
     public String getOperation() {
-        for (Operation obj : Operation.values()) {
-            if (obj.getCode() == code)
-                return obj.name();
+        for (Operation op : Operation.values()) {
+            if (op.code == operationCode)
+                return op.name();
         }
         return null;
     }

@@ -4,11 +4,12 @@ import ru.app.hardware.smartPayout.Manager;
 import ru.app.main.Settings;
 import ru.app.protocol.bne.DepositTable;
 import ru.app.protocol.cctalk.payout.EventType;
+import ru.app.protocol.ucs.UCSResponse;
 
 import java.util.Arrays;
 import java.util.Map;
 
-class ResponseHandler {
+public class ResponseHandler {
     private static Map<String, byte[]> deposits = DepositTable.getDeposits();
 
     /**
@@ -74,5 +75,22 @@ class ResponseHandler {
             default:
                 return null;
         }
+    }
+
+    public static UCSResponse parseUCS(byte[] buffer) {
+        if (buffer == null) {
+            return null;
+        }
+        if (buffer.length == 1) {
+            switch (buffer[0]) {
+                case 0x06:
+                    return UCSResponse.ACK;
+                case 0x05:
+                    return UCSResponse.NAK;
+                default:
+                    return UCSResponse.UNDEFINED;
+            }
+        }
+        return UCSResponse.UNDEFINED;
     }
 }

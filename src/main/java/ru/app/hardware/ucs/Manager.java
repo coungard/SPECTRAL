@@ -5,8 +5,7 @@ import org.apache.log4j.Logger;
 import ru.app.hardware.AbstractManager;
 import ru.app.protocol.ucs.UCSCommand;
 import ru.app.protocol.ucs.classTypes.AuthorizationRequest;
-import ru.app.protocol.ucs.classTypes.WorkWithOperationsArchive;
-import ru.app.util.LogCreator;
+import ru.app.protocol.ucs.classTypes.RequestAcceptance;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -31,27 +30,32 @@ public class Manager extends AbstractManager {
         JLabel label = formLabel("UCS EFTPOS", 0);
         add(label);
 
-        JButton btn = new JButton("put there");
-        btn.setBounds(getWidth() / 2 - 200, 60, 150, 50);
-        add(btn);
-        btn.addMouseListener(new MouseInputAdapter() {
+        JButton hold = createButton("HOLD");
+        hold.setBounds(30, 30, 140, 40);
+        add(hold);
+        hold.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                LOGGER.info(LogCreator.console("blablabla"));
-                client.sendMessage(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.Operation.Sale), new byte[]{}));
+                client.sendMessage(new UCSCommand(new RequestAcceptance(RequestAcceptance.Operation.HOLD), new byte[]{}));
             }
         });
 
-        JButton btn2 = new JButton("put there");
-        btn2.setBounds(getWidth() / 2 + 200, 60, 150, 50);
-        add(btn2);
-        btn2.addMouseListener(new MouseInputAdapter() {
+        JButton preAuth = createButton("Pre-Auth");
+        preAuth.setBounds(30, 80, 140, 40);
+        add(preAuth);
+        preAuth.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                LOGGER.info(LogCreator.console("blobloblo"));
-                client.sendMessage(new UCSCommand(new WorkWithOperationsArchive(WorkWithOperationsArchive.Operation.GetReport), new byte[]{}));
+                client.sendMessage(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.Operation.PreAuth), new byte[]{}));
             }
         });
+    }
+
+    private JButton createButton(String name) {
+        JButton button = new JButton(name);
+        button.setForeground(Color.WHITE);
+        button.setBackground(Color.BLACK);
+        return button;
     }
 
     @Override

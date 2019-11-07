@@ -6,12 +6,20 @@ import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
 import org.apache.log4j.Logger;
 import ru.app.protocol.ucs.UCSCommand;
+import ru.app.protocol.ucs.UCSResponse;
 import ru.app.util.LogCreator;
+import ru.app.util.ResponseHandler;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class Client implements SerialPortEventListener {
     private static final Logger LOGGER = Logger.getLogger(Client.class);
+    private static final byte[] TERMINAL_ID = new byte[]{0x00, 0x00, 0x01, 0x09, 0x09, 0x09, 0x09, 0x03, 0x00, 0x03}; // 10 bytes
+    //    private static final long TERMINAL_ID = 19999303L;
     private SerialPort serialPort;
     private byte[] received;
+    private static final long delayENQ = 3000;
 
     private static final byte DLE = (byte) 0x10;    // каждое сообщение начинается с DLE/STX и заканчивается DLE/ETX
     private static final byte STX = (byte) 0X02;
@@ -37,17 +45,77 @@ public class Client implements SerialPortEventListener {
 
     synchronized byte[] sendMessage(UCSCommand command) {
         LOGGER.info(LogCreator.console(command.toString()));
-        return new byte[0];
+        try {
+            // start session command begin
+            long started = System.currentTimeMillis();
+            UCSResponse response;
+            LOGGER.debug(LogCreator.logOutput(new byte[]{ENQ}));
+            serialPort.writeByte(ENQ);
+            do {
+                Thread.sleep(20);
+                response = ResponseHandler.parseUCS(received);
+            } while (response != UCSResponse.ACK && System.currentTimeMillis() - started < delayENQ);
+            if (response != UCSResponse.ACK) {
+                LOGGER.error(LogCreator.console("NO ACK FROM EFTPOS!"));
+                return null;
+            }
+            // start session command end
+            Thread.sleep(400);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            baos.write(new byte[]{DLE, ETX});       // start session
+            baos.write(formPacket(command));        // message
+            baos.write(new byte[]{DLE, STX});       // end session
+            baos.write(getLRC(baos.toByteArray())); // lrc
+
+            LOGGER.debug(LogCreator.logOutput(baos.toByteArray()));
+            serialPort.writeBytes(baos.toByteArray());
+
+        } catch (SerialPortException | IOException | InterruptedException ex) {
+            LOGGER.error(LogCreator.console(ex.getMessage()), ex);
+        }
+
+        return null;
+    }
+
+    private byte getLRC(byte[] buf) {
+        byte lrc = 0;
+        int i;
+
+        for (i = 0; i < buf.length; i++)
+            lrc ^= buf[i];
+        return lrc;
+    }
+
+    // Формируем message для отправки сообщения на EFTPOS сессии
+    private byte[] formPacket(UCSCommand command) throws IOException {
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+
+        byte classType = command.getClassType().getOperationClass();
+        byte operationCode = command.getClassType().getOperationCode();
+        result.write(classType);
+        result.write(operationCode); //todo... incorrect code!!
+        result.write(TERMINAL_ID);
+        byte[] len = toByteArray(command.getData().length);
+        result.write(len);
+        result.write(command.getData());
+
+        return result.toByteArray();
+    }
+
+    private byte[] toByteArray(int value) {
+        return new byte[]{
+                (byte) (value >> 8),
+                (byte) value};
     }
 
     @Override
     public void serialEvent(SerialPortEvent event) {
-        if (event.getEventType() == SerialPortEvent.RXCHAR) {
+        if (event.getEventType() == SerialPortEvent.RXCHAR && event.getEventValue() > 0) {
             try {
                 received = serialPort.readBytes();
                 LOGGER.debug(LogCreator.logInput(received));
             } catch (SerialPortException ex) {
-                LOGGER.error(LogCreator.console(ex.getMessage()));
+                LOGGER.error(LogCreator.console(ex.getMessage()), ex);
             }
         }
     }

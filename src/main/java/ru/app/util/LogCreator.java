@@ -82,7 +82,7 @@ public class LogCreator {
                 (Settings.properties.get("logLevel.ascii") ? "ASCII:  " + ascii.toString() + "\t" : "") + commandType;
 
         if (manager != null)
-            manager.textArea.setText(manager.textArea.getText() + log + "\n");
+            manager.textArea.setText(manager.textArea.getText() + Settings.dateFormat.format(new Date()) + "\t" + log + "\n");
         return log;
     }
 }

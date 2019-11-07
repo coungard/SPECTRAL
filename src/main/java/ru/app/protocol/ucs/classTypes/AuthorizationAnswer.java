@@ -4,23 +4,22 @@ import ru.app.protocol.ucs.ClassType;
 
 public class AuthorizationAnswer implements ClassType {
 
-    private static byte code;
     private Operation operation;
+    private byte operationCode;
 
     public AuthorizationAnswer(Operation operation) {
         this.operation = operation;
+        this.operationCode = operation.code;
     }
 
     public enum Operation {
 
         AuthorizationResponse((byte) 0x00);     // авторизационный ответ/детальный отчет о транзакции
 
-        Operation(byte code) {
-            AuthorizationAnswer.code = code;
-        }
+        private final byte code;
 
-        public byte getCode() {
-            return code;
+        Operation(byte code) {
+            this.code = code;
         }
     }
 
@@ -31,14 +30,14 @@ public class AuthorizationAnswer implements ClassType {
 
     @Override
     public byte getOperationCode() {
-        return code;
+        return operationCode;
     }
 
     @Override
     public String getOperation() {
-        for (Operation obj : Operation.values()) {
-            if (obj.getCode() == code)
-                return obj.name();
+        for (Operation op : Operation.values()) {
+            if (op.code == operationCode)
+                return op.name();
         }
         return null;
     }

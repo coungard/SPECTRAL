@@ -4,11 +4,12 @@ import ru.app.protocol.ucs.ClassType;
 
 public class RequestAcceptance implements ClassType {
 
-    private static byte code;
     private Operation operation;
+    private byte operationCode;
 
     public RequestAcceptance(Operation operation) {
         this.operation = operation;
+        this.operationCode = operation.code;
     }
 
     public enum Operation {
@@ -21,12 +22,10 @@ public class RequestAcceptance implements ClassType {
         ConsoleMessage((byte) 0x16),                        // сообщение на экран кассы
         InitialResponseErrorParsingRequest((byte) 0x21);     // ошибка валидации ответа
 
-        Operation(byte code) {
-            RequestAcceptance.code = code;
-        }
+        private final byte code;
 
-        public byte getCode() {
-            return code;
+        Operation(byte code) {
+            this.code = code;
         }
     }
 
@@ -37,14 +36,14 @@ public class RequestAcceptance implements ClassType {
 
     @Override
     public byte getOperationCode() {
-        return code;
+        return operationCode;
     }
 
     @Override
     public String getOperation() {
-        for (Operation obj : Operation.values()) {
-            if (obj.getCode() == code)
-                return obj.name();
+        for (Operation op : Operation.values()) {
+            if (op.code == operationCode)
+                return op.name();
         }
         return null;
     }

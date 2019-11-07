@@ -18,4 +18,12 @@ public class UCSCommand {
                 ", data=" + Arrays.toString(data) +
                 '}';
     }
+
+    public ClassType getClassType() {
+        return classType;
+    }
+
+    public byte[] getData() {
+        return data;
+    }
 }

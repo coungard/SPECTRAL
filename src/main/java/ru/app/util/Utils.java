@@ -124,8 +124,8 @@ public class Utils {
     static void sleep(long ms) {
         try {
             Thread.sleep(ms);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException ex) {
+            LOGGER.error(LogCreator.console(ex.getMessage()), ex);
         }
     }
 
@@ -170,6 +170,14 @@ public class Utils {
         return res;
     }
 
+    /**
+     * Деление платежа, приходящего с сервера(предпочтительно для эмулятора ccnet), куда включены монеты и бумажные купюры, исключая 200 и 2000 номиналы,
+     * так как для этих банкнот необходима новая прошивка, отсутствующая на некоторых устройствах.<br/>
+     * Пример: sum = 188 rub. return list {100, 50, 10, 10, 10, 5, 2, 1}
+     *
+     * @param sum общая сумма платежа
+     * @return список распределенных номиналов
+     */
     public static List<Integer> calculatePayment(int sum) {
         int[] nominals = new int[]{1, 2, 5, 10, 50, 100, 500, 1000, 5000};
         List<Integer> result = new ArrayList<>();

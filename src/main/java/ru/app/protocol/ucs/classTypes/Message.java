@@ -4,11 +4,12 @@ import ru.app.protocol.ucs.ClassType;
 
 public class Message implements ClassType {
 
-    private static byte code;
     private Operation operation;
+    private byte operationCode;
 
     public Message(Operation operation) {
         this.operation = operation;
+        this.operationCode = operation.code;
     }
 
     public enum Operation {
@@ -18,12 +19,10 @@ public class Message implements ClassType {
         DirectMessageToTheEFTPOS((byte) 0x02),      // сообщение, передаваемое без изменений на EFTPOS устройство
         DirectMessageFromTheEFTPOS((byte) 0x03);    // сообщение, полученное от EFTPOS устройстваД
 
-        Operation(byte code) {
-            Message.code = code;
-        }
+        private final byte code;
 
-        public byte getCode() {
-            return code;
+        Operation(byte code) {
+            this.code = code;
         }
     }
 
@@ -34,14 +33,14 @@ public class Message implements ClassType {
 
     @Override
     public byte getOperationCode() {
-        return code;
+        return operationCode;
     }
 
     @Override
     public String getOperation() {
-        for (Operation obj : Operation.values()) {
-            if (obj.getCode() == code)
-                return obj.name();
+        for (Operation op : Operation.values()) {
+            if (op.code == operationCode)
+                return op.name();
         }
         return null;
     }

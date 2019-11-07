@@ -4,11 +4,12 @@ import ru.app.protocol.ucs.ClassType;
 
 public class WorkWithOperationsArchive implements ClassType {
 
-    private static byte code;
     private Operation operation;
+    private byte operationCode;
 
     public WorkWithOperationsArchive(Operation operation) {
         this.operation = operation;
+        this.operationCode = operation.code;
     }
 
     public enum Operation {
@@ -20,12 +21,10 @@ public class WorkWithOperationsArchive implements ClassType {
         GetReport((byte) 0x05),                         // запрос отчета о проведенных транзакциях
         Commit((byte) 0x06);                            // подтверждение финансовой транзакции
 
-        Operation(byte code) {
-            WorkWithOperationsArchive.code = code;
-        }
+        private final byte code;
 
-        public byte getCode() {
-            return code;
+        Operation(byte code) {
+            this.code = code;
         }
     }
 
@@ -36,14 +35,14 @@ public class WorkWithOperationsArchive implements ClassType {
 
     @Override
     public byte getOperationCode() {
-        return code;
+        return operationCode;
     }
 
     @Override
     public String getOperation() {
-        for (Operation obj : Operation.values()) {
-            if (obj.getCode() == code)
-                return obj.name();
+        for (Operation op : Operation.values()) {
+            if (op.code == operationCode)
+                return op.name();
         }
         return null;
     }

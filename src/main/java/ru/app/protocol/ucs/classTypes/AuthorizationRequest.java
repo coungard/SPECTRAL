@@ -3,8 +3,9 @@ package ru.app.protocol.ucs.classTypes;
 import ru.app.protocol.ucs.ClassType;
 
 public class AuthorizationRequest implements ClassType {
-    private static byte code;
+
     private Operation operation;
+    private byte operationCode;
 
     public enum Operation {
         Sale((byte) 0x00),                  // продажа товаров и услуг
@@ -35,17 +36,16 @@ public class AuthorizationRequest implements ClassType {
         Activation((byte) 0x19),            // активация карты
         ActivationAndLoad((byte) 0x1A);     // активация и пополнение
 
-        Operation(byte code) {
-            AuthorizationRequest.code = code;
-        }
+        private byte code;
 
-        public byte getCode() {
-            return code;
+        Operation(byte code) {
+            this.code = code;
         }
     }
 
     public AuthorizationRequest(Operation operation) {
         this.operation = operation;
+        this.operationCode = operation.code;
     }
 
     @Override
@@ -55,14 +55,14 @@ public class AuthorizationRequest implements ClassType {
 
     @Override
     public byte getOperationCode() {
-        return code;
+        return operationCode;
     }
 
     @Override
     public String getOperation() {
-        for (Operation obj : Operation.values()) {
-            if (obj.getCode() == code)
-                return obj.name();
+        for (Operation op : Operation.values()) {
+            if (op.code == operationCode)
+                return op.name();
         }
         return null;
     }
