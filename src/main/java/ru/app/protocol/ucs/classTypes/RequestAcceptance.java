@@ -4,6 +4,8 @@ import ru.app.protocol.ucs.ClassType;
 
 public class RequestAcceptance implements ClassType {
 
+    public static final Operation HOLD = Operation.HOLD;
+
     private Operation operation;
     private byte operationCode;
 

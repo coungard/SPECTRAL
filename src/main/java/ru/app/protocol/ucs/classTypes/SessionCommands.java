@@ -4,6 +4,8 @@ import ru.app.protocol.ucs.ClassType;
 
 public class SessionCommands implements ClassType {
 
+    public static final Operation LOGIN = Operation.Login;
+
     private Operation operation;
     private byte operationCode;
 

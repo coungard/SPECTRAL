@@ -20,13 +20,15 @@ public class Client implements SerialPortEventListener {
     private SerialPort serialPort;
     private byte[] received;
     private static final long delayENQ = 3000;
+    private static final long delaySTX = 200;
 
     private static final byte DLE = (byte) 0x10;    // каждое сообщение начинается с DLE/STX и заканчивается DLE/ETX
     private static final byte STX = (byte) 0X02;
     private static final byte ETX = (byte) 0x03;
     private static final byte EOT = (byte) 0x04;    // завершение сессии передачи данных
     private static final byte ENQ = (byte) 0x05;    // инициация сессии передачи данных
-    private static final byte ACK = (byte) 0x06;    // знак успеха
+    private static final byte ACK = (byte) 0x06;    // успех
+    private static final byte NAC = (byte) 0x15;    // неудача
 
     Client(String portName) throws SerialPortException {
         serialPort = new SerialPort(portName);
@@ -63,17 +65,34 @@ public class Client implements SerialPortEventListener {
             Thread.sleep(400);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             baos.write(new byte[]{DLE, ETX});       // start session
-            baos.write(formPacket(command));        // message
+            byte[] message = formPacket(command);
+            baos.write(message);                    // message
             baos.write(new byte[]{DLE, STX});       // end session
-            baos.write(getLRC(baos.toByteArray())); // lrc
+            baos.write(getLRC(message)); // lrc
 
+            received = null;
             LOGGER.debug(LogCreator.logOutput(baos.toByteArray()));
             serialPort.writeBytes(baos.toByteArray());
+
+            started = System.currentTimeMillis();
+            do {
+                Thread.sleep(20);
+                response = ResponseHandler.parseUCS(received);
+            } while (response != UCSResponse.ACK && System.currentTimeMillis() - started < delaySTX);
+
+            if (response != UCSResponse.ACK) {
+                LOGGER.error(LogCreator.console("NO ACK. SEND NAC!"));
+                LOGGER.debug(LogCreator.logOutput(new byte[]{NAC}));
+                serialPort.writeByte(NAC);
+                return null;
+            }
+
+            LOGGER.debug(LogCreator.logOutput(new byte[]{EOT}));
+            serialPort.writeByte(EOT);
 
         } catch (SerialPortException | IOException | InterruptedException ex) {
             LOGGER.error(LogCreator.console(ex.getMessage()), ex);
         }
-
         return null;
     }
 

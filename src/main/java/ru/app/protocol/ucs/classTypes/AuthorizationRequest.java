@@ -4,6 +4,8 @@ import ru.app.protocol.ucs.ClassType;
 
 public class AuthorizationRequest implements ClassType {
 
+    public static final Operation PRE_AUTH = Operation.PreAuth;
+
     private Operation operation;
     private byte operationCode;
 

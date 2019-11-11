@@ -6,6 +6,7 @@ import ru.app.hardware.AbstractManager;
 import ru.app.protocol.ucs.UCSCommand;
 import ru.app.protocol.ucs.classTypes.AuthorizationRequest;
 import ru.app.protocol.ucs.classTypes.RequestAcceptance;
+import ru.app.protocol.ucs.classTypes.SessionCommands;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -30,25 +31,39 @@ public class Manager extends AbstractManager {
         JLabel label = formLabel("UCS EFTPOS", 0);
         add(label);
 
-        JButton hold = createButton("HOLD");
+        JButton hold = createButton("Hold");
         hold.setBounds(30, 30, 140, 40);
         add(hold);
-        hold.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                client.sendMessage(new UCSCommand(new RequestAcceptance(RequestAcceptance.Operation.HOLD), new byte[]{}));
-            }
-        });
+        hold.addMouseListener(new UCSMouseAdapter(new UCSCommand(new RequestAcceptance(RequestAcceptance.HOLD), new byte[]{})));
 
         JButton preAuth = createButton("Pre-Auth");
         preAuth.setBounds(30, 80, 140, 40);
         add(preAuth);
-        preAuth.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                client.sendMessage(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.Operation.PreAuth), new byte[]{}));
-            }
-        });
+        preAuth.addMouseListener(new UCSMouseAdapter(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.PRE_AUTH), new byte[]{})));
+
+        JButton login = createButton("Login");
+        login.setBounds(180, 30, 140, 40);
+        add(login);
+        login.addMouseListener(new UCSMouseAdapter(new UCSCommand(new SessionCommands(SessionCommands.LOGIN), new byte[]{})));
+    }
+
+    private class UCSMouseAdapter extends MouseInputAdapter {
+        private final UCSCommand ucsCommand;
+
+        public UCSMouseAdapter(UCSCommand ucsCommand) {
+            this.ucsCommand = ucsCommand;
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            super.mousePressed(e);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    client.sendMessage(ucsCommand);
+                }
+            }).start();
+        }
     }
 
     private JButton createButton(String name) {

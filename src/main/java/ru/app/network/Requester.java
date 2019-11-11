@@ -42,8 +42,8 @@ public class Requester {
                 .append("    </status>\n");
         if (success) {
             request.append("    <data>\n").append("    \t<answer>")
-                    .append("Пополнение ").append(payment.getNumber()).append(" на ").append(payment.getSum()).append(" рублей")
-                    .append("</answer>\n").append("    </data>\n");
+                    .append("Пополнение ").append(payment.getNumber()).append(" на ").append(payment.getSum())
+                    .append(" руб. /**/Запрос на активацию принятия платежа/*").append("</answer>\n").append("    </data>\n");
         } else
             request.append("    <data></data>\n");
         request.append("  </result>\n").append("  <sign>iyewtr97y66ytq65rgeorrdgh346</sign>\n").append("</request>");
