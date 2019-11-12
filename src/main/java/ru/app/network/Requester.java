@@ -1,6 +1,7 @@
 package ru.app.network;
 
 import org.apache.log4j.Logger;
+import ru.app.main.Settings;
 import ru.app.util.LogCreator;
 
 import java.io.ByteArrayOutputStream;
@@ -34,7 +35,9 @@ public class Requester {
         boolean success = status == Status.SUCCESS;
 
         StringBuilder request = new StringBuilder();
-        request.append("<request>\n").append("  <type>result</type>\n").append("  <login>android</login>\n").append("  <imei>745646</imei>\n")
+        request.append("<request>\n").append("  <type>result</type>\n").
+                append("  <login>").append(Settings.propEmul.get("login")).append("android</login>\n").
+                append("  <imei>").append(Settings.propEmul.get("imei")).append("</imei>\n")
                 .append("  <result>\n")
                 .append("    <command_id>").append(payment.getId()).append("</command_id>\n")
                 .append("    <status>")

@@ -77,9 +77,9 @@ public class LogCreator {
                 break;
         }
 
-        String log = type + (Settings.properties.get("logLevel.bytes") ? "BYTES:  " + Arrays.toString(buffer) + "\t" : "") +
-                (Settings.properties.get("logLevel.hex") ? "HEX:  " + Utils.bytes2hex((buffer)) + "\t" : "") +
-                (Settings.properties.get("logLevel.ascii") ? "ASCII:  " + ascii.toString() + "\t" : "") + commandType;
+        String log = type + ("1".equals(Settings.prop.get("logLevel.bytes")) ? "BYTES:  " + Arrays.toString(buffer) + "\t" : "") +
+                ("1".equals(Settings.prop.get("logLevel.hex")) ? "HEX:  " + Utils.bytes2hex((buffer)) + "\t" : "") +
+                ("1".equals(Settings.prop.get("logLevel.ascii")) ? "ASCII:  " + ascii.toString() + "\t" : "") + commandType;
 
         if (manager != null)
             manager.textArea.setText(manager.textArea.getText() + Settings.dateFormat.format(new Date()) + "\t" + log + "\n");

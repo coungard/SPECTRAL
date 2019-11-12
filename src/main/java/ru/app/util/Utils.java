@@ -39,7 +39,7 @@ public class Utils {
     /**
      * Перевод массива байтов в строку в шеснадцатиричном виде
      */
-    public static String bytes2hex(byte[] buf) {
+    static String bytes2hex(byte[] buf) {
         if (buf == null) return null;
         Formatter formatter = new Formatter();
         for (byte b : buf) formatter.format("%2X ", b);

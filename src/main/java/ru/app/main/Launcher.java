@@ -25,7 +25,7 @@ public class Launcher extends Thread {
     public static PortsPage portsPage = new PortsPage();
     public static DevicesPage devicesPage = new DevicesPage();
     public static OptionPage optionPage = new OptionPage();
-    private final JPanel settingsPage = new SettingsPage();
+    private final SettingsPage settingsPage = new SettingsPage();
     public static AbstractManager currentManager;
     private static final Color BACKGROUND_COLOR = new Color(67, 159, 212);
     private static final Font FONT = new Font(Font.SANS_SERIF, Font.BOLD, 23);
@@ -92,6 +92,8 @@ public class Launcher extends Thread {
         settings.setFont(FONT);
         settings.setBackground(Color.BLACK);
         settings.setForeground(Color.WHITE);
+        if (settingsPage.isAttention())
+            settings.setForeground(Color.RED);
         settings.setBounds(20, 500, 320, 50);
         settings.addMouseListener(new MouseInputAdapter() {
             @Override
