@@ -6,7 +6,7 @@ import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
 import org.apache.log4j.Logger;
 import ru.app.protocol.ucs.UCSCommand;
-import ru.app.protocol.ucs.UCSResponse;
+import ru.app.protocol.ucs.UCSMessage;
 import ru.app.util.LogCreator;
 import ru.app.util.ResponseHandler;
 
@@ -16,7 +16,6 @@ import java.io.IOException;
 public class Client implements SerialPortEventListener {
     private static final Logger LOGGER = Logger.getLogger(Client.class);
     private static final byte[] TERMINAL_ID = new byte[]{0x00, 0x00, 0x01, 0x09, 0x09, 0x09, 0x09, 0x03, 0x00, 0x03}; // 10 bytes
-    //    private static final long TERMINAL_ID = 19999303L;
     private SerialPort serialPort;
     private byte[] received;
     private static final long delayENQ = 3000;
@@ -29,6 +28,9 @@ public class Client implements SerialPortEventListener {
     private static final byte ENQ = (byte) 0x05;    // инициация сессии передачи данных
     private static final byte ACK = (byte) 0x06;    // успех
     private static final byte NAC = (byte) 0x15;    // неудача
+
+    private String currentCommand;
+    private String currentResponse;
 
     Client(String portName) throws SerialPortException {
         serialPort = new SerialPort(portName);
@@ -45,19 +47,28 @@ public class Client implements SerialPortEventListener {
         LOGGER.info(LogCreator.console("Initialization port " + portName + " was succesfull!"));
     }
 
-    synchronized byte[] sendMessage(UCSCommand command) {
+    private synchronized void sendPacket(byte[] packet) {
+        try {
+            currentCommand = ResponseHandler.parseUCS(packet);
+            LOGGER.debug(LogCreator.logOutput(packet));
+            serialPort.writeBytes(packet);
+        } catch (SerialPortException ex) {
+            LOGGER.error(LogCreator.console(ex.getMessage()), ex);
+        }
+    }
+
+    byte[] sendMessage(UCSCommand command) {
         LOGGER.info(LogCreator.console(command.toString()));
         try {
             // start session command begin
             long started = System.currentTimeMillis();
-            UCSResponse response;
-            LOGGER.debug(LogCreator.logOutput(new byte[]{ENQ}));
-            serialPort.writeByte(ENQ);
+            String response;
+            sendPacket(new byte[]{ENQ});
             do {
                 Thread.sleep(20);
                 response = ResponseHandler.parseUCS(received);
-            } while (response != UCSResponse.ACK && System.currentTimeMillis() - started < delayENQ);
-            if (response != UCSResponse.ACK) {
+            } while (!UCSMessage.ACK.toString().equals(response) && System.currentTimeMillis() - started < delayENQ);
+            if (!UCSMessage.ACK.toString().equals(response)) {
                 LOGGER.error(LogCreator.console("NO ACK FROM EFTPOS!"));
                 return null;
             }
@@ -71,26 +82,22 @@ public class Client implements SerialPortEventListener {
             baos.write(getLRC(message)); // lrc
 
             received = null;
-            LOGGER.debug(LogCreator.logOutput(baos.toByteArray()));
-            serialPort.writeBytes(baos.toByteArray());
+            sendPacket(baos.toByteArray());
 
             started = System.currentTimeMillis();
             do {
                 Thread.sleep(20);
                 response = ResponseHandler.parseUCS(received);
-            } while (response != UCSResponse.ACK && System.currentTimeMillis() - started < delaySTX);
+            } while (!UCSMessage.ACK.toString().equals(response) && System.currentTimeMillis() - started < 30000);
 
-            if (response != UCSResponse.ACK) {
+            if (UCSMessage.ACK.toString().equals(response)) {
                 LOGGER.error(LogCreator.console("NO ACK. SEND NAC!"));
-                LOGGER.debug(LogCreator.logOutput(new byte[]{NAC}));
-                serialPort.writeByte(NAC);
+                sendPacket(new byte[]{NAC});
                 return null;
             }
+            sendPacket(new byte[]{EOT});
 
-            LOGGER.debug(LogCreator.logOutput(new byte[]{EOT}));
-            serialPort.writeByte(EOT);
-
-        } catch (SerialPortException | IOException | InterruptedException ex) {
+        } catch (IOException | InterruptedException ex) {
             LOGGER.error(LogCreator.console(ex.getMessage()), ex);
         }
         return null;
@@ -112,7 +119,7 @@ public class Client implements SerialPortEventListener {
         byte classType = command.getClassType().getOperationClass();
         byte operationCode = command.getClassType().getOperationCode();
         result.write(classType);
-        result.write(operationCode); //todo... incorrect code!!
+        result.write(operationCode);
         result.write(TERMINAL_ID);
         byte[] len = toByteArray(command.getData().length);
         result.write(len);
@@ -132,6 +139,7 @@ public class Client implements SerialPortEventListener {
         if (event.getEventType() == SerialPortEvent.RXCHAR && event.getEventValue() > 0) {
             try {
                 received = serialPort.readBytes();
+                currentResponse = ResponseHandler.parseUCS(received);
                 LOGGER.debug(LogCreator.logInput(received));
             } catch (SerialPortException ex) {
                 LOGGER.error(LogCreator.console(ex.getMessage()), ex);
@@ -143,5 +151,13 @@ public class Client implements SerialPortEventListener {
         if (serialPort.isOpened()) {
             serialPort.closePort();
         }
+    }
+
+    String getCurrentCommand() {
+        return currentCommand;
+    }
+
+    String getCurrentResponse() {
+        return currentResponse;
     }
 }

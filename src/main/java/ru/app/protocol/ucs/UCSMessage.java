@@ -1,7 +1,8 @@
 package ru.app.protocol.ucs;
 
-public enum UCSResponse {
+public enum UCSMessage {
     ACK,
-    NAK,
+    ENQ,
+    EOT,
     UNDEFINED;
 }

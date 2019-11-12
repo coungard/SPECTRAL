@@ -44,13 +44,23 @@ public class Manager extends AbstractManager {
         JButton login = createButton("Login");
         login.setBounds(180, 30, 140, 40);
         add(login);
-        login.addMouseListener(new UCSMouseAdapter(new UCSCommand(new SessionCommands(SessionCommands.LOGIN), new byte[]{})));
+        login.addMouseListener(new UCSMouseAdapter(new UCSCommand(new SessionCommands(SessionCommands.LOGIN), new byte[]{0x01})));
+
+        JButton sale = createButton("Sale");
+        sale.setBounds(180, 80, 140, 40);
+        add(sale);
+        sale.addMouseListener(new UCSMouseAdapter(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.SALE), new byte[]{})));
+
+        JButton activation = createButton("Activation");
+        activation.setBounds(330, 30, 140, 40);
+        add(activation);
+        activation.addMouseListener(new UCSMouseAdapter(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.ACTIVATION), new byte[]{})));
     }
 
     private class UCSMouseAdapter extends MouseInputAdapter {
         private final UCSCommand ucsCommand;
 
-        public UCSMouseAdapter(UCSCommand ucsCommand) {
+        UCSMouseAdapter(UCSCommand ucsCommand) {
             this.ucsCommand = ucsCommand;
         }
 
@@ -62,7 +72,7 @@ public class Manager extends AbstractManager {
                 public void run() {
                     client.sendMessage(ucsCommand);
                 }
-            }).start();
+            }, "UCS-THREAD").start();
         }
     }
 
@@ -76,6 +86,16 @@ public class Manager extends AbstractManager {
     @Override
     public void redraw() {
 
+    }
+
+    @Override
+    public String getCurrentCommand() {
+        return client.getCurrentCommand() == null ? "" : "Command: " + client.getCurrentCommand();
+    }
+
+    @Override
+    public String getCurrentResponse() {
+        return client.getCurrentResponse();
     }
 
     @Override

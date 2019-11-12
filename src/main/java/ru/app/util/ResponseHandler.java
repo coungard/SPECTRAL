@@ -4,7 +4,7 @@ import ru.app.hardware.smartPayout.Manager;
 import ru.app.main.Settings;
 import ru.app.protocol.bne.DepositTable;
 import ru.app.protocol.cctalk.payout.EventType;
-import ru.app.protocol.ucs.UCSResponse;
+import ru.app.protocol.ucs.UCSMessage;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -77,20 +77,29 @@ public class ResponseHandler {
         }
     }
 
-    public static UCSResponse parseUCS(byte[] buffer) {
+    public static String parseUCS(byte[] buffer) {
         if (buffer == null) {
             return null;
         }
         if (buffer.length == 1) {
             switch (buffer[0]) {
                 case 0x06:
-                    return UCSResponse.ACK;
+                    return UCSMessage.ACK.toString();
                 case 0x05:
-                    return UCSResponse.NAK;
+                    return UCSMessage.ENQ.toString();
+                case 0x04:
+                    return UCSMessage.EOT.toString();
                 default:
-                    return UCSResponse.UNDEFINED;
+                    return UCSMessage.UNDEFINED.toString();
             }
         }
-        return UCSResponse.UNDEFINED;
+        if (buffer.length > 6) {
+            // buffer[2] = class; buffer[3] = operation.
+            byte cl = buffer[2];
+            byte op = buffer[3];
+
+            // TODO...
+        }
+        return null;
     }
 }

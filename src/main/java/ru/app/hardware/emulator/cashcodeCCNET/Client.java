@@ -93,6 +93,12 @@ class Client {
         }
     }
 
+    void close() throws SerialPortException {
+        if (serialPort.isOpened()) {
+            serialPort.closePort();
+        }
+    }
+
     private class PortReader implements SerialPortEventListener {
         @Override
         public void serialEvent(SerialPortEvent event) {

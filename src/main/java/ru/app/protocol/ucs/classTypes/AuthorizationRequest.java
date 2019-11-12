@@ -5,6 +5,8 @@ import ru.app.protocol.ucs.ClassType;
 public class AuthorizationRequest implements ClassType {
 
     public static final Operation PRE_AUTH = Operation.PreAuth;
+    public static final Operation SALE = Operation.Sale;
+    public static final Operation ACTIVATION = Operation.Activation;
 
     private Operation operation;
     private byte operationCode;

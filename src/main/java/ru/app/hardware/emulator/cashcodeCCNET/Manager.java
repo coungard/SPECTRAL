@@ -1,5 +1,6 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
+import jssc.SerialPortException;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import ru.app.hardware.AbstractManager;
@@ -388,6 +389,10 @@ public class Manager extends AbstractManager {
 
     @Override
     protected void closeAll() {
-
+        try {
+            client.close();
+        } catch (SerialPortException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+        }
     }
 }

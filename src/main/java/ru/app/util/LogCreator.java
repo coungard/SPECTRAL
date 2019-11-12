@@ -75,6 +75,14 @@ public class LogCreator {
                     }
                 }
                 break;
+            case UCS:
+                if (manager == null)
+                    return null;
+                if (type == OUTPUT)
+                    commandType = manager.getCurrentCommand();
+                if (type == INPUT) {
+                    commandType = manager.getCurrentResponse();
+                }
         }
 
         String log = type + ("1".equals(Settings.prop.get("logLevel.bytes")) ? "BYTES:  " + Arrays.toString(buffer) + "\t" : "") +
