@@ -9,21 +9,22 @@ import ru.app.protocol.ucs.UCSCommand;
 import ru.app.protocol.ucs.UCSMessage;
 import ru.app.util.LogCreator;
 import ru.app.util.ResponseHandler;
+import ru.app.util.Utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class Client implements SerialPortEventListener {
     private static final Logger LOGGER = Logger.getLogger(Client.class);
-    private static final byte[] TERMINAL_ID = new byte[]{0x00, 0x00, 0x01, 0x09, 0x09, 0x09, 0x09, 0x03, 0x00, 0x03}; // 10 bytes
+    private static final String TERMINAL_ID = "0019999303"; // 10 chars
     private SerialPort serialPort;
     private byte[] received;
     private static final long delayENQ = 3000;
     private static final long delaySTX = 200;
 
-    private static final byte DLE = (byte) 0x10;    // каждое сообщение начинается с DLE/STX и заканчивается DLE/ETX
-    private static final byte STX = (byte) 0X02;
-    private static final byte ETX = (byte) 0x03;
+    public static final byte DLE = (byte) 0x10;    // каждое сообщение начинается с DLE/STX и заканчивается DLE/ETX
+    public static final byte STX = (byte) 0X02;
+    public static final byte ETX = (byte) 0x03;
     private static final byte EOT = (byte) 0x04;    // завершение сессии передачи данных
     private static final byte ENQ = (byte) 0x05;    // инициация сессии передачи данных
     private static final byte ACK = (byte) 0x06;    // успех
@@ -48,6 +49,7 @@ public class Client implements SerialPortEventListener {
     }
 
     private synchronized void sendPacket(byte[] packet) {
+        received = null;
         try {
             currentCommand = ResponseHandler.parseUCS(packet);
             LOGGER.debug(LogCreator.logOutput(packet));
@@ -57,59 +59,71 @@ public class Client implements SerialPortEventListener {
         }
     }
 
-    byte[] sendMessage(UCSCommand command) {
+    private synchronized void sendLRC(byte lrc) {
+        received = null;
+        currentCommand = "LRC";
+        try {
+            LOGGER.debug(LogCreator.logOutput(new byte[]{lrc}));
+            serialPort.writeByte(lrc);
+        } catch (SerialPortException ex) {
+            LOGGER.error(LogCreator.console(ex.getMessage()), ex);
+        }
+    }
+
+    synchronized void sendBytes(byte[] buffer) {
+        try {
+            sendPacket(new byte[]{ENQ});
+            Thread.sleep(100);
+            sendPacket(new byte[]{DLE, STX});
+            sendPacket(buffer);
+            sendPacket(new byte[]{DLE, ETX});
+            sendLRC(Utils.getLRC(buffer));
+        } catch (InterruptedException ex) {
+            LOGGER.error(LogCreator.console(ex.getMessage()), ex);
+        }
+    }
+
+    synchronized void sendMessage(UCSCommand command) {
         LOGGER.info(LogCreator.console(command.toString()));
         try {
-            // start session command begin
-            long started = System.currentTimeMillis();
-            String response;
             sendPacket(new byte[]{ENQ});
-            do {
-                Thread.sleep(20);
-                response = ResponseHandler.parseUCS(received);
-            } while (!UCSMessage.ACK.toString().equals(response) && System.currentTimeMillis() - started < delayENQ);
-            if (!UCSMessage.ACK.toString().equals(response)) {
-                LOGGER.error(LogCreator.console("NO ACK FROM EFTPOS!"));
-                return null;
-            }
-            // start session command end
-            Thread.sleep(400);
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            baos.write(new byte[]{DLE, ETX});       // start session
+            if (ACKfailed()) return;
+
+            Thread.sleep(100);
+            sendPacket(new byte[]{DLE, STX});       // start session
             byte[] message = formPacket(command);
-            baos.write(message);                    // message
-            baos.write(new byte[]{DLE, STX});       // end session
-            baos.write(getLRC(message)); // lrc
+            sendPacket(message);                    // message
+            sendPacket(new byte[]{DLE, ETX});       // end session
+            sendLRC(Utils.getLRC(message)); // lrc
 
-            received = null;
-            sendPacket(baos.toByteArray());
+            if (ACKfailed()) return;
 
-            started = System.currentTimeMillis();
-            do {
-                Thread.sleep(20);
-                response = ResponseHandler.parseUCS(received);
-            } while (!UCSMessage.ACK.toString().equals(response) && System.currentTimeMillis() - started < 30000);
-
-            if (UCSMessage.ACK.toString().equals(response)) {
-                LOGGER.error(LogCreator.console("NO ACK. SEND NAC!"));
-                sendPacket(new byte[]{NAC});
-                return null;
-            }
             sendPacket(new byte[]{EOT});
 
         } catch (IOException | InterruptedException ex) {
             LOGGER.error(LogCreator.console(ex.getMessage()), ex);
         }
-        return null;
     }
 
-    private byte getLRC(byte[] buf) {
-        byte lrc = 0;
-        int i;
+    private boolean ACKfailed() {
+        String response;
+        long started = System.currentTimeMillis();
+        do {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException ex) {
+                LOGGER.error(LogCreator.console(ex.getMessage()), ex);
+                return true;
+            }
+            response = ResponseHandler.parseUCS(received);
+        } while (!UCSMessage.ACK.toString().equals(response) && System.currentTimeMillis() - started < delaySTX);
 
-        for (i = 0; i < buf.length; i++)
-            lrc ^= buf[i];
-        return lrc;
+        if (!UCSMessage.ACK.toString().equals(response)) {
+            LOGGER.error(LogCreator.console("\n\n\nERROR TIMEOUT!"));
+            sendPacket(new byte[]{NAC});
+            return true;
+        }
+        return false;
     }
 
     // Формируем message для отправки сообщения на EFTPOS сессии
@@ -120,18 +134,34 @@ public class Client implements SerialPortEventListener {
         byte operationCode = command.getClassType().getOperationCode();
         result.write(classType);
         result.write(operationCode);
-        result.write(TERMINAL_ID);
-        byte[] len = toByteArray(command.getData().length);
+
+        byte[] tid = TERMINAL_ID.getBytes();
+        result.write(tid);
+        byte[] len = getASCIIlength(command.getData().length);
         result.write(len);
         result.write(command.getData());
 
         return result.toByteArray();
     }
 
-    private byte[] toByteArray(int value) {
+    private byte[] getASCIIlength(int length) {
+        char[] temp = new char[]{'0', '0'};
+        String len = "" + length;
+
+        if (len.length() == 1) {
+            temp[1] = len.charAt(0);
+        }
+        if (len.length() == 2) {
+            temp[0] = len.charAt(0);
+            temp[1] = len.charAt(1);
+        }
+        if (len.length() > 2) {
+            throw new RuntimeException("Длина не должна превышать 99 (2-значное число)!");
+        }
         return new byte[]{
-                (byte) (value >> 8),
-                (byte) value};
+                (byte) temp[0],
+                (byte) temp[1]
+        };
     }
 
     @Override

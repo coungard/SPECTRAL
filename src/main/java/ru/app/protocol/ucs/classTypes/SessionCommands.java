@@ -15,14 +15,14 @@ public class SessionCommands implements ClassType {
     }
 
     public enum Operation {
-        Login((byte) 0x00),                 // инициация рабочей сессии
-        LoginResponse((byte) 0x01),         // ответ на запрос инициации рабочей сессии
-        PrintLine((byte) 0x02),             // печать одной или нескольких линий текста на чековом принтере
-        Break((byte) 0x03),                 // прервать операцию
-        BreakResponse((byte) 0x04),         // ответ на запрос прерывания операции
-        InfoMessage((byte) 0x06),           // информационное сообщение общего характера
-        ResponseInformation((byte) 0x07),   // получение информации от кассы
-        RequestInformation((byte) 0x08);    // отправка информации на кассу
+        Login((byte) 0x30),                 // инициация рабочей сессии
+        LoginResponse((byte) 0x31),         // ответ на запрос инициации рабочей сессии
+        PrintLine((byte) 0x32),             // печать одной или нескольких линий текста на чековом принтере
+        Break((byte) 0x33),                 // прервать операцию
+        BreakResponse((byte) 0x34),         // ответ на запрос прерывания операции
+        InfoMessage((byte) 0x36),           // информационное сообщение общего характера
+        ResponseInformation((byte) 0x37),   // получение информации от кассы
+        RequestInformation((byte) 0x38);    // отправка информации на кассу
 
         private final byte code;
 
@@ -33,7 +33,7 @@ public class SessionCommands implements ClassType {
 
     @Override
     public byte getOperationClass() {
-        return (byte) 0x03;
+        return (byte) 0x033;
     }
 
     @Override

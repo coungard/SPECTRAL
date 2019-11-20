@@ -44,17 +44,29 @@ public class Manager extends AbstractManager {
         JButton login = createButton("Login");
         login.setBounds(180, 30, 140, 40);
         add(login);
-        login.addMouseListener(new UCSMouseAdapter(new UCSCommand(new SessionCommands(SessionCommands.LOGIN), new byte[]{0x01})));
+        login.addMouseListener(new UCSMouseAdapter(new UCSCommand(new SessionCommands(SessionCommands.LOGIN), new byte[]{})));
 
         JButton sale = createButton("Sale");
         sale.setBounds(180, 80, 140, 40);
         add(sale);
-        sale.addMouseListener(new UCSMouseAdapter(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.SALE), new byte[]{})));
+        sale.addMouseListener(new UCSMouseAdapter(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.SALE),
+                new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00})));
 
         JButton activation = createButton("Activation");
         activation.setBounds(330, 30, 140, 40);
         add(activation);
         activation.addMouseListener(new UCSMouseAdapter(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.ACTIVATION), new byte[]{})));
+
+        JButton test = createButton("Test");
+        test.setBounds(580, 30, 140, 40);
+        add(test);
+        test.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                client.sendBytes(new byte[]{(byte) 0x33, (byte) 0x30, (byte) 0x30, (byte) 0x30, (byte) 0x31, (byte) 0x39, (byte) 0x39,
+                        (byte) 0x39, (byte) 0x39, (byte) 0x33, (byte) 0x31, (byte) 0x39, (byte) 0x30, (byte) 0x30});
+            }
+        });
     }
 
     private class UCSMouseAdapter extends MouseInputAdapter {

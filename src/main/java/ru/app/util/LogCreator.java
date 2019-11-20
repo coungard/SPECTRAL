@@ -87,7 +87,7 @@ public class LogCreator {
 
         String log = type + ("1".equals(Settings.prop.get("logLevel.bytes")) ? "BYTES:  " + Arrays.toString(buffer) + "\t" : "") +
                 ("1".equals(Settings.prop.get("logLevel.hex")) ? "HEX:  " + Utils.bytes2hex((buffer)) + "\t" : "") +
-                ("1".equals(Settings.prop.get("logLevel.ascii")) ? "ASCII:  " + ascii.toString() + "\t" : "") + commandType;
+                ("1".equals(Settings.prop.get("logLevel.ascii")) ? "ASCII:  " + ascii.toString() + "\t\t" : "") + commandType;
 
         if (manager != null)
             manager.textArea.setText(manager.textArea.getText() + Settings.dateFormat.format(new Date()) + "\t" + log + "\n");

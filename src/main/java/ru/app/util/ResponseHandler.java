@@ -1,6 +1,7 @@
 package ru.app.util;
 
 import ru.app.hardware.smartPayout.Manager;
+import ru.app.hardware.ucs.Client;
 import ru.app.main.Settings;
 import ru.app.protocol.bne.DepositTable;
 import ru.app.protocol.cctalk.payout.EventType;
@@ -83,15 +84,23 @@ public class ResponseHandler {
         }
         if (buffer.length == 1) {
             switch (buffer[0]) {
-                case 0x06:
-                    return UCSMessage.ACK.toString();
-                case 0x05:
-                    return UCSMessage.ENQ.toString();
                 case 0x04:
                     return UCSMessage.EOT.toString();
+                case 0x05:
+                    return UCSMessage.ENQ.toString();
+                case 0x06:
+                    return UCSMessage.ACK.toString();
+                case 0x15:
+                    return UCSMessage.NAK.toString();
                 default:
-                    return UCSMessage.UNDEFINED.toString();
+                    return null;
             }
+        }
+        if (buffer.length == 2) {
+            if (buffer[0] == Client.DLE && buffer[1] == Client.STX)
+                return "DLE/STX";
+            if (buffer[0] == Client.DLE && buffer[1] == Client.ETX)
+                return "DLE/ETX";
         }
         if (buffer.length > 6) {
             // buffer[2] = class; buffer[3] = operation.

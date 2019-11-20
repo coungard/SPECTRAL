@@ -197,4 +197,19 @@ public class Utils {
         }
         return result;
     }
+
+    /**
+     * Алгоритм вычисления контрольной суммы. Исключительное ИЛИ всех байтов сообщения.
+     *
+     * @param buf передаваемый буффер с сообщением
+     * @return байт lrc
+     */
+    public static byte getLRC(byte[] buf) {
+        byte lrc = 0;
+        int i;
+
+        for (i = 0; i < buf.length; i++)
+            lrc ^= buf[i];
+        return lrc;
+    }
 }

@@ -4,5 +4,6 @@ public enum UCSMessage {
     ACK,
     ENQ,
     EOT,
+    NAK,
     UNDEFINED;
 }
