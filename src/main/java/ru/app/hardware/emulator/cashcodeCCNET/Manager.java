@@ -289,7 +289,7 @@ public class Manager extends AbstractManager {
             }
         }
 
-        if (client.readDeviceConnected()) {
+        if (client.realDeviceConnected()) {
             activateEmulator(false);
             emul.addMouseListener(new MouseInputAdapter() {
                 @Override
@@ -359,7 +359,7 @@ public class Manager extends AbstractManager {
     }
 
     private void sendEscrowPosition() {
-        if (client.getStatus() == BillStateType.Idling || client.readDeviceConnected()) {
+        if (client.getStatus() == BillStateType.Idling || client.realDeviceConnected()) {
             client.escrowNominal();
         } else {
             LOGGER.warn(LogCreator.console("can not escrow, casher not idling now!"));

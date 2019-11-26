@@ -137,6 +137,7 @@ class Client {
             case ACK:
                 return;
             case Reset:
+                setStatus(BillStateType.UnitDisabled);
                 changeStatus(6000, BillStateType.Initialize);
             case GetStatus:
                 currentResponse = "Set Status [Emulator]";
@@ -230,7 +231,7 @@ class Client {
         return false;
     }
 
-    boolean readDeviceConnected() {
+    boolean realDeviceConnected() {
         return cashCodeClient != null;
     }
 
