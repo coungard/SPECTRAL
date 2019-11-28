@@ -23,6 +23,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
@@ -46,9 +47,12 @@ public class Manager extends AbstractManager {
     private List<JButton> billButtons = new ArrayList<>();
     private JButton encashButton;
     private Requester requester;
+    private boolean requesterStarted = false;
+    private boolean botStarted = false;
     private static final String URL = "http://192.168.15.121:8080/ussdWww/";
     private static final int TIME_OUT = 60000 * 20;
     private static final int ERROR_TIME_OUT = 60000 * 60;
+    private static final int BOT_STARTER_TIME_OUT = 60000 * 5; // 5 minutes
 
     public Manager(String port) {
         setSize(1020, 600);
@@ -65,10 +69,7 @@ public class Manager extends AbstractManager {
             @Override
             public void run() {
                 LOGGER.info(LogCreator.console("Request loop started"));
-
-//                startBot();
-//
-                while (true) {
+                while (requesterStarted) {
                     try {
                         Thread.sleep(3000);
                         String response = requester.checkPayment();
@@ -198,30 +199,12 @@ public class Manager extends AbstractManager {
         }).start();
     }
 
-    private void startBot() {
-        try {
-//            Runtime.getRuntime().exec("c:\\starterPy.bat");
-            Runtime.getRuntime().exec("cmd /c start \"\" starterPy.bat");
-            LOGGER.info(LogCreator.console("Bot started.."));
-        } catch (IOException ex) {
-            LOGGER.error(LogCreator.console("Can not start Bot!"), ex);
-        }
-    }
-
     @Override
     public void struct() {
         JLabel mainLabel = formLabel("EMULATOR CASHCODE CCNET", 0);
         add(mainLabel);
 
-        JButton test = new JButton("test");
-        test.setBounds(740, 90, 120, 40);
-        test.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                Requester.goPay();
-            }
-        });
-        add(test);
+        scroll.setBounds(30, 190, 960, 340);
 
         emul = new JLabel();
         emul.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/emulator.gif"))));
@@ -243,8 +226,9 @@ public class Manager extends AbstractManager {
         add(modeLabel);
 
         encashButton = new JButton("Encashment");
-        encashButton.setBounds(550, 40, 180, 50);
+        encashButton.setBounds(450, 40, 180, 40);
         encashButton.setBackground(new Color(233, 217, 182));
+        encashButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
         add(encashButton);
         encashButton.addActionListener(new AbstractAction() {
             @Override
@@ -262,10 +246,105 @@ public class Manager extends AbstractManager {
             }
         });
 
+        JButton botButton = new JButton("Start Bot");
+        botButton.setBounds(350, 145, 160, 40);
+        botButton.setBackground(new Color(243, 245, 197));
+        botButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+        add(botButton);
+        botButton.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!botStarted) {
+                            LOGGER.info(LogCreator.console("start bot button pressed"));
+
+                            long started = System.currentTimeMillis();
+                            botButton.setEnabled(false);
+
+                            boolean access = false;
+                            try {
+                                Path path = Paths.get("payments/autoRun");
+                                if (Files.exists(path)) {
+                                    LOGGER.warn(LogCreator.console("Bot file already exists! Recreating."));
+                                    Files.delete(path);
+                                }
+                                Files.createFile(path);
+                                Map<String, String> startOpt = new HashMap<>();
+                                startOpt.put("bot", "open");
+                                Helper.saveProp(startOpt, path.toFile());
+                                do {
+                                    Thread.sleep(400);
+                                    Map<String, String> bot = Helper.loadProp(path.toFile());
+
+                                    if (bot.get("bot").equals("ok")) {
+                                        Files.delete(path);
+                                        access = true;
+                                        break;
+                                    }
+                                } while (System.currentTimeMillis() - started < BOT_STARTER_TIME_OUT);
+
+                                if (access) {
+                                    botStarted = true;
+                                    botButton.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/bot.gif"))));
+                                    LOGGER.info(LogCreator.console("Bot started!"));
+                                } else {
+                                    LOGGER.error(LogCreator.console("Can not starting bot!"));
+                                }
+                            } catch (IOException | InterruptedException ex) {
+                                LOGGER.error(ex.getMessage(), ex);
+                            } finally {
+                                botButton.setEnabled(true);
+                            }
+
+                        } else {
+                            LOGGER.info(LogCreator.console("stop bot button pressed"));
+                            botButton.setIcon(null);
+                            botStarted = false;
+//                            stopBot(); TODO...
+                        }
+                    }
+                }).start();
+            }
+        });
+
+        JButton requesterButton = new JButton("Start Requester");
+        requesterButton.setBounds(540, 145, 160, 40);
+        requesterButton.setBackground(botButton.getBackground());
+        requesterButton.setFont(botButton.getFont());
+        add(requesterButton);
+        requesterButton.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                LOGGER.info(LogCreator.console("start requester button pressed"));
+                if (!requesterStarted) {
+                    if (!botStarted) {
+                        String[] buttons = new String[]{"Yes", "No"};
+                        int review = JOptionPane.showOptionDialog(null, "Bot not started, are you sure to start Requester?",
+                                "Attention!", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, buttons, buttons[0]);
+
+                        if (review == 0) {
+                            requesterButton.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/requester.gif"))));
+                            requesterStarted = true;
+                            requestLoop();
+                        }
+                    } else {
+                        requesterButton.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/requester.gif"))));
+                        requesterStarted = true;
+                    }
+                } else {
+                    LOGGER.info(LogCreator.console("stop requester button pressed!"));
+                    requesterButton.setIcon(null);
+                    requesterStarted = false;
+                }
+            }
+        });
+
         paymentPanel = new JPanel();
-        paymentPanel.setBorder(BorderFactory.createTitledBorder("NOTE INSERTION COMMANDS"));
-        paymentPanel.setBounds(30, 40, 500, 100);
-        paymentPanel.setBackground(new Color(7, 146, 151));
+        paymentPanel.setBorder(BorderFactory.createTitledBorder("Вставка номинала банкноты (в рублях)"));
+        paymentPanel.setBounds(30, 40, 400, 100);
+        paymentPanel.setBackground(new Color(248, 243, 103));
         add(paymentPanel);
 
         verboseLog = new JCheckBox("verbose Log");
@@ -330,7 +409,6 @@ public class Manager extends AbstractManager {
 
     @Override
     public void redraw() {
-        requestLoop();
     }
 
     /**
@@ -367,8 +445,11 @@ public class Manager extends AbstractManager {
     }
 
     private void addBill(String billName) {
-        JButton bill = new JButton(billName);
-        bill.setPreferredSize(new Dimension(100, 30));
+        JButton bill = new JButton(billName.split(" ")[0]); // Отсекаем RU в названии
+        bill.setPreferredSize(new Dimension(80, 30));
+        bill.setForeground(Color.WHITE);
+        bill.setBackground(Color.BLACK);
+        bill.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
         paymentPanel.add(bill);
         billButtons.add(bill);
     }

@@ -5,6 +5,9 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
@@ -211,5 +214,59 @@ public class Utils {
         for (i = 0; i < buf.length; i++)
             lrc ^= buf[i];
         return lrc;
+    }
+
+
+    /**
+     * Метод принимает целое числовое значение от 1 до 99, и возвращает в виде 2-байтового массива
+     * ascii формата. </p> Пример: 1 -> {'0','1'}; 23 -> {'2','3'}
+     *
+     * @param length - передаваемое целое число
+     * @return 2-х значное число в представлении char массива
+     */
+    public static byte[] getASCIIlength(int length) {
+        char[] temp = new char[]{'0', '0'};
+        String len = "" + length;
+
+        if (len.length() == 1) {
+            temp[1] = len.charAt(0);
+        }
+        if (len.length() == 2) {
+            temp[0] = len.charAt(0);
+            temp[1] = len.charAt(1);
+        }
+        if (len.length() > 2) {
+            throw new RuntimeException("Длина не должна превышать 99 (2-значное число)!");
+        }
+        return new byte[]{
+                (byte) temp[0],
+                (byte) temp[1]
+        };
+    }
+
+    /**
+     * Алгоритм шифрования строки MD5
+     *
+     * @param text передаваемая строка
+     * @return шифрованное значение
+     */
+    public static String md5(String text) {
+        MessageDigest messageDigest;
+        byte[] digest = new byte[0];
+        try {
+            messageDigest = MessageDigest.getInstance("MD5");
+            messageDigest.reset();
+            messageDigest.update(text.getBytes());
+            digest = messageDigest.digest();
+        } catch (NoSuchAlgorithmException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+        }
+        BigInteger bigInt = new BigInteger(1, digest);
+        StringBuilder md5Hex = new StringBuilder(bigInt.toString(16));
+
+        while (md5Hex.length() < 32) {
+            md5Hex.insert(0, "0");
+        }
+        return md5Hex.toString();
     }
 }

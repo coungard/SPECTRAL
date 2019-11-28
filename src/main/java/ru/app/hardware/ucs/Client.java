@@ -13,6 +13,7 @@ import ru.app.util.Utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class Client implements SerialPortEventListener {
     private static final Logger LOGGER = Logger.getLogger(Client.class);
@@ -21,6 +22,11 @@ public class Client implements SerialPortEventListener {
     private byte[] received;
     private static final long delayENQ = 3000;
     private static final long delaySTX = 200;
+
+    /*
+        State during which we don't process incoming messages (ENQ -> EOT)
+     */
+    private boolean transaction = false;
 
     public static final byte DLE = (byte) 0x10;    // каждое сообщение начинается с DLE/STX и заканчивается DLE/ETX
     public static final byte STX = (byte) 0X02;
@@ -70,6 +76,17 @@ public class Client implements SerialPortEventListener {
         }
     }
 
+    private synchronized void sendACK() {
+        received = null;
+        currentCommand = "ACK";
+        try {
+            LOGGER.debug(LogCreator.logOutput(new byte[]{ACK}));
+            serialPort.writeByte(ACK);
+        } catch (SerialPortException ex) {
+            LOGGER.error(LogCreator.console(ex.getMessage()), ex);
+        }
+    }
+
     synchronized void sendBytes(byte[] buffer) {
         try {
             sendPacket(new byte[]{ENQ});
@@ -85,6 +102,7 @@ public class Client implements SerialPortEventListener {
 
     synchronized void sendMessage(UCSCommand command) {
         LOGGER.info(LogCreator.console(command.toString()));
+        transaction = true;
         try {
             sendPacket(new byte[]{ENQ});
             if (ACKfailed()) return;
@@ -99,6 +117,7 @@ public class Client implements SerialPortEventListener {
             if (ACKfailed()) return;
 
             sendPacket(new byte[]{EOT});
+            transaction = false;
 
         } catch (IOException | InterruptedException ex) {
             LOGGER.error(LogCreator.console(ex.getMessage()), ex);
@@ -137,31 +156,11 @@ public class Client implements SerialPortEventListener {
 
         byte[] tid = TERMINAL_ID.getBytes();
         result.write(tid);
-        byte[] len = getASCIIlength(command.getData().length);
+        byte[] len = Utils.getASCIIlength(command.getData().length);
         result.write(len);
         result.write(command.getData());
 
         return result.toByteArray();
-    }
-
-    private byte[] getASCIIlength(int length) {
-        char[] temp = new char[]{'0', '0'};
-        String len = "" + length;
-
-        if (len.length() == 1) {
-            temp[1] = len.charAt(0);
-        }
-        if (len.length() == 2) {
-            temp[0] = len.charAt(0);
-            temp[1] = len.charAt(1);
-        }
-        if (len.length() > 2) {
-            throw new RuntimeException("Длина не должна превышать 99 (2-значное число)!");
-        }
-        return new byte[]{
-                (byte) temp[0],
-                (byte) temp[1]
-        };
     }
 
     @Override
@@ -171,9 +170,50 @@ public class Client implements SerialPortEventListener {
                 received = serialPort.readBytes();
                 currentResponse = ResponseHandler.parseUCS(received);
                 LOGGER.debug(LogCreator.logInput(received));
+
+                formAnswer(received);
             } catch (SerialPortException ex) {
                 LOGGER.error(LogCreator.console(ex.getMessage()), ex);
             }
+        }
+    }
+
+    private void formAnswer(byte[] received) {
+        if (received.length == 1) {
+            switch (received[0]) {
+                case ENQ:
+                    sendACK();
+                    break;
+                case EOT:
+                    break;
+                default:
+                    LOGGER.error(LogCreator.console("INVALID BYTE FROM POST TERMINAL!"));
+            }
+        } else {
+            byte[] start = new byte[]{received[0], received[1]};
+            if (!Arrays.equals(start, new byte[]{DLE, STX})) {
+                LOGGER.error(LogCreator.console("Wrong starting DLE/STX bytes from POST Terminal!"));
+                return;
+            }
+
+            byte[] end = new byte[]{received[received.length - 3], received[received.length - 2]};
+            if (!Arrays.equals(end, new byte[]{DLE, ETX})) {
+                LOGGER.error(LogCreator.console("Wrong ending DLE/ETX bytes from POST Terminal!"));
+                return;
+            }
+
+            ByteArrayOutputStream msg = new ByteArrayOutputStream();
+            for (int i = 2; i < received.length - 3; i++) {
+                msg.write(received[i]);
+            }
+            byte lrc = Utils.getLRC(msg.toByteArray());
+
+            if (lrc != received[received.length - 1]) {
+                LOGGER.error(LogCreator.console("Wrong lrc from POST Terminal!"));
+                return;
+            }
+
+            sendACK();
         }
     }
 
@@ -189,5 +229,10 @@ public class Client implements SerialPortEventListener {
 
     String getCurrentResponse() {
         return currentResponse;
+    }
+
+    @Override
+    public String toString() {
+        return "UCS-THREAD";
     }
 }

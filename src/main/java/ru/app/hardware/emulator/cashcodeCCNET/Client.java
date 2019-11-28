@@ -137,7 +137,7 @@ class Client {
             case ACK:
                 return;
             case Reset:
-                setStatus(BillStateType.UnitDisabled);
+                setStatus(BillStateType.UnitDisabled); // after reset always disabled, no idling
                 changeStatus(6000, BillStateType.Initialize);
             case GetStatus:
                 currentResponse = "Set Status [Emulator]";
@@ -248,14 +248,13 @@ class Client {
                 } catch (InterruptedException ex) {
                     LOGGER.error(LogCreator.console(ex.getMessage()));
                 }
-                LOGGER.info(LogCreator.console("set status old = " + oldStatus));
                 setStatus(oldStatus);
             }
         }).start();
     }
 
     synchronized void setStatus(BillStateType status) {
-        LOGGER.info(LogCreator.console("set status new = " + status));
+        LOGGER.info(LogCreator.console("old status = " + getStatus() + ", new status = " + status));
         this.status = status;
     }
 

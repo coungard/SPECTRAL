@@ -32,33 +32,33 @@ public class Manager extends AbstractManager {
         add(label);
 
         JButton hold = createButton("Hold");
-        hold.setBounds(30, 30, 140, 40);
+        hold.setBounds(30, 35, 140, 40);
         add(hold);
         hold.addMouseListener(new UCSMouseAdapter(new UCSCommand(new RequestAcceptance(RequestAcceptance.HOLD), new byte[]{})));
 
         JButton preAuth = createButton("Pre-Auth");
-        preAuth.setBounds(30, 80, 140, 40);
+        preAuth.setBounds(30, 85, 140, 40);
         add(preAuth);
         preAuth.addMouseListener(new UCSMouseAdapter(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.PRE_AUTH), new byte[]{})));
 
         JButton login = createButton("Login");
-        login.setBounds(180, 30, 140, 40);
+        login.setBounds(180, 35, 140, 40);
         add(login);
         login.addMouseListener(new UCSMouseAdapter(new UCSCommand(new SessionCommands(SessionCommands.LOGIN), new byte[]{})));
 
         JButton sale = createButton("Sale");
-        sale.setBounds(180, 80, 140, 40);
+        sale.setBounds(180, 85, 140, 40);
         add(sale);
         sale.addMouseListener(new UCSMouseAdapter(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.SALE),
                 new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00})));
 
         JButton activation = createButton("Activation");
-        activation.setBounds(330, 30, 140, 40);
+        activation.setBounds(330, 35, 140, 40);
         add(activation);
         activation.addMouseListener(new UCSMouseAdapter(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.ACTIVATION), new byte[]{})));
 
         JButton test = createButton("Test");
-        test.setBounds(580, 30, 140, 40);
+        test.setBounds(580, 35, 140, 40);
         add(test);
         test.addMouseListener(new MouseInputAdapter() {
             @Override

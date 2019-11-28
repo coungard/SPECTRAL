@@ -9,6 +9,7 @@ import ru.app.main.pages.DevicesPage;
 import ru.app.main.pages.OptionPage;
 import ru.app.main.pages.PortsPage;
 import ru.app.main.pages.SettingsPage;
+import ru.app.main.pages.settings.GeneralSettings;
 import ru.app.util.LogCreator;
 
 import javax.swing.*;
@@ -25,7 +26,8 @@ public class Launcher extends Thread {
     public static PortsPage portsPage = new PortsPage();
     public static DevicesPage devicesPage = new DevicesPage();
     public static OptionPage optionPage = new OptionPage();
-    private final SettingsPage settingsPage = new SettingsPage();
+    //    private final GeneralSettings settingsPage = new GeneralSettings();
+    public static SettingsPage settingsPage = new SettingsPage();
     public static AbstractManager currentManager;
     private static final Color BACKGROUND_COLOR = new Color(67, 159, 212);
     private static final Font FONT = new Font(Font.SANS_SERIF, Font.BOLD, 23);
@@ -92,7 +94,7 @@ public class Launcher extends Thread {
         settings.setFont(FONT);
         settings.setBackground(Color.BLACK);
         settings.setForeground(Color.WHITE);
-        if (settingsPage.isAttention())
+        if (GeneralSettings.isAttention())
             settings.setForeground(Color.RED);
         settings.setBounds(20, 500, 320, 50);
         settings.addMouseListener(new MouseInputAdapter() {
@@ -102,6 +104,21 @@ public class Launcher extends Thread {
                 settingsPage.setVisible(true);
             }
         });
+
+        JButton exit = new JButton("Exit");
+        exit.setFont(FONT);
+        exit.setBackground(new Color(156, 30, 198));
+        exit.setForeground(Color.WHITE);
+        exit.setBounds(Settings.dimension.width - 200, Settings.dimension.height - 100, 180, 50);
+        exit.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                LOGGER.info("Exit application");
+                System.exit(0);
+            }
+        });
+
+        mainPanel.add(exit);
         mainPanel.add(settings);
     }
 

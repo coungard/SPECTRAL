@@ -11,6 +11,7 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 
 public abstract class AbstractManager extends JLayeredPane {
+    protected JScrollPane scroll;
     public volatile JTextArea textArea;
 
     public abstract void struct();
@@ -25,7 +26,7 @@ public abstract class AbstractManager extends JLayeredPane {
         textArea.setEditable(false);
         DefaultCaret caret = (DefaultCaret) textArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-        JScrollPane scroll = new JScrollPane(textArea);
+        scroll = new JScrollPane(textArea);
         scroll.setBounds(30, 140, 960, 390);
         add(scroll);
 

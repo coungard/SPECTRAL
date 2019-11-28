@@ -3,6 +3,7 @@ package ru.app.network;
 import org.apache.log4j.Logger;
 import ru.app.main.Settings;
 import ru.app.util.LogCreator;
+import ru.app.util.Utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -34,9 +35,15 @@ public class Requester {
         conn.addRequestProperty("Content-Type", "text/plain; charset=UTF-8");
         boolean success = status == Status.SUCCESS;
 
+        String login = Settings.propEmul.get("login");
+        String password = Settings.propEmul.get("passwd");
+        String type = "result";
+        String imei = Settings.propEmul.get("imei");
+        String sign = Utils.md5(login + password + type + imei);
+
         StringBuilder request = new StringBuilder();
-        request.append("<request>\n").append("  <type>result</type>\n").
-                append("  <login>").append(Settings.propEmul.get("login")).append("android</login>\n").
+        request.append("<request>\n").append("  <type>").append(type).append("</type>\n").
+                append("  <login>").append(Settings.propEmul.get("login")).append("</login>\n").
                 append("  <imei>").append(Settings.propEmul.get("imei")).append("</imei>\n")
                 .append("  <result>\n")
                 .append("    <command_id>").append(payment.getId()).append("</command_id>\n")
@@ -49,7 +56,7 @@ public class Requester {
                     .append(" руб. /**/Запрос на активацию принятия платежа/*").append("</answer>\n").append("    </data>\n");
         } else
             request.append("    <data></data>\n");
-        request.append("  </result>\n").append("  <sign>iyewtr97y66ytq65rgeorrdgh346</sign>\n").append("</request>");
+        request.append("  </result>\n").append("  <sign>").append(sign).append("</sign>\n").append("</request>");
 
         LOGGER.info(LogCreator.console("Requester send >> " + request.toString()));
         byte[] data = request.toString().getBytes(StandardCharsets.UTF_8);
@@ -85,11 +92,17 @@ public class Requester {
         conn.setDoOutput(true);
         conn.addRequestProperty("Content-Type", "text/plain; charset=UTF-8");
 
+        String login = Settings.propEmul.get("login");
+        String password = Settings.propEmul.get("passwd");
+        String type = "command";
+        String imei = Settings.propEmul.get("imei");
+        String sign = Utils.md5(login + password + type + imei);
+
         String request = "<request>\n" +
-                "  <imei>357829072172464</imei>\n" +
-                "  <login>samsung</login>\n" +
-                "  <sign>21da91fd6534c5c21114d820763dbf10</sign>\n" +
-                "  <type>command</type>\n" +
+                "  <imei>" + Settings.propEmul.get("imei") + "</imei>\n" +
+                "  <login>" + Settings.propEmul.get("login") + "</login>\n" +
+                "  <sign>" + sign + "</sign>\n" +
+                "  <type>" + type + "</type>\n" +
                 "</request>";
         byte[] data = request.getBytes(StandardCharsets.UTF_8);
         OutputStream os = conn.getOutputStream();
