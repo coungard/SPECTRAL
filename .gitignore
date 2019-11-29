@@ -2,5 +2,6 @@
 **.cfg
 **/.idea
 **/target
+**/payments
 **/out
 **/log

@@ -11,13 +11,19 @@ import ru.app.main.pages.PortsPage;
 import ru.app.main.pages.SettingsPage;
 import ru.app.main.pages.settings.GeneralSettings;
 import ru.app.util.LogCreator;
+import ru.app.util.Utils;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.Properties;
 
 public class Launcher extends Thread {
     private static final Logger LOGGER = Logger.getLogger(Launcher.class);
@@ -26,7 +32,6 @@ public class Launcher extends Thread {
     public static PortsPage portsPage = new PortsPage();
     public static DevicesPage devicesPage = new DevicesPage();
     public static OptionPage optionPage = new OptionPage();
-    //    private final GeneralSettings settingsPage = new GeneralSettings();
     public static SettingsPage settingsPage = new SettingsPage();
     public static AbstractManager currentManager;
     private static final Color BACKGROUND_COLOR = new Color(67, 159, 212);
@@ -52,7 +57,7 @@ public class Launcher extends Thread {
         String log4jPath = System.getProperty("os.name").contains("Linux") ? "log4j.xml" : "log4j_win.xml";
         DOMConfigurator.configure(Objects.requireNonNull(this.getClass().getClassLoader().getResource(log4jPath)));
 
-        LOGGER.info(LogCreator.console("Emulator started"));
+        LOGGER.info(LogCreator.console("Spectral started"));
         window.setSize(Settings.dimension);
 
         addPanel(mainPanel);
@@ -66,6 +71,26 @@ public class Launcher extends Thread {
         window.setVisible(true);
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         window.setLocationRelativeTo(null);
+
+        if (Files.exists(Paths.get(Settings.autoLaunchPropFile))) {
+            launchEmulator();
+        }
+    }
+
+    private void launchEmulator() {
+        LOGGER.info(LogCreator.console("emulator auto launcher starting..."));
+        try {
+            String emulPort = Utils.getPropertyFromFile(Settings.autoLaunchPropFile, "port");
+
+            if (emulPort != null) {
+                mainPanel.setVisible(false);
+                defineManager(new ru.app.hardware.emulator.cashcodeCCNET.Manager(emulPort));
+            } else {
+                LOGGER.info("emulPort = null!");
+            }
+        } catch (IOException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+        }
     }
 
     private void addPanel(JPanel panel) {

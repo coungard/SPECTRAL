@@ -1,16 +1,14 @@
 package ru.app.util;
 
 import org.apache.log4j.Logger;
+import ru.app.main.Settings;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Formatter;
-import java.util.List;
+import java.util.*;
 
 public class Utils {
     private static final Logger LOGGER = Logger.getLogger(Utils.class);
@@ -268,5 +266,33 @@ public class Utils {
             md5Hex.insert(0, "0");
         }
         return md5Hex.toString();
+    }
+
+    public static String getPropertyFromFile(String file, String target) throws IOException {
+        String result = null;
+        Properties p = new Properties();
+        p.load(new FileReader(file));
+        for (String key : p.stringPropertyNames()) {
+            if (target.equals(key))
+                result = p.getProperty(key);
+        }
+        return result;
+    }
+
+    /**
+     * Сохранить настройки в файл
+     */
+    public static void saveProp(Map<String, String> prms, String file) {
+        try {
+            Properties prop = new Properties();
+            for (Map.Entry<String, String> e : prms.entrySet()) {
+                prop.setProperty(e.getKey(), e.getValue());
+            }
+            OutputStream os = new FileOutputStream(file);
+            prop.store(os, null);
+            os.close();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

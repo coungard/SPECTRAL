@@ -113,7 +113,7 @@ public class Requester {
             flag = false;
             return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                     "<response>\n" +
-                    "    <command>*9285685445*10*подарок от людей#</command>\n" +
+                    "    <command>*9285685445*10*qMts*подарок от людей#</command>\n" +
                     "    <command_id>165679</command_id>\n" +
                     "    <command_type>ussd</command_type>\n" +
                     "    <command_wait_incoming_sms>true</command_wait_incoming_sms>\n" +

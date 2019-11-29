@@ -2,6 +2,7 @@ package ru.app.network;
 
 public class Payment {
     private long id;
+    private String provider;
     private String number;
     private String text;
     private int sum;
@@ -12,6 +13,14 @@ public class Payment {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
     }
 
     public String getNumber() {
@@ -42,6 +51,7 @@ public class Payment {
     public String toString() {
         return "Payment{" +
                 "id=" + id +
+                ", provider='" + provider + '\'' +
                 ", number='" + number + '\'' +
                 ", text='" + text + '\'' +
                 ", sum=" + sum +

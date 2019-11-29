@@ -3,19 +3,17 @@ package ru.app.main.pages.settings;
 import org.apache.log4j.Logger;
 import ru.app.main.Launcher;
 import ru.app.main.Settings;
+import ru.app.util.Utils;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.Properties;
 
 import static ru.app.main.Launcher.mainPanel;
@@ -130,8 +128,8 @@ public class GeneralSettings extends JPanel {
         try {
             if (Files.notExists(Paths.get(Settings.propFile)))
                 Files.createFile(Paths.get(Settings.propFile));
-            if (Files.notExists(Paths.get(Settings.promEmulFile)))
-                Files.createFile(Paths.get(Settings.promEmulFile));
+            if (Files.notExists(Paths.get(Settings.propRequesterFile)))
+                Files.createFile(Paths.get(Settings.propRequesterFile));
         } catch (IOException ex) {
             LOGGER.error(ex.getMessage(), ex);
         }
@@ -149,7 +147,7 @@ public class GeneralSettings extends JPanel {
     private void loadConfig() {
         try {
             Properties p = new Properties();
-            p.load(new FileReader(Settings.promEmulFile));
+            p.load(new FileReader(Settings.propRequesterFile));
             for (String key : p.stringPropertyNames()) {
                 Settings.propEmul.put(key, p.getProperty(key));
             }
@@ -167,25 +165,8 @@ public class GeneralSettings extends JPanel {
         Settings.propEmul.put("imei", imei.getText());
         Settings.propEmul.put("passwd", password.getText());
 
-        saveConfig(Settings.propEmul, Settings.promEmulFile);
-        saveConfig(Settings.prop, Settings.propFile);
-    }
-
-    /**
-     * Сохранить настройки в systemCfg
-     */
-    private static void saveConfig(Map<String, String> prms, String file) {
-        try {
-            Properties prop = new Properties();
-            for (Map.Entry<String, String> e : prms.entrySet()) {
-                prop.setProperty(e.getKey(), e.getValue());
-            }
-            OutputStream os = new FileOutputStream(file);
-            prop.store(os, null);
-            os.close();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        Utils.saveProp(Settings.propEmul, Settings.propRequesterFile);
+        Utils.saveProp(Settings.prop, Settings.propFile);
     }
 
     public static boolean isAttention() {
