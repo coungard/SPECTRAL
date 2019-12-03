@@ -68,7 +68,7 @@ public class GeneralSettings extends JPanel {
         login.setBounds(120, 30, 150, 30);
         login.setFont(new Font(Font.DIALOG_INPUT, Font.BOLD, 12));
         login.setHorizontalAlignment(SwingConstants.CENTER);
-        login.setText(Settings.propEmul.get("login"));
+        login.setText(Settings.propEmulator.get("login"));
         requesterPanel.add(login);
 
         JLabel imeiLabel = new JLabel("imei: ");
@@ -79,7 +79,7 @@ public class GeneralSettings extends JPanel {
         imei.setBounds(120, 75, 150, 30);
         imei.setFont(login.getFont());
         imei.setHorizontalAlignment(SwingConstants.CENTER);
-        imei.setText(Settings.propEmul.get("imei"));
+        imei.setText(Settings.propEmulator.get("imei"));
         requesterPanel.add(imei);
 
         JLabel passwdLabel = new JLabel("passwd: ");
@@ -90,7 +90,7 @@ public class GeneralSettings extends JPanel {
         password.setBounds(120, 115, 150, 30);
         password.setFont(login.getFont());
         password.setHorizontalAlignment(SwingConstants.CENTER);
-        password.setText(Settings.propEmul.get("passwd"));
+        password.setText(Settings.propEmulator.get("passwd"));
         requesterPanel.add(password);
 
         JButton save = new JButton("Save");
@@ -122,6 +122,17 @@ public class GeneralSettings extends JPanel {
         if (login.getText().equals("") && imei.getText().equals("") && password.getText().equals("")) {
             attention = true;
         }
+
+        JLabel softLabel = new JLabel("CashMachine software settings");
+        softLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
+        softLabel.setBounds(20, 180, 500, 60);
+        add(softLabel);
+
+        JComboBox<String> soft = new JComboBox<>();
+        soft.setOpaque(false);
+        soft.addItem("1: P/N=SM-RU1353, S/N=21KC07006857, A/N=-25.0.77.83.8.18.-16");
+        soft.setBounds(20, 230, 500, 40);
+        add(soft);
     }
 
     private void initialization() {
@@ -130,8 +141,8 @@ public class GeneralSettings extends JPanel {
                 Files.createDirectory(Paths.get(Settings.propDir));
             if (Files.notExists(Paths.get(Settings.propFile)))
                 Files.createFile(Paths.get(Settings.propFile));
-            if (Files.notExists(Paths.get(Settings.propRequesterFile)))
-                Files.createFile(Paths.get(Settings.propRequesterFile));
+            if (Files.notExists(Paths.get(Settings.propEmulatorFile)))
+                Files.createFile(Paths.get(Settings.propEmulatorFile));
             if (Files.exists(Paths.get("payments/autoRun")))
                 Files.delete(Paths.get("payments/autoRun"));
         } catch (IOException ex) {
@@ -151,9 +162,9 @@ public class GeneralSettings extends JPanel {
     private void loadConfig() {
         try {
             Properties p = new Properties();
-            p.load(new FileReader(Settings.propRequesterFile));
+            p.load(new FileReader(Settings.propEmulatorFile));
             for (String key : p.stringPropertyNames()) {
-                Settings.propEmul.put(key, p.getProperty(key));
+                Settings.propEmulator.put(key, p.getProperty(key));
             }
         } catch (IOException ex) {
             LOGGER.error(ex.getMessage(), ex);
@@ -165,11 +176,11 @@ public class GeneralSettings extends JPanel {
         Settings.prop.put("logLevel.bytes", bytesLog.isSelected() ? "1" : "0");
         Settings.prop.put("logLevel.ascii", asciiLog.isSelected() ? "1" : "0");
 
-        Settings.propEmul.put("login", login.getText());
-        Settings.propEmul.put("imei", imei.getText());
-        Settings.propEmul.put("passwd", password.getText());
+        Settings.propEmulator.put("login", login.getText());
+        Settings.propEmulator.put("imei", imei.getText());
+        Settings.propEmulator.put("passwd", password.getText());
 
-        Utils.saveProp(Settings.propEmul, Settings.propRequesterFile);
+        Utils.saveProp(Settings.propEmulator, Settings.propEmulatorFile);
         Utils.saveProp(Settings.prop, Settings.propFile);
     }
 

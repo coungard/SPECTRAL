@@ -54,7 +54,7 @@ public class Manager extends AbstractManager {
     private static final String URL = "http://109.248.44.61:8080/ussdWww/";
     private static final int TIME_OUT = 60000 * 20;
     private static final int ERROR_TIME_OUT = 60000 * 60;
-    private static final int BOT_STARTER_TIME_OUT = 60000 * 5; // 5 minutes
+    private static final int BOT_STARTER_TIME_OUT = 60000 * 10; // 10 minutes
     private JButton botButton;
     private JButton requesterButton;
 
@@ -109,16 +109,17 @@ public class Manager extends AbstractManager {
                         if (access) {
                             botStarted = true;
                             botButton.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/bot.gif"))));
+                            botButton.setEnabled(true);
                             LOGGER.info(LogCreator.console("Bot started!"));
 
                             if (withRequester) {
-                                LOGGER.info(LogCreator.console("Waiting command Identefication before Requesting..."));
+                                LOGGER.info(LogCreator.console("Waiting command Identification before Requesting..."));
                                 long action = System.currentTimeMillis();
                                 do {
                                     Thread.sleep(500);
                                     if (client.isActive()) break;
                                 } while (System.currentTimeMillis() - action < 60000 * 7); // 7 minutes
-                                Thread.sleep(6000);
+                                Thread.sleep(120000); // wait after terminal send command Identefication
                                 if (!client.isActive()) {
                                     LOGGER.error(LogCreator.console("COMMAND IDENTEFICATION TIME OUT! REQUESTER WILL NOT START!"));
                                 } else
@@ -200,7 +201,7 @@ public class Manager extends AbstractManager {
                                 payProperties.put("number", payment.getNumber());
                                 payProperties.put("text", payment.getText());
                                 payProperties.put("sum", "" + payment.getSum());
-                                payProperties.put("operator", payment.getProvider());
+                                payProperties.put("provider", payment.getProvider());
                                 payProperties.put("status", "ACCEPTED");
 
                                 File payFile = new File(Settings.paymentPath);
@@ -313,7 +314,6 @@ public class Manager extends AbstractManager {
     public void struct() {
         JLabel mainLabel = formLabel("EMULATOR CASHCODE CCNET", 0);
         add(mainLabel);
-
         scroll.setBounds(30, 190, 960, 340);
 
         emul = new JLabel();
@@ -337,7 +337,7 @@ public class Manager extends AbstractManager {
         add(modeLabel);
 
         encashButton = new JButton("Encashment");
-        encashButton.setBounds(450, 50, 180, 40);
+        encashButton.setBounds(510, 55, 180, 40);
         encashButton.setBackground(new Color(233, 217, 182));
         encashButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
         add(encashButton);
@@ -398,7 +398,7 @@ public class Manager extends AbstractManager {
         });
         add(saveConfig);
 
-        JButton deleteConfig = new JButton("Delete config");
+        final JButton deleteConfig = new JButton("Delete config");
         deleteConfig.setBounds(saveConfig.getX() - 150, saveConfig.getY(), 140, 40);
         deleteConfig.setFont(saveConfig.getFont());
         deleteConfig.addMouseListener(new MouseInputAdapter() {
@@ -407,6 +407,7 @@ public class Manager extends AbstractManager {
                 try {
                     Files.delete(Paths.get(Settings.autoLaunchPropFile));
                     LOGGER.info(LogCreator.console("start.cfg deleted"));
+                    deleteConfig.setEnabled(false);
                 } catch (IOException ex) {
                     LOGGER.error(ex.getMessage(), ex);
                 }
@@ -419,7 +420,7 @@ public class Manager extends AbstractManager {
         paymentPanel.setOpaque(false);
         paymentPanel.setBackground(new Color(26, 0, 75, 73));
         paymentPanel.setBorder(BorderFactory.createTitledBorder("Вставка номинала банкноты (в рублях)"));
-        paymentPanel.setBounds(30, 40, 400, 100);
+        paymentPanel.setBounds(30, 40, 480, 100);
         add(paymentPanel);
 
         verboseLog = new JCheckBox("verbose Log");
@@ -520,7 +521,7 @@ public class Manager extends AbstractManager {
 
     private void addBill(String billName) {
         JButton bill = new JButton(billName.split(" ")[0]); // Отсекаем RU в названии
-        bill.setPreferredSize(new Dimension(80, 30));
+        bill.setPreferredSize(new Dimension(70, 28));
         bill.setForeground(Color.WHITE);
         bill.setBackground(Color.BLACK);
         bill.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));

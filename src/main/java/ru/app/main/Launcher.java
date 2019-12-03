@@ -83,6 +83,8 @@ public class Launcher extends Thread {
 
             if (emulPort != null) {
                 mainPanel.setVisible(false);
+                Settings.hardware = DeviceType.EMULATOR;
+                Settings.deviceForEmulator = "CCNET CASHER";
                 defineManager(new ru.app.hardware.emulator.cashcodeCCNET.Manager(emulPort));
             } else {
                 LOGGER.info("emulPort = null!");

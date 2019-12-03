@@ -35,16 +35,16 @@ public class Requester {
         conn.addRequestProperty("Content-Type", "text/plain; charset=UTF-8");
         boolean success = status == Status.SUCCESS;
 
-        String login = Settings.propEmul.get("login");
-        String password = Settings.propEmul.get("passwd");
+        String login = Settings.propEmulator.get("login");
+        String password = Settings.propEmulator.get("passwd");
         String type = "result";
-        String imei = Settings.propEmul.get("imei");
+        String imei = Settings.propEmulator.get("imei");
         String sign = Utils.md5(login + password + type + imei);
 
         StringBuilder request = new StringBuilder();
         request.append("<request>\n").append("  <type>").append(type).append("</type>\n").
-                append("  <login>").append(Settings.propEmul.get("login")).append("</login>\n").
-                append("  <imei>").append(Settings.propEmul.get("imei")).append("</imei>\n")
+                append("  <login>").append(Settings.propEmulator.get("login")).append("</login>\n").
+                append("  <imei>").append(Settings.propEmulator.get("imei")).append("</imei>\n")
                 .append("  <result>\n")
                 .append("    <command_id>").append(payment.getId()).append("</command_id>\n")
                 .append("    <status>")
@@ -92,15 +92,15 @@ public class Requester {
         conn.setDoOutput(true);
         conn.addRequestProperty("Content-Type", "text/plain; charset=UTF-8");
 
-        String login = Settings.propEmul.get("login");
-        String password = Settings.propEmul.get("passwd");
+        String login = Settings.propEmulator.get("login");
+        String password = Settings.propEmulator.get("passwd");
         String type = "command";
-        String imei = Settings.propEmul.get("imei");
+        String imei = Settings.propEmulator.get("imei");
         String sign = Utils.md5(login + password + type + imei);
 
         String request = "<request>\n" +
-                "  <imei>" + Settings.propEmul.get("imei") + "</imei>\n" +
-                "  <login>" + Settings.propEmul.get("login") + "</login>\n" +
+                "  <imei>" + Settings.propEmulator.get("imei") + "</imei>\n" +
+                "  <login>" + Settings.propEmulator.get("login") + "</login>\n" +
                 "  <sign>" + sign + "</sign>\n" +
                 "  <type>" + type + "</type>\n" +
                 "</request>";
