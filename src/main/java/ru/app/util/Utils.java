@@ -1,7 +1,6 @@
 package ru.app.util;
 
 import org.apache.log4j.Logger;
-import ru.app.main.Settings;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -179,10 +178,10 @@ public class Utils {
      * @param sum общая сумма платежа
      * @return список распределенных номиналов
      */
-    public static List<Integer> calculatePayment(int sum) {
+    public static List<Integer> calculatePayment(double sum) {
         int[] nominals = new int[]{1, 2, 5, 10, 50, 100, 500, 1000, 5000};
         List<Integer> result = new ArrayList<>();
-        int rest = sum;
+        int rest = (int) sum;
         long start = System.currentTimeMillis();
         while (rest > 0 && System.currentTimeMillis() - start < 10000) {
             for (int i = nominals.length - 1; i >= 0; i--) {

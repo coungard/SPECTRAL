@@ -36,6 +36,7 @@ public class PortListener extends MouseInputAdapter {
                             Launcher.defineManager(new ru.app.hardware.emulator.coinCCTALK.Manager(portName));
                             break;
                     }
+                    break;
                 case UCS:
                     Launcher.defineManager(new ru.app.hardware.ucs.Manager(portName));
                     break;

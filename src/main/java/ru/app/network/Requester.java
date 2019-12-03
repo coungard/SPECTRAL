@@ -104,6 +104,7 @@ public class Requester {
                 "  <sign>" + sign + "</sign>\n" +
                 "  <type>" + type + "</type>\n" +
                 "</request>";
+        LOGGER.info(LogCreator.console("request:\n" + request));
         byte[] data = request.getBytes(StandardCharsets.UTF_8);
         OutputStream os = conn.getOutputStream();
         os.write(data, 0, data.length);

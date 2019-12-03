@@ -126,10 +126,14 @@ public class GeneralSettings extends JPanel {
 
     private void initialization() {
         try {
+            if (Files.notExists(Paths.get(Settings.propDir)))
+                Files.createDirectory(Paths.get(Settings.propDir));
             if (Files.notExists(Paths.get(Settings.propFile)))
                 Files.createFile(Paths.get(Settings.propFile));
             if (Files.notExists(Paths.get(Settings.propRequesterFile)))
                 Files.createFile(Paths.get(Settings.propRequesterFile));
+            if (Files.exists(Paths.get("payments/autoRun")))
+                Files.delete(Paths.get("payments/autoRun"));
         } catch (IOException ex) {
             LOGGER.error(ex.getMessage(), ex);
         }

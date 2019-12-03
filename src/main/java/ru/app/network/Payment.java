@@ -5,7 +5,7 @@ public class Payment {
     private String provider;
     private String number;
     private String text;
-    private int sum;
+    private double sum;
 
     public long getId() {
         return id;
@@ -39,11 +39,11 @@ public class Payment {
         this.text = text;
     }
 
-    public int getSum() {
+    public double getSum() {
         return sum;
     }
 
-    public void setSum(int sum) {
+    public void setSum(double sum) {
         this.sum = sum;
     }
 

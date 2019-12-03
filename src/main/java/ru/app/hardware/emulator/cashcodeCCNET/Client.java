@@ -37,6 +37,7 @@ class Client {
     private CashCodeClient cashCodeClient;
     private CashCodeClient tempClient;
     private volatile BillStateType status = BillStateType.UnitDisabled;
+    private boolean active = false;
 
     Client(String portName) {
         serialPort = new SerialPort(portName);
@@ -149,6 +150,7 @@ class Client {
                 break;
             case Identification:
                 currentResponse = "Identification [Emulator]";
+                setActive(true);
                 sendMessage(new Identification());
                 break;
             case Stack:
@@ -279,5 +281,13 @@ class Client {
             tempClient = cashCodeClient;
             cashCodeClient = null;
         }
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    private void setActive(boolean active) {
+        this.active = active;
     }
 }

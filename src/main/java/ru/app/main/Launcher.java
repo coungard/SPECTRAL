@@ -18,12 +18,10 @@ import javax.swing.event.MouseInputAdapter;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Objects;
-import java.util.Properties;
 
 public class Launcher extends Thread {
     private static final Logger LOGGER = Logger.getLogger(Launcher.class);
@@ -70,6 +68,7 @@ public class Launcher extends Thread {
 
         window.setVisible(true);
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        window.setResizable(false);
         window.setLocationRelativeTo(null);
 
         if (Files.exists(Paths.get(Settings.autoLaunchPropFile))) {

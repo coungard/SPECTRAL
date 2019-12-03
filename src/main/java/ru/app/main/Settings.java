@@ -16,6 +16,9 @@ public class Settings {
     public static DeviceType hardware;
     public static String deviceForEmulator = null;
     public static String realPortForEmulator = null;
+
+    // директория с файлами конфигурации
+    public static final String propDir = "config/";
     // общие настройки приложения (файл)
     public static final String propFile = "config/prop.cfg";
     // настройки эмулятора (файл)

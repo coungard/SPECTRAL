@@ -33,7 +33,7 @@ public class Helper {
         Payment payment = new Payment();
         payment.setId(Long.valueOf(cmd2));
         payment.setNumber(data[1]);
-        payment.setSum(Integer.valueOf(data[2]));
+        payment.setSum(Double.valueOf(data[2]));
         payment.setProvider(data[3]);
         payment.setText(data[4].substring(0, data[4].length() - 1)); // w/o # symbol
 
