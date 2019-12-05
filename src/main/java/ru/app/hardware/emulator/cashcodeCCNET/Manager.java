@@ -118,12 +118,15 @@ public class Manager extends AbstractManager {
                                 do {
                                     Thread.sleep(500);
                                     if (client.isActive()) break;
-                                } while (System.currentTimeMillis() - action < 60000 * 7); // 7 minutes
-                                Thread.sleep(120000); // wait after terminal send command Identefication
+                                } while (System.currentTimeMillis() - action < 60000 * 10); // 10 minutes
+                                Thread.sleep(5000);
                                 if (!client.isActive()) {
-                                    LOGGER.error(LogCreator.console("COMMAND IDENTEFICATION TIME OUT! REQUESTER WILL NOT START!"));
-                                } else
+                                    LOGGER.error(LogCreator.console("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!"));
+                                } else {
+                                    LOGGER.info(LogCreator.console("Identification command received. 5 minutes waiting for repaints..."));
+                                    Thread.sleep(60000 * 5); // wait after terminal send command Identefication
                                     startRequester();
+                                }
                             }
                         } else {
                             LOGGER.error(LogCreator.console("Can not starting bot!"));
@@ -251,8 +254,8 @@ public class Manager extends AbstractManager {
                                 List<Integer> nominals = Utils.calculatePayment(payment.getSum());
                                 for (Integer nominal : nominals) {
                                     Thread.sleep(4000);
-                                    String bill = nominal + " RUB";
-                                    Manager.this.billAcceptance(billTable.get(bill));
+                                    String bill = "" + nominal;
+                                    billAcceptance(billTable.get(bill));
                                 }
                                 Thread.sleep(5000);
                                 payProperties.put("status", Status.STACKED.toString());
@@ -462,25 +465,25 @@ public class Manager extends AbstractManager {
             modeLabel.setVisible(false);
             emul.setVisible(true);
         }
-        createCatalogPayments();
+//        createCatalogPayments();
     }
 
-    private void createCatalogPayments() {
-        try {
-            if (Files.notExists(Paths.get(Settings.paymentsDir))) {
-                Files.createDirectory(Paths.get(Settings.paymentsDir));
-            }
-            if (Files.notExists(Paths.get(Settings.successDir))) {
-                Files.createDirectory(Paths.get(Settings.successDir));
-            }
-            if (Files.notExists(Paths.get(Settings.errorDir))) {
-                Files.createDirectory(Paths.get(Settings.errorDir));
-            }
-        } catch (IOException ex) {
-            LOGGER.error(ex.getMessage(), ex);
-            LOGGER.info(LogCreator.console("Can not create payment directory: "));
-        }
-    }
+//    private void createCatalogPayments() {
+//        try {
+//            if (Files.notExists(Paths.get(Settings.paymentsDir))) {
+//                Files.createDirectory(Paths.get(Settings.paymentsDir));
+//            }
+//            if (Files.notExists(Paths.get(Settings.successDir))) {
+//                Files.createDirectory(Paths.get(Settings.successDir));
+//            }
+//            if (Files.notExists(Paths.get(Settings.errorDir))) {
+//                Files.createDirectory(Paths.get(Settings.errorDir));
+//            }
+//        } catch (IOException ex) {
+//            LOGGER.error(ex.getMessage(), ex);
+//            LOGGER.info(LogCreator.console("Can not create payment directory: "));
+//        }
+//    }
 
     @Override
     public void redraw() {

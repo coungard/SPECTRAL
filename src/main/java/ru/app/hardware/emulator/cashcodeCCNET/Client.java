@@ -133,7 +133,7 @@ class Client {
         }
     }
 
-    synchronized private void emulateProcess(byte[] received) {
+    private void emulateProcess(byte[] received) {
         switch (currentCommand) {
             case ACK:
                 return;
@@ -158,7 +158,8 @@ class Client {
                 changeStatus(1000, BillStateType.Stacking);
                 break;
             case Poll:
-                switch (getStatus()) {
+                BillStateType status = getStatus();
+                switch (status) {
                     case Accepting:
                         sendMessage(new Command(BillStateType.Accepting));
                         break;
@@ -226,7 +227,7 @@ class Client {
         }
 
         long timestamp = System.currentTimeMillis();
-        if (timestamp - activityDate > 10000) {
+        if (timestamp - activityDate > 60000) {
             activityDate = timestamp;
             return true;
         }

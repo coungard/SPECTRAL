@@ -3,6 +3,7 @@ package ru.app.main.pages.settings;
 import org.apache.log4j.Logger;
 import ru.app.main.Launcher;
 import ru.app.main.Settings;
+import ru.app.protocol.ccnet.emulator.response.Identification;
 import ru.app.util.Utils;
 
 import javax.swing.*;
@@ -10,10 +11,12 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Properties;
 
 import static ru.app.main.Launcher.mainPanel;
@@ -25,6 +28,7 @@ public class GeneralSettings extends JPanel {
     private final JTextField imei;
     private final JTextField password;
     private static boolean attention;
+    private final JComboBox<Object> softBox;
     private JCheckBox hexLog;
     private JCheckBox bytesLog;
     private JCheckBox asciiLog;
@@ -128,11 +132,12 @@ public class GeneralSettings extends JPanel {
         softLabel.setBounds(20, 180, 500, 60);
         add(softLabel);
 
-        JComboBox<String> soft = new JComboBox<>();
-        soft.setOpaque(false);
-        soft.addItem("1: P/N=SM-RU1353, S/N=21KC07006857, A/N=-25.0.77.83.8.18.-16");
-        soft.setBounds(20, 230, 500, 40);
-        add(soft);
+        softBox = new JComboBox<>();
+        for (Map.Entry<String, String> entry : Identification.getSoftwareMap().entrySet()) {
+            softBox.addItem(entry.getKey() + ": " + entry.getValue());
+        }
+        softBox.setBounds(20, 230, 500, 40);
+        add(softBox);
     }
 
     private void initialization() {
@@ -143,8 +148,25 @@ public class GeneralSettings extends JPanel {
                 Files.createFile(Paths.get(Settings.propFile));
             if (Files.notExists(Paths.get(Settings.propEmulatorFile)))
                 Files.createFile(Paths.get(Settings.propEmulatorFile));
+
+            if (Files.notExists(Paths.get(Settings.paymentsDir))) {
+                Files.createDirectory(Paths.get(Settings.paymentsDir));
+            }
+            if (Files.notExists(Paths.get(Settings.successDir))) {
+                Files.createDirectory(Paths.get(Settings.successDir));
+            }
+            if (Files.notExists(Paths.get(Settings.errorDir))) {
+                Files.createDirectory(Paths.get(Settings.errorDir));
+            }
+
             if (Files.exists(Paths.get("payments/autoRun")))
                 Files.delete(Paths.get("payments/autoRun"));
+            if (Files.notExists(Paths.get("payments/loading/")))
+                Files.createDirectory(Paths.get("payments/loading/"));
+            if (Files.exists(Paths.get("payments/payment"))) {
+                Files.copy(Paths.get("payments/payment"), Paths.get("payments/loading/payment_" + System.currentTimeMillis()));
+                Files.delete(Paths.get("payments/payment"));
+            }
         } catch (IOException ex) {
             LOGGER.error(ex.getMessage(), ex);
         }
@@ -166,6 +188,12 @@ public class GeneralSettings extends JPanel {
             for (String key : p.stringPropertyNames()) {
                 Settings.propEmulator.put(key, p.getProperty(key));
             }
+
+            Properties p2 = new Properties();
+            p2.load(new FileReader(Settings.propFile));
+            for (String key : p2.stringPropertyNames()) {
+                Settings.prop.put(key, p2.getProperty(key));
+            }
         } catch (IOException ex) {
             LOGGER.error(ex.getMessage(), ex);
         }
@@ -175,6 +203,7 @@ public class GeneralSettings extends JPanel {
         Settings.prop.put("logLevel.hex", hexLog.isSelected() ? "1" : "0");
         Settings.prop.put("logLevel.bytes", bytesLog.isSelected() ? "1" : "0");
         Settings.prop.put("logLevel.ascii", asciiLog.isSelected() ? "1" : "0");
+        Settings.prop.put("casher.soft", softBox.getSelectedIndex() + 1 + "");
 
         Settings.propEmulator.put("login", login.getText());
         Settings.propEmulator.put("imei", imei.getText());

@@ -50,7 +50,8 @@ public class Manager extends AbstractManager {
         sale.setBounds(180, 85, 140, 40);
         add(sale);
         sale.addMouseListener(new UCSMouseAdapter(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.SALE),
-                new byte[]{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00})));
+                new byte[]{'0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0'}))); // 100 rub
+        // TODO...
 
         JButton activation = createButton("Activation");
         activation.setBounds(330, 35, 140, 40);

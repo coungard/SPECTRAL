@@ -135,7 +135,7 @@ public class Client implements SerialPortEventListener {
                 return true;
             }
             response = ResponseHandler.parseUCS(received);
-        } while (!UCSMessage.ACK.toString().equals(response) && System.currentTimeMillis() - started < delaySTX);
+        } while (!UCSMessage.ACK.toString().equals(response) && System.currentTimeMillis() - started < 10000);
 
         if (!UCSMessage.ACK.toString().equals(response)) {
             LOGGER.error(LogCreator.console("\n\n\nERROR TIMEOUT!"));
@@ -157,6 +157,7 @@ public class Client implements SerialPortEventListener {
         byte[] tid = TERMINAL_ID.getBytes();
         result.write(tid);
         byte[] len = Utils.getASCIIlength(command.getData().length);
+        if (classType == (byte) 0x31) len = new byte[]{(byte) '0', (byte) 'C'};
         result.write(len);
         result.write(command.getData());
 
@@ -171,7 +172,7 @@ public class Client implements SerialPortEventListener {
                 currentResponse = ResponseHandler.parseUCS(received);
                 LOGGER.debug(LogCreator.logInput(received));
 
-                formAnswer(received);
+                if (received != null) formAnswer(received);
             } catch (SerialPortException ex) {
                 LOGGER.error(LogCreator.console(ex.getMessage()), ex);
             }
@@ -185,6 +186,10 @@ public class Client implements SerialPortEventListener {
                     sendACK();
                     break;
                 case EOT:
+                    break;
+                case ACK:
+                    break;
+                case NAC:
                     break;
                 default:
                     LOGGER.error(LogCreator.console("INVALID BYTE FROM POST TERMINAL!"));

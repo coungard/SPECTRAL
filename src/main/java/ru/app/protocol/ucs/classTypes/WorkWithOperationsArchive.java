@@ -30,7 +30,7 @@ public class WorkWithOperationsArchive implements ClassType {
 
     @Override
     public byte getOperationClass() {
-        return (byte) 0x02;
+        return (byte) 0x32;
     }
 
     @Override

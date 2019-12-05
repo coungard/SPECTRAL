@@ -28,7 +28,7 @@ public class Message implements ClassType {
 
     @Override
     public byte getOperationClass() {
-        return (byte) 0x07;
+        return (byte) 0x37;
     }
 
     @Override

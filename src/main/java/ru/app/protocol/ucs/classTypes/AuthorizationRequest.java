@@ -12,12 +12,12 @@ public class AuthorizationRequest implements ClassType {
     private byte operationCode;
 
     public enum Operation {
-        Sale((byte) 0x00),                  // продажа товаров и услуг
-        PreAuth((byte) 0x01),               // преавторизация
-        CashAdvance((byte) 0x02),           // выдача наличных
-        MailOrder((byte) 0x03),             // заказ по почте/телефону (клиент и карта отсутствуют)
-        Credit((byte) 0x04),                // возврат денег на счет клиента
-        ElectronicCommerce((byte) 0x05),    // продажа товаров и услуг через Internet
+        Sale((byte) '0'),                  // продажа товаров и услуг
+        PreAuth((byte) '1'),               // преавторизация
+        CashAdvance((byte) '2'),           // выдача наличных
+        MailOrder((byte) '3'),             // заказ по почте/телефону (клиент и карта отсутствуют)
+        Credit((byte) '4'),                // возврат денег на счет клиента
+        ElectronicCommerce((byte) '5'),    // продажа товаров и услуг через Internet
         OfflineSale((byte) 0x06),           // введение транзакции после голосовой авторизации
         OfflineCash((byte) 0x07),           // выдача наличных после голосовой авторизации
         Recurring((byte) 0x08),             // регулярная транзакция
@@ -54,7 +54,7 @@ public class AuthorizationRequest implements ClassType {
 
     @Override
     public byte getOperationClass() {
-        return (byte) 0x01;
+        return (byte) 0x31;
     }
 
     @Override

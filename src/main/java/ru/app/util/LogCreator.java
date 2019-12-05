@@ -6,6 +6,8 @@ import ru.app.hardware.smartPayout.Client;
 import ru.app.main.Launcher;
 import ru.app.main.Settings;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -46,9 +48,16 @@ public class LogCreator {
 
     private static String log(byte[] buffer, StreamType type) {
         StringBuilder ascii = new StringBuilder();
-        for (byte b : buffer) {
-            if (b != '\r' || Settings.hardware == DeviceType.BNE_S110M) ascii.append((char) b);
-        }
+        if (Settings.hardware == DeviceType.UCS) {
+            try {
+                ascii.append(new String(buffer, "windows-1251"));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        } else
+            for (byte b : buffer) {
+                if (b != '\r' || Settings.hardware == DeviceType.BNE_S110M) ascii.append((char) b);
+            }
         String commandType = "";
 
         switch (Settings.hardware) {

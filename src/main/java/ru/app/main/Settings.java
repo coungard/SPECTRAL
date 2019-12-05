@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Settings {
-    static final String VERSION = "1.59";
+    static final String VERSION = "1.60";
     public static final Dimension dimension = new Dimension(1020, 600);
     public static final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:S");
     public static final String COUNTRY = "ITL";
@@ -40,5 +40,7 @@ public class Settings {
         prop.put("logLevel.hex", "1");
         prop.put("logLevel.bytes", "0");
         prop.put("logLevel.ascii", "0");
+
+        prop.put("casher.soft", "1");
     }
 }

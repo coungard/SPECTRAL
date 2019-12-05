@@ -15,7 +15,7 @@ public class RequestAcceptance implements ClassType {
     }
 
     public enum Operation {
-        InitialResponse((byte) 0x00),                       // OK первичный позитивный ответ на авторизационный запрос класса 1 или 2-6
+        InitialResponse((byte) '0'),                       // OK первичный позитивный ответ на авторизационный запрос класса 1 или 2-6
         InitialResponseRequiresLoginFirst((byte) 0x01),     // негативный ответ на первичный запрос. Требуется инициация рабочей сессии
         PINEntryRequired((byte) 0x02),                      // требуется ввод пин-кода
         OnlineAuthorisationRequired((byte) 0x03),           // требуется он-лайн авторизация
@@ -33,7 +33,7 @@ public class RequestAcceptance implements ClassType {
 
     @Override
     public byte getOperationClass() {
-        return (byte) 0x05;
+        return (byte) '5';
     }
 
     @Override

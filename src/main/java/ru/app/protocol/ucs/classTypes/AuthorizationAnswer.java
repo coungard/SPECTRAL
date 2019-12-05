@@ -25,7 +25,7 @@ public class AuthorizationAnswer implements ClassType {
 
     @Override
     public byte getOperationClass() {
-        return (byte) 0x06;
+        return (byte) 0x36;
     }
 
     @Override

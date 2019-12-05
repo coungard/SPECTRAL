@@ -33,7 +33,7 @@ public class SessionCommands implements ClassType {
 
     @Override
     public byte getOperationClass() {
-        return (byte) 0x033;
+        return (byte) 0x33;
     }
 
     @Override
