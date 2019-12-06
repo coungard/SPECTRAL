@@ -57,6 +57,12 @@ public class Identification extends EmulatorCommand {
 
     static {
         softwareMap.put("1", "P/N=SM-RU1353, S/N=21KC07006857, A/N=-25.0.77.83.8.18.-16");
+        softwareMap.put("2", "P/N=SM-RU1353, S/N=39K820073069, A/N=99.1.47.78.32.28.-16");
+        softwareMap.put("3", "P/N=SM-RU1353, S/N=21KE22015806, A/N=-57.4.77.83.7.20.-14");
+        softwareMap.put("4", "P/N=SM-RU1353, S/N=21KA06005906, A/N=69.2.77.83.2.16.-16");
+        softwareMap.put("5", "P/N=SM-RU1353, S/N=39K744052627, A/N=82.0.77.83.6.77.-16");
+        softwareMap.put("6", "P/N=SM-RU1353, S/N=21KD11010097, A/N=-52.9.77.83.80.18.-14");
+        softwareMap.put("7", "P/N=SM-RU1353, S/N=39K721030377, A/N=96.1.77.83.25.7-16");
     }
 
     public static Map<String, String> getSoftwareMap() {
