@@ -11,12 +11,12 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import static ru.app.main.Launcher.mainPanel;
@@ -136,7 +136,12 @@ public class GeneralSettings extends JPanel {
         for (Map.Entry<String, String> entry : Identification.getSoftwareMap().entrySet()) {
             softBox.addItem(entry.getKey() + ": " + entry.getValue());
         }
-        softBox.setSelectedIndex(Integer.parseInt(Settings.prop.get("casher.soft")) - 1);
+        for (int i = 0; i < softBox.getItemCount(); i++) {
+            String value = (String) softBox.getModel().getElementAt(i);
+            if (value.startsWith(Settings.prop.get("casher.soft"))) {
+                softBox.setSelectedItem(value);
+            }
+        }
         softBox.setBounds(20, 230, 500, 40);
         add(softBox);
     }
@@ -159,7 +164,6 @@ public class GeneralSettings extends JPanel {
             if (Files.notExists(Paths.get(Settings.errorDir))) {
                 Files.createDirectory(Paths.get(Settings.errorDir));
             }
-
             if (Files.exists(Paths.get("payments/autoRun")))
                 Files.delete(Paths.get("payments/autoRun"));
             if (Files.notExists(Paths.get("payments/loading/")))
@@ -204,7 +208,7 @@ public class GeneralSettings extends JPanel {
         Settings.prop.put("logLevel.hex", hexLog.isSelected() ? "1" : "0");
         Settings.prop.put("logLevel.bytes", bytesLog.isSelected() ? "1" : "0");
         Settings.prop.put("logLevel.ascii", asciiLog.isSelected() ? "1" : "0");
-        Settings.prop.put("casher.soft", softBox.getSelectedIndex() + 1 + "");
+        Settings.prop.put("casher.soft", ((String) Objects.requireNonNull(softBox.getSelectedItem())).substring(0, 1));
 
         Settings.propEmulator.put("login", login.getText());
         Settings.propEmulator.put("imei", imei.getText());
