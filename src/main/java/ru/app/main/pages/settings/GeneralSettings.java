@@ -136,6 +136,7 @@ public class GeneralSettings extends JPanel {
         for (Map.Entry<String, String> entry : Identification.getSoftwareMap().entrySet()) {
             softBox.addItem(entry.getKey() + ": " + entry.getValue());
         }
+        softBox.setSelectedIndex(Integer.parseInt(Settings.prop.get("casher.soft")) - 1);
         softBox.setBounds(20, 230, 500, 40);
         add(softBox);
     }

@@ -2,6 +2,8 @@ package ru.app.protocol.ccnet;
 
 import ru.app.util.Utils;
 
+import java.io.IOException;
+
 /**
  * Команда протокола
  */
@@ -31,7 +33,7 @@ public class Command {
         this.type = type;
     }
 
-    public byte[] getData() {
+    public byte[] getData() throws IOException {
         return data;
     }
 

@@ -80,7 +80,7 @@ class Client {
             if (accessLog(output, StreamType.OUTPUT))
                 LOGGER.info(LogCreator.logOutput(output));
             serialPort.writeBytes(output);
-        } catch (SerialPortException ex) {
+        } catch (SerialPortException | IOException ex) {
             LOGGER.error(LogCreator.console(ex.getMessage()));
         }
     }
@@ -188,8 +188,9 @@ class Client {
         }
     }
 
-    private byte[] formPacket(Command command) {
-        byte[] data = command.getData() != null ? command.getData() : new byte[0];
+    private byte[] formPacket(Command command) throws IOException {
+        byte[] commandData = command.getData();
+        byte[] data = commandData != null ? commandData : new byte[0];
         boolean emulCommand = command.isEmulator();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(SYNC);

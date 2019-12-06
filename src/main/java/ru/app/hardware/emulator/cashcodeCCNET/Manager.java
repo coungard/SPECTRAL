@@ -11,6 +11,7 @@ import ru.app.network.Requester;
 import ru.app.network.Status;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.emulator.BillTable;
+import ru.app.protocol.ccnet.emulator.response.Identification;
 import ru.app.util.LogCreator;
 import ru.app.util.Utils;
 
@@ -465,25 +466,7 @@ public class Manager extends AbstractManager {
             modeLabel.setVisible(false);
             emul.setVisible(true);
         }
-//        createCatalogPayments();
     }
-
-//    private void createCatalogPayments() {
-//        try {
-//            if (Files.notExists(Paths.get(Settings.paymentsDir))) {
-//                Files.createDirectory(Paths.get(Settings.paymentsDir));
-//            }
-//            if (Files.notExists(Paths.get(Settings.successDir))) {
-//                Files.createDirectory(Paths.get(Settings.successDir));
-//            }
-//            if (Files.notExists(Paths.get(Settings.errorDir))) {
-//                Files.createDirectory(Paths.get(Settings.errorDir));
-//            }
-//        } catch (IOException ex) {
-//            LOGGER.error(ex.getMessage(), ex);
-//            LOGGER.info(LogCreator.console("Can not create payment directory: "));
-//        }
-//    }
 
     @Override
     public void redraw() {
