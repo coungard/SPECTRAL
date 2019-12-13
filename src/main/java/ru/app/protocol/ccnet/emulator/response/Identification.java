@@ -4,11 +4,11 @@ import ru.app.main.Settings;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Identification extends EmulatorCommand {
-    private static Map<String, String> softwareMap = new HashMap<>();
+    private static Map<String, String> softwareMap = new LinkedHashMap<>();
 
     @Override
     public byte[] getData() throws IOException {

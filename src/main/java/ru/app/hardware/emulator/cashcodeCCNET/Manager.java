@@ -11,7 +11,6 @@ import ru.app.network.Requester;
 import ru.app.network.Status;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.emulator.BillTable;
-import ru.app.protocol.ccnet.emulator.response.Identification;
 import ru.app.util.LogCreator;
 import ru.app.util.Utils;
 
@@ -51,7 +50,6 @@ public class Manager extends AbstractManager {
     private Requester requester;
     private boolean requesterStarted = false;
     private boolean botStarted = false;
-    //    private static final String URL = "http://192.168.15.121:8080/ussdWww/";
     private static final String URL = "http://109.248.44.61:8080/ussdWww/";
     private static final int TIME_OUT = 60000 * 20;
     private static final int ERROR_TIME_OUT = 60000 * 60;
@@ -121,12 +119,12 @@ public class Manager extends AbstractManager {
                                     if (client.isActive()) break;
                                 } while (System.currentTimeMillis() - action < 60000 * 10); // 10 minutes
                                 Thread.sleep(5000);
-                                if (!client.isActive()) {
+                                if (client.isActive()) {
                                     LOGGER.error(LogCreator.console("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!"));
                                 } else {
-                                    LOGGER.info(LogCreator.console("Identification command received. 5 minutes waiting for repaints..."));
-                                    Thread.sleep(60000 * 5); // wait after terminal send command Identefication
-                                    startRequester();
+                                    LOGGER.info(LogCreator.console("Identification command received. 10 minutes waiting for repaints..."));
+                                    Thread.sleep(60000 * 10); // wait after terminal send command Identefication
+                                    if (!requesterStarted) startRequester();
                                 }
                             }
                         } else {
@@ -154,7 +152,7 @@ public class Manager extends AbstractManager {
                 if (!requesterStarted) {
                     if (!botStarted) {
                         String[] buttons = new String[]{"Yes", "No"};
-                        int review = JOptionPane.showOptionDialog(null, "Bot not started, are you sure to start Requester?",
+                        int review = JOptionPane.showOptionDialog(null, "Bot not started, are you sure for start Requester?",
                                 "Attention!", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, buttons, buttons[0]);
 
                         if (review == 0) {
@@ -254,7 +252,7 @@ public class Manager extends AbstractManager {
                                 }
                                 List<Integer> nominals = Utils.calculatePayment(payment.getSum());
                                 for (Integer nominal : nominals) {
-                                    Thread.sleep(4000);
+                                    Thread.sleep(7000);
                                     String bill = "" + nominal;
                                     billAcceptance(billTable.get(bill));
                                 }

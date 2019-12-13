@@ -57,17 +57,6 @@ public class Manager extends AbstractManager {
         activation.setBounds(330, 35, 140, 40);
         add(activation);
         activation.addMouseListener(new UCSMouseAdapter(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.ACTIVATION), new byte[]{})));
-
-        JButton test = createButton("Test");
-        test.setBounds(580, 35, 140, 40);
-        add(test);
-        test.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                client.sendBytes(new byte[]{(byte) 0x33, (byte) 0x30, (byte) 0x30, (byte) 0x30, (byte) 0x31, (byte) 0x39, (byte) 0x39,
-                        (byte) 0x39, (byte) 0x39, (byte) 0x33, (byte) 0x31, (byte) 0x39, (byte) 0x30, (byte) 0x30});
-            }
-        });
     }
 
     private class UCSMouseAdapter extends MouseInputAdapter {
