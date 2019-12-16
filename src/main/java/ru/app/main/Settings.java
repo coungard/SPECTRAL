@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Settings {
-    static final String VERSION = "1.62";
+    static final String VERSION = "1.63";
     public static final Dimension dimension = new Dimension(1020, 600);
     public static final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:S");
     public static final String COUNTRY = "ITL";
@@ -42,5 +42,9 @@ public class Settings {
         prop.put("logLevel.ascii", "0");
 
         prop.put("casher.soft", "1");
+
+        propEmulator.put("url", "http://109.248.44.61:8080/ussdWorker/");
+        propEmulator.put("timeout.status", "180000");
+        propEmulator.put("timeout.nominals", "5000");
     }
 }

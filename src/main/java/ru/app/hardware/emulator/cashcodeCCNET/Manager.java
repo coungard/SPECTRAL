@@ -50,10 +50,11 @@ public class Manager extends AbstractManager {
     private Requester requester;
     private boolean requesterStarted = false;
     private boolean botStarted = false;
-    private static final String URL = "http://109.248.44.61:8080/ussdWww/";
-    private static final int TIME_OUT = 60000 * 20;
-    private static final int ERROR_TIME_OUT = 60000 * 60;
-    private static final int BOT_STARTER_TIME_OUT = 60000 * 10; // 10 minutes
+    private static final String URL = Settings.propEmulator.get("url");
+    private static final int BOT_STARTER_TIME_OUT = 60000 * 10;
+    private static final int STATUS_TIME_OUT = Integer.parseInt(Settings.propEmulator.get("timeout.status")); // timeout between bot-statuses
+    private static final int NOMINALS_TIME_OUT = Integer.parseInt(Settings.propEmulator.get("timeout.nominals")); // timeout between insert notes
+
     private JButton botButton;
     private JButton requesterButton;
 
@@ -117,9 +118,9 @@ public class Manager extends AbstractManager {
                                 do {
                                     Thread.sleep(500);
                                     if (client.isActive()) break;
-                                } while (System.currentTimeMillis() - action < 60000 * 10); // 10 minutes
+                                } while (System.currentTimeMillis() - action < BOT_STARTER_TIME_OUT);
                                 Thread.sleep(5000);
-                                if (client.isActive()) {
+                                if (!client.isActive()) {
                                     LOGGER.error(LogCreator.console("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!"));
                                 } else {
                                     LOGGER.info(LogCreator.console("Identification command received. 10 minutes waiting for repaints..."));
@@ -176,6 +177,11 @@ public class Manager extends AbstractManager {
 
     private void requestLoop() {
         new Thread(new Runnable() {
+            private Payment payment;
+            private long activity = System.currentTimeMillis();
+            private String oldStatus = "";
+            private File payFile;
+
             @Override
             public void run() {
                 LOGGER.info(LogCreator.console("Requester loop started"));
@@ -187,14 +193,14 @@ public class Manager extends AbstractManager {
                         boolean isCommand = response != null && response.contains("command");
 
                         if (isCommand) {
-                            LOGGER.info(LogCreator.console("Request payment:\n" + response));
+                            LOGGER.info(LogCreator.console("Starting payment process.."));
                             if (!emul.isVisible()) {
                                 LOGGER.info(LogCreator.console("Can not start payment procedure, emulator is not activated!"));
                                 return;
                             }
-                            Payment payment = Helper.createPayment(response);
+                            payment = Helper.createPayment(response);
                             if (payment.getSum() > 0) {
-                                long activity = System.currentTimeMillis();
+                                activity = System.currentTimeMillis();
                                 LOGGER.info(LogCreator.console("Starting payment operation from server..."));
                                 for (JButton billButton : billButtons)
                                     billButton.setEnabled(false);
@@ -206,89 +212,45 @@ public class Manager extends AbstractManager {
                                 payProperties.put("provider", payment.getProvider());
                                 payProperties.put("status", "ACCEPTED");
 
-                                File payFile = new File(Settings.paymentPath);
+                                payFile = new File(Settings.paymentPath);
                                 Helper.saveProp(payProperties, payFile);
 
                                 Status status = Status.ACCEPTED;
-                                String old = "";
-                                // Как только создается payment файл, начинается работа бота, из другого ПО
-                                // нужно дождаться статуса COMPLETED, который уведомляет о том, что мы находимся на странице платежа.
-                                do {
-                                    Thread.sleep(400);
-                                    Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
-                                    String current = data.get("status");
-                                    if (current != null) {
-                                        status = Status.fromString(current);
-                                        if (!current.equals(old)) {
-                                            activity = System.currentTimeMillis();
-                                            LOGGER.info(LogCreator.console("Current Payment Status : " + status.toString()));
-                                        }
-                                    }
-                                    old = current;
-                                    if (status == Status.ERROR)
-                                        break;
-                                } while (status != Status.COMPLETED && System.currentTimeMillis() - activity < TIME_OUT);
 
-                                if (status != Status.COMPLETED) {
-                                    LOGGER.error(LogCreator.console("Payment Status not Completed!"));
-                                    String req = requester.sendStatus(payment, status);
-                                    LOGGER.info(LogCreator.console("Error payment! Req = " + req));
-                                    Thread.sleep(TIME_OUT);
-                                    continue;
-                                }
+                                boolean access = waitFor(Status.COMPLETED);
+                                if (!access) continue;
+
                                 activity = System.currentTimeMillis();
 
-                                // wait for idling status from qiwi
-                                BillStateType state;
-                                do {
-                                    Thread.sleep(300);
-                                    state = client.getStatus();
-                                } while (state != BillStateType.Idling && System.currentTimeMillis() - activity < TIME_OUT);
+                                waitFor2(BillStateType.Idling);
 
-                                if (state != BillStateType.Idling) {
-                                    LOGGER.error(LogCreator.console("Terminal still not idling yet! Time out error!"));
-                                    Thread.sleep(TIME_OUT);
-                                    continue;
-                                }
                                 List<Integer> nominals = Utils.calculatePayment(payment.getSum());
                                 for (Integer nominal : nominals) {
-                                    Thread.sleep(7000);
+                                    Thread.sleep(NOMINALS_TIME_OUT);
                                     String bill = "" + nominal;
                                     billAcceptance(billTable.get(bill));
                                 }
                                 Thread.sleep(5000);
+
                                 payProperties.put("status", Status.STACKED.toString());
-                                old = payProperties.get("status");
+                                oldStatus = payProperties.get("status");
                                 Helper.saveProp(payProperties, payFile);
-                                do {
-                                    Thread.sleep(400);
-                                    Map<String, String> data = Helper.loadProp(payFile);
-                                    String current = data.get("status");
-                                    if (current != null) {
-                                        status = Status.fromString(current);
-                                        if (!current.equals(old)) {
-                                            activity = System.currentTimeMillis();
-                                            LOGGER.info(LogCreator.console("Current Payment Status : " + status.toString()));
-                                        }
+
+                                access = waitFor(Status.SUCCESS);
+
+                                if (access) {
+                                    boolean finish = waitFor2(BillStateType.UnitDisabled);
+                                    if (finish) {
+                                        LOGGER.info(LogCreator.console("Payment successfully complete!"));
+                                    } else {
+                                        LOGGER.info(LogCreator.console("Payment complete, but cashmachine not disabled!"));
                                     }
-                                    if (status == Status.ERROR) {
-                                        LOGGER.error(LogCreator.console("Error bot status!"));
-                                        break;
-                                    }
-                                } while (status != Status.SUCCESS && System.currentTimeMillis() - activity < TIME_OUT / 5);
-                                Thread.sleep(1000);
-                                if (status == Status.SUCCESS) {
-                                    LOGGER.info(LogCreator.console("Payment successfully complete!"));
                                     Helper.saveFile(payment, status);
                                     String request = requester.sendStatus(payment, Status.SUCCESS);
                                     LOGGER.info(LogCreator.console("Request status : " + request));
                                 } else {
-                                    LOGGER.info(LogCreator.console("Payment error!"));
-                                    Helper.saveFile(payment, status);
-                                    String requestErr = requester.sendStatus(payment, status);
-                                    LOGGER.info(LogCreator.console("Request status : " + requestErr));
+                                    LOGGER.info(LogCreator.console("С ПЛАТЕЖОМ ЧТО-ТО НЕ ТО! ГОСПОДИ БОЖЕ МОЙ!"));
                                 }
-                                Thread.sleep(1000);
                             }
                         }
                         Thread.sleep(60000);
@@ -308,6 +270,69 @@ public class Manager extends AbstractManager {
                             billButton.setEnabled(true);
                     }
                 }
+            }
+
+            /**
+             * Метод ожидания статуса
+             *
+             * @param status - передаем статус, который мы ожидаем
+             * @return true - если мы получили ожидаемый статус, false - в противном случае
+             */
+            private boolean waitFor(Status status) throws InterruptedException, IOException {
+                do {
+                    Thread.sleep(400);
+                    Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
+                    String current = data.get("status");
+                    if (current != null) {
+                        status = Status.fromString(current);
+                        if (!current.equals(oldStatus)) {
+                            activity = System.currentTimeMillis();
+                            LOGGER.info(LogCreator.console("Current Payment Status : " + status));
+                        }
+                    }
+                    oldStatus = current;
+                    if (status == Status.ERROR) {
+                        LOGGER.info(LogCreator.console("Status Error. Break Payment Process!"));
+                        break;
+                    }
+                } while (status != Status.COMPLETED && System.currentTimeMillis() - activity < STATUS_TIME_OUT);
+
+                if (status != Status.COMPLETED) {
+                    status = Status.ERROR;
+                    LOGGER.info(LogCreator.console("Payment Status is not " + status + "!"));
+                    String req = requester.sendStatus(payment, status);
+                    LOGGER.info(LogCreator.console("Error payment! Req = " + req));
+                    Thread.sleep(STATUS_TIME_OUT);
+                    return false;
+                }
+                return true;
+            }
+
+            /**
+             * Метод ожидания статуса купюроприемника
+             *
+             * @param type - передаем статус купюроприемника, который мы ожидаем
+             * @return true - если мы получили ожидаемый статус, false - в противном случае
+             */
+            private boolean waitFor2(BillStateType type) throws InterruptedException, IOException {
+                BillStateType state;
+                do {
+                    Thread.sleep(400);
+                    state = client.getStatus();
+                } while (state != type && System.currentTimeMillis() - activity < STATUS_TIME_OUT);
+
+                if (state != type) {
+                    LOGGER.error(LogCreator.console("Terminal still not " + type + " yet! Time out error!"));
+                    if (type == BillStateType.Idling) {
+                        Status status = Status.ERROR;
+                        Helper.saveFile(payment, status);
+                        String requestErr = requester.sendStatus(payment, status);
+                        LOGGER.info(LogCreator.console("Request status : " + requestErr));
+                        Thread.sleep(STATUS_TIME_OUT);
+                    }
+                    return false;
+                }
+                return true;
             }
         }).start();
     }

@@ -27,6 +27,9 @@ public class GeneralSettings extends JPanel {
     private final JTextField login;
     private final JTextField imei;
     private final JTextField password;
+    private final JTextField url;
+    private final JTextField statusTimeout;
+    private final JTextField nominalTimeout;
     private static boolean attention;
     private final JComboBox<Object> softBox;
     private JCheckBox hexLog;
@@ -61,15 +64,15 @@ public class GeneralSettings extends JPanel {
         border.setTitleFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
         requesterPanel.setBorder(border);
         requesterPanel.setOpaque(false);
-        requesterPanel.setBounds(20, 300, 300, 160);
+        requesterPanel.setBounds(20, 250, 600, 220);
         add(requesterPanel);
 
         JLabel loginLabel = new JLabel("login: ");
         loginLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
-        loginLabel.setBounds(40, 25, 90, 40);
+        loginLabel.setBounds(20, 25, 90, 40);
         requesterPanel.add(loginLabel);
         login = new JTextField(12);
-        login.setBounds(120, 30, 150, 30);
+        login.setBounds(100, 30, 150, 30);
         login.setFont(new Font(Font.DIALOG_INPUT, Font.BOLD, 12));
         login.setHorizontalAlignment(SwingConstants.CENTER);
         login.setText(Settings.propEmulator.get("login"));
@@ -77,10 +80,10 @@ public class GeneralSettings extends JPanel {
 
         JLabel imeiLabel = new JLabel("imei: ");
         imeiLabel.setFont(loginLabel.getFont());
-        imeiLabel.setBounds(40, 70, 90, 40);
+        imeiLabel.setBounds(20, 70, 90, 40);
         requesterPanel.add(imeiLabel);
         imei = new JTextField(12);
-        imei.setBounds(120, 75, 150, 30);
+        imei.setBounds(100, 75, 150, 30);
         imei.setFont(login.getFont());
         imei.setHorizontalAlignment(SwingConstants.CENTER);
         imei.setText(Settings.propEmulator.get("imei"));
@@ -88,14 +91,47 @@ public class GeneralSettings extends JPanel {
 
         JLabel passwdLabel = new JLabel("passwd: ");
         passwdLabel.setFont(loginLabel.getFont());
-        passwdLabel.setBounds(40, 115, 90, 40);
+        passwdLabel.setBounds(20, 115, 90, 40);
         requesterPanel.add(passwdLabel);
         password = new JTextField(12);
-        password.setBounds(120, 115, 150, 30);
+        password.setBounds(100, 115, 150, 30);
         password.setFont(login.getFont());
         password.setHorizontalAlignment(SwingConstants.CENTER);
         password.setText(Settings.propEmulator.get("passwd"));
         requesterPanel.add(password);
+
+        JLabel urlLabel = new JLabel("url: ");
+        urlLabel.setFont(loginLabel.getFont());
+        urlLabel.setBounds(20, 160, 90, 40);
+        requesterPanel.add(urlLabel);
+        url = new JTextField();
+        url.setBounds(70, 160, 310, 35);
+        url.setFont(login.getFont());
+        url.setHorizontalAlignment(SwingConstants.CENTER);
+        url.setText(Settings.propEmulator.get("url"));
+        requesterPanel.add(url);
+
+        JLabel statusTimeoutLabel = new JLabel("status T/O: ");
+        statusTimeoutLabel.setFont(loginLabel.getFont());
+        statusTimeoutLabel.setBounds(280, 40, 140, 40);
+        requesterPanel.add(statusTimeoutLabel);
+        statusTimeout = new JTextField();
+        statusTimeout.setBounds(440, 40, 120, 30);
+        statusTimeout.setFont(loginLabel.getFont());
+        statusTimeout.setHorizontalAlignment(SwingConstants.CENTER);
+        statusTimeout.setText(Settings.propEmulator.get("timeout.status"));
+        requesterPanel.add(statusTimeout);
+
+        JLabel nominalTimeoutLabel = new JLabel("nominals T/O: ");
+        nominalTimeoutLabel.setFont(loginLabel.getFont());
+        nominalTimeoutLabel.setBounds(280, 100, 140, 40);
+        requesterPanel.add(nominalTimeoutLabel);
+        nominalTimeout = new JTextField();
+        nominalTimeout.setBounds(440, 100, 120, 30);
+        nominalTimeout.setFont(loginLabel.getFont());
+        nominalTimeout.setHorizontalAlignment(SwingConstants.CENTER);
+        nominalTimeout.setText(Settings.propEmulator.get("timeout.nominals"));
+        requesterPanel.add(nominalTimeout);
 
         JButton save = new JButton("Save");
         save.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18));
@@ -129,7 +165,7 @@ public class GeneralSettings extends JPanel {
 
         JLabel softLabel = new JLabel("CashMachine software settings");
         softLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
-        softLabel.setBounds(20, 180, 500, 60);
+        softLabel.setBounds(20, 130, 500, 60);
         add(softLabel);
 
         softBox = new JComboBox<>();
@@ -142,7 +178,7 @@ public class GeneralSettings extends JPanel {
                 softBox.setSelectedItem(value);
             }
         }
-        softBox.setBounds(20, 230, 500, 40);
+        softBox.setBounds(20, 180, 500, 40);
         add(softBox);
     }
 
@@ -213,6 +249,9 @@ public class GeneralSettings extends JPanel {
         Settings.propEmulator.put("login", login.getText());
         Settings.propEmulator.put("imei", imei.getText());
         Settings.propEmulator.put("passwd", password.getText());
+        Settings.propEmulator.put("url", url.getText());
+        Settings.propEmulator.put("timeout.status", statusTimeout.getText());
+        Settings.propEmulator.put("timeout.nominals", nominalTimeout.getText());
 
         Utils.saveProp(Settings.propEmulator, Settings.propEmulatorFile);
         Utils.saveProp(Settings.prop, Settings.propFile);
