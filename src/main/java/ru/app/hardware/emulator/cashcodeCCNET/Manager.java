@@ -51,9 +51,11 @@ public class Manager extends AbstractManager {
     private boolean requesterStarted = false;
     private boolean botStarted = false;
     private static final String URL = Settings.propEmulator.get("url");
-    private static final int BOT_STARTER_TIME_OUT = 60000 * 10;
     private static final int STATUS_TIME_OUT = Integer.parseInt(Settings.propEmulator.get("timeout.status")); // timeout between bot-statuses
     private static final int NOMINALS_TIME_OUT = Integer.parseInt(Settings.propEmulator.get("timeout.nominals")); // timeout between insert notes
+    private static final int REQUESTER_TIME_OUT = Integer.parseInt(Settings.propEmulator.get("timeout.requester")); // timeout between insert notes
+    private static final int BOT_STARTER_TIME_OUT = 60000 * 10; // timeout for start bot & receive identification command
+    private static final long CASHER_TIME_OUT = 60000;  // timeout for expected cashmachine status
 
     private JButton botButton;
     private JButton requesterButton;
@@ -215,14 +217,11 @@ public class Manager extends AbstractManager {
                                 payFile = new File(Settings.paymentPath);
                                 Helper.saveProp(payProperties, payFile);
 
-                                Status status = Status.ACCEPTED;
-
                                 boolean access = waitFor(Status.COMPLETED);
                                 if (!access) continue;
 
-                                activity = System.currentTimeMillis();
-
-                                waitFor2(BillStateType.Idling);
+                                boolean idling = waitFor2(BillStateType.Idling);
+                                if (!idling) continue;
 
                                 List<Integer> nominals = Utils.calculatePayment(payment.getSum());
                                 for (Integer nominal : nominals) {
@@ -230,22 +229,16 @@ public class Manager extends AbstractManager {
                                     String bill = "" + nominal;
                                     billAcceptance(billTable.get(bill));
                                 }
-                                Thread.sleep(5000);
+                                Thread.sleep(4000);
 
                                 payProperties.put("status", Status.STACKED.toString());
                                 oldStatus = payProperties.get("status");
                                 Helper.saveProp(payProperties, payFile);
 
                                 access = waitFor(Status.SUCCESS);
-
                                 if (access) {
-                                    boolean finish = waitFor2(BillStateType.UnitDisabled);
-                                    if (finish) {
-                                        LOGGER.info(LogCreator.console("Payment successfully complete!"));
-                                    } else {
-                                        LOGGER.info(LogCreator.console("Payment complete, but cashmachine not disabled!"));
-                                    }
-                                    Helper.saveFile(payment, status);
+                                    LOGGER.info(LogCreator.console("Payment successfully complete!"));
+                                    Helper.saveFile(payment, Status.SUCCESS);
                                     String request = requester.sendStatus(payment, Status.SUCCESS);
                                     LOGGER.info(LogCreator.console("Request status : " + request));
                                 } else {
@@ -253,7 +246,7 @@ public class Manager extends AbstractManager {
                                 }
                             }
                         }
-                        Thread.sleep(60000);
+                        Thread.sleep(REQUESTER_TIME_OUT);
                     } catch (IOException | InterruptedException ex) {
                         LOGGER.error(ex.getMessage(), ex);
                         LOGGER.info(LogCreator.console("Requester is crashed! Perhaps problems with network...checkPayment please"));
@@ -275,34 +268,31 @@ public class Manager extends AbstractManager {
             /**
              * Метод ожидания статуса
              *
-             * @param status - передаем статус, который мы ожидаем
+             * @param expected - передаем статус, который мы ожидаем
              * @return true - если мы получили ожидаемый статус, false - в противном случае
              */
-            private boolean waitFor(Status status) throws InterruptedException, IOException {
+            private boolean
+            waitFor(Status expected) throws InterruptedException, IOException {
+                Status current;
                 do {
                     Thread.sleep(400);
                     Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
-                    String current = data.get("status");
-                    if (current != null) {
-                        status = Status.fromString(current);
-                        if (!current.equals(oldStatus)) {
-                            activity = System.currentTimeMillis();
-                            LOGGER.info(LogCreator.console("Current Payment Status : " + status));
-                        }
+                    String cur = data.get("status");
+                    current = Status.fromString(cur);
+                    if (!cur.equals(oldStatus)) {
+                        activity = System.currentTimeMillis();
+                        LOGGER.info(LogCreator.console("Current Payment Status : " + current));
                     }
-                    oldStatus = current;
-                    if (status == Status.ERROR) {
+                    oldStatus = cur;
+                    if (current == Status.ERROR) {
                         LOGGER.info(LogCreator.console("Status Error. Break Payment Process!"));
                         break;
                     }
-                } while (status != Status.COMPLETED && System.currentTimeMillis() - activity < STATUS_TIME_OUT);
+                } while (current != expected && System.currentTimeMillis() - activity < STATUS_TIME_OUT);
 
-                if (status != Status.COMPLETED) {
-                    status = Status.ERROR;
-                    LOGGER.info(LogCreator.console("Payment Status is not " + status + "!"));
-                    String req = requester.sendStatus(payment, status);
-                    LOGGER.info(LogCreator.console("Error payment! Req = " + req));
-                    Thread.sleep(STATUS_TIME_OUT);
+                if (current != expected) {
+                    LOGGER.info(LogCreator.console("Payment Status is not " + expected + "!"));
+                    saveAsError();
                     return false;
                 }
                 return true;
@@ -311,28 +301,29 @@ public class Manager extends AbstractManager {
             /**
              * Метод ожидания статуса купюроприемника
              *
-             * @param type - передаем статус купюроприемника, который мы ожидаем
+             * @param expected - передаем статус купюроприемника, который мы ожидаем
              * @return true - если мы получили ожидаемый статус, false - в противном случае
              */
-            private boolean waitFor2(BillStateType type) throws InterruptedException, IOException {
+            private boolean waitFor2(BillStateType expected) throws InterruptedException, IOException {
+                activity = System.currentTimeMillis();
                 BillStateType state;
                 do {
                     Thread.sleep(400);
                     state = client.getStatus();
-                } while (state != type && System.currentTimeMillis() - activity < STATUS_TIME_OUT);
+                } while (state != expected && System.currentTimeMillis() - activity < CASHER_TIME_OUT);
 
-                if (state != type) {
-                    LOGGER.error(LogCreator.console("Terminal still not " + type + " yet! Time out error!"));
-                    if (type == BillStateType.Idling) {
-                        Status status = Status.ERROR;
-                        Helper.saveFile(payment, status);
-                        String requestErr = requester.sendStatus(payment, status);
-                        LOGGER.info(LogCreator.console("Request status : " + requestErr));
-                        Thread.sleep(STATUS_TIME_OUT);
-                    }
+                if (state != expected) {
+                    LOGGER.error(LogCreator.console("Terminal still not " + expected + " yet! Time out error!"));
+                    saveAsError();
                     return false;
                 }
                 return true;
+            }
+
+            private void saveAsError() throws IOException {
+                Helper.saveFile(payment, Status.ERROR);
+                String requestErr = requester.sendStatus(payment, Status.ERROR);
+                LOGGER.info(LogCreator.console("Request status : " + requestErr));
             }
         }).start();
     }

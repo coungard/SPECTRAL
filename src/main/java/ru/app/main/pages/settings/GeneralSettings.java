@@ -30,6 +30,7 @@ public class GeneralSettings extends JPanel {
     private final JTextField url;
     private final JTextField statusTimeout;
     private final JTextField nominalTimeout;
+    private final JTextField requesterTimeout;
     private static boolean attention;
     private final JComboBox<Object> softBox;
     private JCheckBox hexLog;
@@ -113,25 +114,39 @@ public class GeneralSettings extends JPanel {
 
         JLabel statusTimeoutLabel = new JLabel("status T/O: ");
         statusTimeoutLabel.setFont(loginLabel.getFont());
-        statusTimeoutLabel.setBounds(280, 40, 140, 40);
+        statusTimeoutLabel.setBounds(280, 25, 140, 40);
+        statusTimeoutLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         requesterPanel.add(statusTimeoutLabel);
         statusTimeout = new JTextField();
-        statusTimeout.setBounds(440, 40, 120, 30);
-        statusTimeout.setFont(loginLabel.getFont());
+        statusTimeout.setBounds(440, 30, 150, 30);
+        statusTimeout.setFont(login.getFont());
         statusTimeout.setHorizontalAlignment(SwingConstants.CENTER);
         statusTimeout.setText(Settings.propEmulator.get("timeout.status"));
         requesterPanel.add(statusTimeout);
 
         JLabel nominalTimeoutLabel = new JLabel("nominals T/O: ");
         nominalTimeoutLabel.setFont(loginLabel.getFont());
-        nominalTimeoutLabel.setBounds(280, 100, 140, 40);
+        nominalTimeoutLabel.setBounds(280, 70, 140, 40);
+        nominalTimeoutLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         requesterPanel.add(nominalTimeoutLabel);
         nominalTimeout = new JTextField();
-        nominalTimeout.setBounds(440, 100, 120, 30);
-        nominalTimeout.setFont(loginLabel.getFont());
+        nominalTimeout.setBounds(440, 75, 150, 30);
+        nominalTimeout.setFont(login.getFont());
         nominalTimeout.setHorizontalAlignment(SwingConstants.CENTER);
         nominalTimeout.setText(Settings.propEmulator.get("timeout.nominals"));
         requesterPanel.add(nominalTimeout);
+
+        JLabel requesterTimeoutLabel = new JLabel("requester T/O: ");
+        requesterTimeoutLabel.setFont(loginLabel.getFont());
+        requesterTimeoutLabel.setBounds(280, 115, 140, 40);
+        requesterTimeoutLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        requesterPanel.add(requesterTimeoutLabel);
+        requesterTimeout = new JTextField();
+        requesterTimeout.setBounds(440, 115, 150, 30);
+        requesterTimeout.setFont(login.getFont());
+        requesterTimeout.setHorizontalAlignment(SwingConstants.CENTER);
+        requesterTimeout.setText(Settings.propEmulator.get("timeout.requester"));
+        requesterPanel.add(requesterTimeout);
 
         JButton save = new JButton("Save");
         save.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18));
@@ -252,6 +267,7 @@ public class GeneralSettings extends JPanel {
         Settings.propEmulator.put("url", url.getText());
         Settings.propEmulator.put("timeout.status", statusTimeout.getText());
         Settings.propEmulator.put("timeout.nominals", nominalTimeout.getText());
+        Settings.propEmulator.put("timeout.requester", requesterTimeout.getText());
 
         Utils.saveProp(Settings.propEmulator, Settings.propEmulatorFile);
         Utils.saveProp(Settings.prop, Settings.propFile);

@@ -272,11 +272,13 @@ public class Utils {
     public static String getPropertyFromFile(String file, String target) throws IOException {
         String result = null;
         Properties p = new Properties();
-        p.load(new FileReader(file));
+        FileReader fr = new FileReader(file);
+        p.load(fr);
         for (String key : p.stringPropertyNames()) {
             if (target.equals(key))
                 result = p.getProperty(key);
         }
+        fr.close();
         return result;
     }
 
