@@ -127,7 +127,7 @@ class Client {
                     else
                         emulateProcess(response.toByteArray());
                 } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
-                    LOGGER.error(LogCreator.console(ex.getMessage()));
+                    LOGGER.error(LogCreator.console(ex.getMessage()), ex);
                 }
             }
         }

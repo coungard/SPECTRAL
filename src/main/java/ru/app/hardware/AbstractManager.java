@@ -15,6 +15,7 @@ public abstract class AbstractManager extends JLayeredPane {
     public volatile JTextArea textArea;
 
     public abstract void struct();
+
     public abstract void redraw();
 
     protected abstract void closeAll();
@@ -66,8 +67,13 @@ public abstract class AbstractManager extends JLayeredPane {
         exitButton.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                closeAll();
-                System.exit(0);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        closeAll();
+                        System.exit(0);
+                    }
+                }).start();
             }
         });
         add(exitButton);

@@ -46,10 +46,20 @@ public class PortsPage extends JPanel {
             sorry.setVisible(true);
             mainLabel.setText("Sorry, you don't have a com-ports");
         }
+
         for (int i = 0; i < ports.length; i++) {
+            int vCount = 5;
             JButton button = new JButton(ports[i]);
-            button.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 23));
-            button.setBounds(Settings.dimension.width / 2 - 150, 60 + i * 90, 300, 60);
+            button.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
+
+            int xOffset = Settings.dimension.width / 2 - 150;
+            if (ports.length > 5) {
+                xOffset = ports.length > 10 ? 30 : 200;
+                if (i > 4 && i < 10) xOffset = xOffset + 330;
+                if (i >= 10) xOffset = xOffset + 660;
+            }
+
+            button.setBounds(xOffset, 60 + (i == 0 ? 0 : i % vCount) * 90, 300, 60);
             button.addMouseListener(new PortListener(ports[i]));
             buttonList.add(button);
             add(button);

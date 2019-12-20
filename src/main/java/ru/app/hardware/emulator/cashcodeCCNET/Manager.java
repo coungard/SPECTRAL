@@ -1,6 +1,5 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
-import jssc.SerialPortException;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import ru.app.hardware.AbstractManager;
@@ -231,7 +230,7 @@ public class Manager extends AbstractManager {
                                 }
                                 Thread.sleep(4000);
 
-                                payProperties.put("status", Status.STACKED.toString());
+                                payProperties.put("status", "STACKED");
                                 oldStatus = payProperties.get("status");
                                 Helper.saveProp(payProperties, payFile);
 
@@ -273,6 +272,7 @@ public class Manager extends AbstractManager {
              */
             private boolean
             waitFor(Status expected) throws InterruptedException, IOException {
+                LOGGER.info(LogCreator.console("wait for status: " + expected));
                 Status current;
                 do {
                     Thread.sleep(400);
@@ -305,6 +305,7 @@ public class Manager extends AbstractManager {
              * @return true - если мы получили ожидаемый статус, false - в противном случае
              */
             private boolean waitFor2(BillStateType expected) throws InterruptedException, IOException {
+                LOGGER.info(LogCreator.console("wait for casher state: " + expected));
                 activity = System.currentTimeMillis();
                 BillStateType state;
                 do {
@@ -335,7 +336,6 @@ public class Manager extends AbstractManager {
         scroll.setBounds(30, 190, 960, 340);
 
         emul = new JLabel();
-//        emul.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/emulator.gif"))));
         emul.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/doomguy.gif"))));
 
         emul.setSize(emul.getIcon().getIconWidth(), emul.getIcon().getIconHeight());
@@ -545,10 +545,83 @@ public class Manager extends AbstractManager {
 
     @Override
     protected void closeAll() {
+        LOGGER.info(LogCreator.console("close client & qiwi starting.."));
         try {
             client.close();
-        } catch (SerialPortException ex) {
+            closeQiwi();
+            Thread.sleep(3000);
+            LOGGER.info(LogCreator.console("All processes terminated!"));
+            Thread.sleep(3000);
+        } catch (Exception ex) {
             LOGGER.error(ex.getMessage(), ex);
+        }
+    }
+
+    private void closeQiwi() {
+        if (!Utils.isUnix()) {
+            Utils.runCmd(new String[]{"closeMaratl.bat"});
+//            String process = "maratl.exe";
+//            List<String> list = new ArrayList<>();
+//
+//            Process p = Runtime.getRuntime().exec("tasklist");
+//            try (BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+//                String line;
+//                while ((line = input.readLine()) != null) {
+//                    list.add(line);
+//                }
+//            }
+//
+//            int pid = 0;
+//            boolean founded = false;
+//            for (String s : list) {
+//                if (s.contains(process)) {
+//                    LOGGER.info(LogCreator.console("required process is founded: " + process));
+//                    founded = true;
+//                    String[] parts = s.split(" ", 2);
+//                    String text = parts[1].trim();
+//                    String res = text.split(" ")[0];
+//
+//                    pid = Integer.parseInt(res);
+//                    break;
+//                }
+//            }
+//
+//            if (!founded) {
+//                LOGGER.info(LogCreator.console("Process " + process + " not founded!"));
+//                return;
+//            }
+//
+//            LOGGER.info(LogCreator.console("PID, we required = " + pid));
+//            String command = "taskkill /f /im " + process;
+//
+//            LOGGER.info(LogCreator.console("Command cmd: \t" + command));
+//            Runtime.getRuntime().exec(command);
+//
+//            LOGGER.info(LogCreator.console("Waiting for terminating process: " + process));
+//            Thread.sleep(6000);
+//
+//            list.clear();
+//            Process p2 = Runtime.getRuntime().exec("tasklist");
+//            try (BufferedReader input = new BufferedReader(new InputStreamReader(p2.getInputStream()))) {
+//                String line;
+//                while ((line = input.readLine()) != null) {
+//                    list.add(line);
+//                }
+//            }
+//            boolean isDeleted = true;
+//            for (String s : list) {
+//                if (s.contains(process)) {
+//                    isDeleted = false;
+//                }
+//            }
+//            if (isDeleted) {
+//                LOGGER.info(LogCreator.console(process + " succesfully killed!"));
+//            } else {
+//                LOGGER.info(LogCreator.console("Error! Failed to terminated process: " + process));
+//            }
+//            Thread.sleep(5000);
+        } else {
+            LOGGER.info("can not closeQiwi on linux");
         }
     }
 

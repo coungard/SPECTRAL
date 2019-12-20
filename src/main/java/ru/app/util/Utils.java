@@ -298,4 +298,21 @@ public class Utils {
             throw new RuntimeException(ex);
         }
     }
+
+    // возвращает true, если используется Unix подобная ОС
+    public static boolean isUnix() {
+        String os = System.getProperty("os.name").toLowerCase();
+        return (os.contains("nix") || os.contains("nux"));
+    }
+
+    public static Process runCmd(String[] args) {
+        LOGGER.info(Arrays.toString(args));
+        try {
+            Runtime runtime = Runtime.getRuntime();
+            return runtime.exec(args);
+        } catch (Exception ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            return null;
+        }
+    }
 }
