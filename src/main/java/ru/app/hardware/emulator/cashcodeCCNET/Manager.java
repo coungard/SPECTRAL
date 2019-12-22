@@ -15,6 +15,7 @@ import ru.app.util.Utils;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
+import javax.swing.text.DefaultCaret;
 import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -39,9 +40,11 @@ public class Manager extends AbstractManager {
     private Client client;
     private String portName;
     private static JCheckBox verboseLog;
+    private static JCheckBox autoScroll;
     private boolean cassetteOut = false;
     private JLabel emul;
     private JLabel casher;
+    private JLabel serialError = new JLabel("SERIAL PORT ERRORS!");
     private JLabel modeLabel = new JLabel("change mode -->>");
     private Map<String, byte[]> billTable;
     private List<JButton> billButtons = new ArrayList<>();
@@ -64,7 +67,12 @@ public class Manager extends AbstractManager {
         setSize(1020, 600);
         setOpaque(true);
         setBackground(BACKGROUND_COLOR);
-        client = new Client(port);
+        client = new Client(port, new ManagerListener() {
+            @Override
+            public void serialPortErrorReports() {
+                serialError.setVisible(true);
+            }
+        });
         requester = new Requester(URL);
         billTable = new BillTable().getTable();
         struct();
@@ -99,7 +107,6 @@ public class Manager extends AbstractManager {
                         do {
                             Thread.sleep(400);
                             Map<String, String> bot = Helper.loadProp(path.toFile());
-
                             if (bot.get("bot").equals("ok")) {
                                 Files.delete(path);
                                 access = true;
@@ -333,6 +340,26 @@ public class Manager extends AbstractManager {
     public void struct() {
         JLabel mainLabel = formLabel("EMULATOR CASHCODE CCNET", 0);
         add(mainLabel);
+
+        verboseLog = new JCheckBox("verbose Log");
+        verboseLog.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 16));
+        verboseLog.setBounds(getWidth() - 160, 5, 150, 20);
+        add(verboseLog);
+
+        autoScroll = new JCheckBox("auto scroll");
+        autoScroll.setSelected(true);
+        autoScroll.setFont(verboseLog.getFont());
+        autoScroll.setBounds(getWidth() - 160, 30, 150, 30);
+        autoScroll.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DefaultCaret caret = (DefaultCaret) textArea.getCaret();
+                boolean auto = autoScroll.isSelected();
+                caret.setUpdatePolicy(auto ? DefaultCaret.ALWAYS_UPDATE : DefaultCaret.NEVER_UPDATE);
+            }
+        });
+        add(autoScroll);
+
         scroll.setBounds(30, 190, 960, 340);
 
         emul = new JLabel();
@@ -349,6 +376,12 @@ public class Manager extends AbstractManager {
         casher.setLocation(885, 70);
         casher.setVisible(false);
         add(casher);
+
+        serialError.setFont(new Font(Font.DIALOG, Font.BOLD, 20));
+        serialError.setForeground(Color.RED);
+        serialError.setBounds(420, 140, 300, 40);
+        serialError.setVisible(false);
+        add(serialError);
 
         modeLabel.setBounds(700, 80, 200, 100);
         modeLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
@@ -440,11 +473,6 @@ public class Manager extends AbstractManager {
         paymentPanel.setBorder(BorderFactory.createTitledBorder("Вставка номинала банкноты (в рублях)"));
         paymentPanel.setBounds(30, 40, 480, 100);
         add(paymentPanel);
-
-        verboseLog = new JCheckBox("verbose Log");
-        verboseLog.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
-        verboseLog.setBounds(getWidth() - 160, 10, 150, 50);
-        add(verboseLog);
 
         for (String denomination : billTable.keySet()) {
             addBill(denomination);

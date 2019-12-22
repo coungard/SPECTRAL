@@ -21,6 +21,7 @@ import java.util.Objects;
 
 class Client {
     private static final Logger LOGGER = Logger.getLogger(Client.class);
+    private final ManagerListener listener;
 
     private SerialPort serialPort;
     private final byte SYNC = (byte) 0x02;
@@ -39,8 +40,9 @@ class Client {
     private volatile BillStateType status = BillStateType.UnitDisabled;
     private boolean active = false;
 
-    Client(String portName) {
+    Client(String portName, ManagerListener listener) {
         serialPort = new SerialPort(portName);
+        this.listener = listener;
         try {
             serialPort.openPort();
             serialPort.setParams(SerialPort.BAUDRATE_9600,
@@ -127,6 +129,7 @@ class Client {
                     else
                         emulateProcess(response.toByteArray());
                 } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
+                    listener.serialPortErrorReports();
                     LOGGER.error(LogCreator.console(ex.getMessage()), ex);
                 }
             }
@@ -150,7 +153,7 @@ class Client {
                 break;
             case Identification:
                 currentResponse = "Identification [Emulator]";
-                setActive(true);
+                active = true;
                 sendMessage(new Identification());
                 break;
             case Stack:
@@ -287,9 +290,5 @@ class Client {
 
     public boolean isActive() {
         return active;
-    }
-
-    private void setActive(boolean active) {
-        this.active = active;
     }
 }
