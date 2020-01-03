@@ -81,6 +81,7 @@ public class Manager extends AbstractManager {
             startProcess(true);
         }
         LOGGER.info(LogCreator.console("Client manager started on port: " + portName));
+        Map<String, String> prop = new HashMap<>();
     }
 
     private void startProcess(final boolean withRequester) {
@@ -132,6 +133,7 @@ public class Manager extends AbstractManager {
                                     LOGGER.error(LogCreator.console("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!"));
                                 } else {
                                     LOGGER.info(LogCreator.console("Identification command received. 10 minutes waiting for repaints..."));
+                                    watchDog();
                                     Thread.sleep(60000 * 10); // wait after terminal send command Identefication
                                     if (!requesterStarted) startRequester();
                                 }
@@ -150,6 +152,24 @@ public class Manager extends AbstractManager {
                     botButton.setIcon(null);
                     botStarted = false;
                 }
+            }
+        }).start();
+    }
+
+    private void watchDog() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                LOGGER.info("Watch dog started");
+                long delay = System.currentTimeMillis();
+                do {
+                    if (!client.isPollingActivity()) {
+                        if (System.currentTimeMillis() - delay > 10000) {
+                            LOGGER.warn("Warning! Terminal is not polling! (5 sec timeout)");
+                            delay = System.currentTimeMillis();
+                        }
+                    }
+                } while (true);
             }
         }).start();
     }
@@ -540,10 +560,10 @@ public class Manager extends AbstractManager {
     }
 
     private void sendEscrowPosition() {
-        if (client.getStatus() == BillStateType.Idling || client.realDeviceConnected()) {
+        if (client.getStatus() != BillStateType.UnitDisabled || client.realDeviceConnected()) {
             client.escrowNominal();
         } else {
-            LOGGER.warn(LogCreator.console("can not escrow, casher not idling now!"));
+            LOGGER.warn(LogCreator.console("can not escrow, casher disabled state now!"));
         }
     }
 
@@ -588,80 +608,8 @@ public class Manager extends AbstractManager {
     private void closeQiwi() {
         if (!Utils.isUnix()) {
             Utils.runCmd(new String[]{"closeMaratl.bat"});
-//            String process = "maratl.exe";
-//            List<String> list = new ArrayList<>();
-//
-//            Process p = Runtime.getRuntime().exec("tasklist");
-//            try (BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-//                String line;
-//                while ((line = input.readLine()) != null) {
-//                    list.add(line);
-//                }
-//            }
-//
-//            int pid = 0;
-//            boolean founded = false;
-//            for (String s : list) {
-//                if (s.contains(process)) {
-//                    LOGGER.info(LogCreator.console("required process is founded: " + process));
-//                    founded = true;
-//                    String[] parts = s.split(" ", 2);
-//                    String text = parts[1].trim();
-//                    String res = text.split(" ")[0];
-//
-//                    pid = Integer.parseInt(res);
-//                    break;
-//                }
-//            }
-//
-//            if (!founded) {
-//                LOGGER.info(LogCreator.console("Process " + process + " not founded!"));
-//                return;
-//            }
-//
-//            LOGGER.info(LogCreator.console("PID, we required = " + pid));
-//            String command = "taskkill /f /im " + process;
-//
-//            LOGGER.info(LogCreator.console("Command cmd: \t" + command));
-//            Runtime.getRuntime().exec(command);
-//
-//            LOGGER.info(LogCreator.console("Waiting for terminating process: " + process));
-//            Thread.sleep(6000);
-//
-//            list.clear();
-//            Process p2 = Runtime.getRuntime().exec("tasklist");
-//            try (BufferedReader input = new BufferedReader(new InputStreamReader(p2.getInputStream()))) {
-//                String line;
-//                while ((line = input.readLine()) != null) {
-//                    list.add(line);
-//                }
-//            }
-//            boolean isDeleted = true;
-//            for (String s : list) {
-//                if (s.contains(process)) {
-//                    isDeleted = false;
-//                }
-//            }
-//            if (isDeleted) {
-//                LOGGER.info(LogCreator.console(process + " succesfully killed!"));
-//            } else {
-//                LOGGER.info(LogCreator.console("Error! Failed to terminated process: " + process));
-//            }
-//            Thread.sleep(5000);
         } else {
             LOGGER.info("can not closeQiwi on linux");
         }
     }
-
-//    @Override
-//    protected void paintComponent(Graphics g) {
-//        super.paintComponent(g);
-//        BufferedImage image;
-//        try {
-//            image = ImageIO.read(new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/emulator_bg.jpg")).getPath()));
-//            g.drawImage(image, 0, 0, null);
-//        } catch (IOException ex) {
-//            LOGGER.error(ex.getMessage(), ex);
-//        }
-//    }
 }

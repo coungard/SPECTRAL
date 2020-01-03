@@ -189,7 +189,7 @@ public class GeneralSettings extends JPanel {
         }
         for (int i = 0; i < softBox.getItemCount(); i++) {
             String value = (String) softBox.getModel().getElementAt(i);
-            if (value.startsWith(Settings.prop.get("casher.soft"))) {
+            if (value.startsWith(Settings.propEmulator.get("casher.soft"))) {
                 softBox.setSelectedItem(value);
             }
         }
@@ -259,8 +259,8 @@ public class GeneralSettings extends JPanel {
         Settings.prop.put("logLevel.hex", hexLog.isSelected() ? "1" : "0");
         Settings.prop.put("logLevel.bytes", bytesLog.isSelected() ? "1" : "0");
         Settings.prop.put("logLevel.ascii", asciiLog.isSelected() ? "1" : "0");
-        Settings.prop.put("casher.soft", ((String) Objects.requireNonNull(softBox.getSelectedItem())).substring(0, 1));
 
+        Settings.propEmulator.put("casher.soft", ((String) Objects.requireNonNull(softBox.getSelectedItem())).substring(0, 1));
         Settings.propEmulator.put("login", login.getText());
         Settings.propEmulator.put("imei", imei.getText());
         Settings.propEmulator.put("passwd", password.getText());

@@ -59,7 +59,7 @@ public abstract class AbstractManager extends JLayeredPane {
         });
         add(restartButton);
 
-        JButton exitButton = new JButton("Exit");
+        final JButton exitButton = new JButton("Exit");
         exitButton.setBackground(new Color(208, 44, 50));
         exitButton.setFont(restartButton.getFont());
         exitButton.setForeground(restartButton.getForeground());
@@ -70,6 +70,7 @@ public abstract class AbstractManager extends JLayeredPane {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
+                        exitButton.setEnabled(false);
                         closeAll();
                         System.exit(0);
                     }

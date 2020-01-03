@@ -12,7 +12,7 @@ public class Identification extends EmulatorCommand {
 
     @Override
     public byte[] getData() throws IOException {
-        return getSoftwareIdentification(Settings.prop.get("casher.soft"));
+        return getSoftwareIdentification(Settings.propEmulator.get("casher.soft"));
     }
 
     private byte[] getSoftwareIdentification(String softNumber) throws IOException {

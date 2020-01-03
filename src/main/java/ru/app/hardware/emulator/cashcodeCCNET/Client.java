@@ -39,6 +39,7 @@ class Client {
     private CashCodeClient tempClient;
     private volatile BillStateType status = BillStateType.UnitDisabled;
     private boolean active = false;
+    private long pollingActivity;
 
     Client(String portName, ManagerListener listener) {
         serialPort = new SerialPort(portName);
@@ -109,10 +110,16 @@ class Client {
                 try {
                     ByteArrayOutputStream response = new ByteArrayOutputStream();
                     byte[] sync = serialPort.readBytes(1);
-                    if (sync[0] != SYNC) return; //WRONG SYNC!!
+                    if (sync[0] != SYNC) {
+                        LOGGER.warn("Wrong SYNC from port!");
+                        return;
+                    }
                     response.write(sync);
                     byte[] addr = serialPort.readBytes(1);
-                    if (addr[0] != PERIPHERIAL_CODE) return; // WRONG ADDRESS!!
+                    if (addr[0] != PERIPHERIAL_CODE) {
+                        LOGGER.warn("Wrong address byte from port!");
+                        return;
+                    }
                     response.write(addr);
                     byte[] length = serialPort.readBytes(1);
                     response.write(length);
@@ -161,6 +168,7 @@ class Client {
                 changeStatus(1000, BillStateType.Stacking);
                 break;
             case Poll:
+                pollingActivity = System.currentTimeMillis();
                 BillStateType status = getStatus();
                 switch (status) {
                     case Accepting:
@@ -211,7 +219,7 @@ class Client {
         return baos.toByteArray();
     }
 
-    synchronized private boolean accessLog(byte[] buffer, StreamType type) {
+    private boolean accessLog(byte[] buffer, StreamType type) {
         if (Manager.isVerboseLog()) return true;
         if (currentCommand == CommandType.ACK) return false;
 
@@ -290,5 +298,9 @@ class Client {
 
     public boolean isActive() {
         return active;
+    }
+
+    public boolean isPollingActivity() {
+        return System.currentTimeMillis() - pollingActivity < 5000;
     }
 }
