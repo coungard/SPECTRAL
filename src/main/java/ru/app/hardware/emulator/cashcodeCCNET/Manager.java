@@ -81,7 +81,6 @@ public class Manager extends AbstractManager {
             startProcess(true);
         }
         LOGGER.info(LogCreator.console("Client manager started on port: " + portName));
-        Map<String, String> prop = new HashMap<>();
     }
 
     private void startProcess(final boolean withRequester) {
@@ -532,6 +531,7 @@ public class Manager extends AbstractManager {
 
     @Override
     public void redraw() {
+        LOGGER.info(LogCreator.console("Emulator configuration: " + Settings.propEmulator));
     }
 
     /**

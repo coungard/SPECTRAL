@@ -6,6 +6,7 @@ import ru.app.main.Settings;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.Command;
 import ru.app.protocol.ccnet.CommandType;
+import ru.app.protocol.ccnet.emulator.BillTable;
 import ru.app.protocol.ccnet.emulator.response.Identification;
 import ru.app.protocol.ccnet.emulator.response.SetStatus;
 import ru.app.protocol.ccnet.emulator.response.TakeBillTable;
@@ -16,6 +17,7 @@ import ru.app.util.StreamType;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 
 
@@ -27,6 +29,7 @@ class Client {
     private final byte SYNC = (byte) 0x02;
     private final byte PERIPHERIAL_CODE = (byte) 0x03;
 
+    private Map<String, byte[]> billTable;
     private volatile byte[] currentDenom;
     private CommandType currentCommand;
     private String currentResponse = "";
@@ -60,6 +63,8 @@ class Client {
 
         if (Settings.realPortForEmulator != null)
             cashCodeClient = new CashCodeClient(Settings.realPortForEmulator, this);
+
+        billTable = new BillTable().getTable();
     }
 
     void escrowNominal() {
@@ -79,7 +84,14 @@ class Client {
                 } else
                     currentResponse = command.toString();
             }
-
+            if (currentResponse != null && currentResponse.contains("BillStacked")) {
+                for (Map.Entry<String, byte[]> entry : billTable.entrySet()) {
+                    if (Arrays.equals(entry.getValue(), currentDenom)) {
+                        currentResponse += " [" + entry.getKey() + "]"; // example: BillStacked [100]
+                        break;
+                    }
+                }
+            }
             if (accessLog(output, StreamType.OUTPUT))
                 LOGGER.info(LogCreator.logOutput(output));
             serialPort.writeBytes(output);
@@ -263,7 +275,11 @@ class Client {
                 } catch (InterruptedException ex) {
                     LOGGER.error(LogCreator.console(ex.getMessage()));
                 }
-                setStatus(oldStatus);
+                if (oldStatus == BillStateType.Accepting || oldStatus == BillStateType.BillStacked) {
+                    LOGGER.warn(LogCreator.console("Old emulator status = " + oldStatus + ". This status is not expected!"));
+                    setStatus(BillStateType.Idling);
+                } else
+                    setStatus(oldStatus);
             }
         }).start();
     }
