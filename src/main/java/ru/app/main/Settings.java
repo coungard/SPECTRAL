@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Settings {
-    static final String VERSION = "1.68";
+    static final String VERSION = "1.70";
     public static final Dimension dimension = new Dimension(1020, 600);
     public static final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:S");
     public static final String COUNTRY = "ITL";

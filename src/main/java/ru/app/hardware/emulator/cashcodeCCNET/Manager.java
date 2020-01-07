@@ -83,76 +83,72 @@ public class Manager extends AbstractManager {
         LOGGER.info(LogCreator.console("Client manager started on port: " + portName));
     }
 
+
     private void startProcess(final boolean withRequester) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if (!botStarted) {
-                    LOGGER.info(LogCreator.console("Bot starting..."));
+        if (!botStarted) {
+            LOGGER.info(LogCreator.console("Bot starting..."));
 
-                    long started = System.currentTimeMillis();
-                    botButton.setEnabled(false);
+            long started = System.currentTimeMillis();
+            botButton.setEnabled(false);
 
-                    boolean access = false;
-                    try {
-                        Path path = Paths.get("payments/autoRun");
-                        if (Files.exists(path)) {
-                            LOGGER.warn(LogCreator.console("Bot file already exists! Recreating."));
-                            Files.delete(path);
-                        }
-                        Files.createFile(path);
-                        Map<String, String> startOpt = new HashMap<>();
-                        startOpt.put("bot", "open");
-                        Helper.saveProp(startOpt, path.toFile());
-                        do {
-                            Thread.sleep(400);
-                            Map<String, String> bot = Helper.loadProp(path.toFile());
-                            if (bot.get("bot").equals("ok")) {
-                                Files.delete(path);
-                                access = true;
-                                break;
-                            }
-                        } while (System.currentTimeMillis() - started < BOT_STARTER_TIME_OUT);
-
-                        if (access) {
-                            botStarted = true;
-                            botButton.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/bot.gif"))));
-                            botButton.setEnabled(true);
-                            LOGGER.info(LogCreator.console("Bot started!"));
-
-                            if (withRequester) {
-                                LOGGER.info(LogCreator.console("Waiting command Identification before Requesting..."));
-                                long action = System.currentTimeMillis();
-                                do {
-                                    Thread.sleep(500);
-                                    if (client.isActive()) break;
-                                } while (System.currentTimeMillis() - action < BOT_STARTER_TIME_OUT);
-                                Thread.sleep(5000);
-                                if (!client.isActive()) {
-                                    LOGGER.error(LogCreator.console("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!"));
-                                } else {
-                                    LOGGER.info(LogCreator.console("Identification command received. 10 minutes waiting for repaints..."));
-                                    watchDog();
-                                    Thread.sleep(60000 * 10); // wait after terminal send command Identefication
-                                    if (!requesterStarted) startRequester();
-                                }
-                            }
-                        } else {
-                            LOGGER.error(LogCreator.console("Can not starting bot!"));
-                        }
-                    } catch (IOException | InterruptedException ex) {
-                        LOGGER.error(ex.getMessage(), ex);
-                    } finally {
-                        botButton.setEnabled(true);
-                    }
-
-                } else {
-                    LOGGER.info(LogCreator.console("stop bot button pressed"));
-                    botButton.setIcon(null);
-                    botStarted = false;
+            boolean access = false;
+            try {
+                Path path = Paths.get("payments/autoRun");
+                if (Files.exists(path)) {
+                    LOGGER.warn(LogCreator.console("Bot file already exists! Recreating."));
+                    Files.delete(path);
                 }
+                Files.createFile(path);
+                Map<String, String> startOpt = new HashMap<>();
+                startOpt.put("bot", "open");
+                Helper.saveProp(startOpt, path.toFile());
+                do {
+                    Thread.sleep(400);
+                    Map<String, String> bot = Helper.loadProp(path.toFile());
+                    if (bot.get("bot").equals("ok")) {
+                        Files.delete(path);
+                        access = true;
+                        break;
+                    }
+                } while (System.currentTimeMillis() - started < BOT_STARTER_TIME_OUT);
+
+                if (access) {
+                    botStarted = true;
+                    botButton.setIcon(new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("graphic/bot.gif"))));
+                    botButton.setEnabled(true);
+                    LOGGER.info(LogCreator.console("Bot started!"));
+
+                    if (withRequester) {
+                        LOGGER.info(LogCreator.console("Waiting command Identification before Requesting..."));
+                        long start = System.currentTimeMillis();
+                        do {
+                            Thread.sleep(500);
+                            if (client.isActive()) break;
+                        } while (System.currentTimeMillis() - start < BOT_STARTER_TIME_OUT);
+                        Thread.sleep(5000);
+                        if (!client.isActive()) {
+                            LOGGER.error(LogCreator.console("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!"));
+                        } else {
+                            LOGGER.info(LogCreator.console("Identification command received. 10 minutes waiting for repaints..."));
+                            watchDog();
+                            Thread.sleep(60000 * 10); // wait after terminal send command Identefication
+                            if (!requesterStarted) startRequester();
+                        }
+                    }
+                } else {
+                    LOGGER.error(LogCreator.console("Can not starting bot!"));
+                }
+            } catch (IOException | InterruptedException ex) {
+                LOGGER.error(ex.getMessage(), ex);
+            } finally {
+                botButton.setEnabled(true);
             }
-        }).start();
+
+        } else {
+            LOGGER.info(LogCreator.console("stop bot button pressed"));
+            botButton.setIcon(null);
+            botStarted = false;
+        }
     }
 
     /**
@@ -177,32 +173,27 @@ public class Manager extends AbstractManager {
     }
 
     private void startRequester() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if (!requesterStarted) {
-                    if (!botStarted) {
-                        String[] buttons = new String[]{"Yes", "No"};
-                        int review = JOptionPane.showOptionDialog(null, "Bot not started, are you sure for start Requester?",
-                                "Attention!", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, buttons, buttons[0]);
+        if (!requesterStarted) {
+            if (!botStarted) {
+                String[] buttons = new String[]{"Yes", "No"};
+                int review = JOptionPane.showOptionDialog(null, "Bot not started, are you sure for start Requester?",
+                        "Attention!", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, buttons, buttons[0]);
 
-                        if (review == 0) {
-                            requesterButton.setIcon(new ImageIcon(Objects.requireNonNull(Manager.this.getClass().getClassLoader().getResource("graphic/requester.gif"))));
-                            requesterStarted = true;
-                            requestLoop();
-                        }
-                    } else {
-                        requesterButton.setIcon(new ImageIcon(Objects.requireNonNull(Manager.this.getClass().getClassLoader().getResource("graphic/requester.gif"))));
-                        requesterStarted = true;
-                        requestLoop();
-                    }
-                } else {
-                    LOGGER.info(LogCreator.console("stop requester button pressed!"));
-                    requesterButton.setIcon(null);
-                    requesterStarted = false;
+                if (review == 0) {
+                    requesterButton.setIcon(new ImageIcon(Objects.requireNonNull(Manager.this.getClass().getClassLoader().getResource("graphic/requester.gif"))));
+                    requesterStarted = true;
+                    requestLoop();
                 }
+            } else {
+                requesterButton.setIcon(new ImageIcon(Objects.requireNonNull(Manager.this.getClass().getClassLoader().getResource("graphic/requester.gif"))));
+                requesterStarted = true;
+                requestLoop();
             }
-        }).start();
+        } else {
+            LOGGER.info(LogCreator.console("stop requester button pressed!"));
+            requesterButton.setIcon(null);
+            requesterStarted = false;
+        }
     }
 
     private void requestLoop() {
