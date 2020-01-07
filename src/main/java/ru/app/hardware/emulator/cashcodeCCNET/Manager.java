@@ -155,6 +155,9 @@ public class Manager extends AbstractManager {
         }).start();
     }
 
+    /**
+     * Дополнительный метод слежения за клиентом, отслеживающий разные состояния эмулятора
+     */
     private void watchDog() {
         new Thread(new Runnable() {
             @Override
@@ -300,6 +303,7 @@ public class Manager extends AbstractManager {
             waitFor(Status expected) throws InterruptedException, IOException {
                 LOGGER.info(LogCreator.console("wait for status: " + expected));
                 Status current;
+                long start = System.currentTimeMillis();
                 do {
                     Thread.sleep(400);
                     Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
@@ -308,6 +312,10 @@ public class Manager extends AbstractManager {
                     if (!cur.equals(oldStatus)) {
                         activity = System.currentTimeMillis();
                         LOGGER.info(LogCreator.console("Current Payment Status : " + current));
+                    }
+                    if (expected == Status.SUCCESS && System.currentTimeMillis() - start > 5000) {
+                        LOGGER.info(LogCreator.console("Pay-Status: " + current)); // не всегда считывает SUCCESS (дополнительный лог)
+                        start = System.currentTimeMillis();
                     }
                     oldStatus = cur;
                     if (current == Status.ERROR) {

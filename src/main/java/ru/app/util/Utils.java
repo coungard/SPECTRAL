@@ -215,33 +215,29 @@ public class Utils {
 
 
     /**
-     * Метод принимает целое числовое значение от 1 до 99, и возвращает в виде 2-байтового массива
-     * ascii формата. </p> Пример: 1 -> {'0','1'}; 23 -> {'2','3'}
+     * Метод принимает целое числовое значение от 1 до 256, и возвращает в виде 2-байтового массива
+     * ascii формата. </p> Пример: 1 -> {'0','1'}; 12 -> {'0','C'}
      *
      * @param length - передаваемое целое число
      * @return 2-х значное число в представлении char массива
      */
     public static byte[] getASCIIlength(int length) {
-        char[] temp = new char[]{'0', '0'};
-        String len = "" + length;
+        byte[] temp = new byte[]{(byte) length};
+        StringBuilder sb = new StringBuilder();
+        for (byte b : temp) {
+            String hex = Integer.toHexString(0xFF & b);
+            if (hex.length() == 1)
+                sb.append('0');
+            sb.append(hex);
+        }
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
 
-        if (len.length() == 1) {
-            temp[1] = len.charAt(0);
-        }
-        if (len.length() == 2) {
-            temp[0] = len.charAt(0);
-            temp[1] = len.charAt(1);
-        }
-        if (len.length() > 2) {
-            throw new RuntimeException("Длина не должна превышать 99 (2-значное число)!");
-        }
-        return new byte[]{
-                (byte) temp[0],
-                (byte) temp[1]
-        };
+        char[] ch = sb.toString().toCharArray();
+        for (char c : ch)
+            result.write(c);
+
+        return result.toByteArray();
     }
-
-    // '1' , '2' - '0', 'C'
 
     /**
      * Алгоритм шифрования строки MD5

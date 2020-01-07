@@ -285,7 +285,7 @@ class Client {
     }
 
     synchronized void setStatus(BillStateType status) {
-        LOGGER.info(LogCreator.console("old status = " + getStatus() + ", new status = " + status));
+        LOGGER.info(LogCreator.console("new status = " + status + ", old status = " + getStatus()));
         this.status = status;
     }
 

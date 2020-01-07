@@ -7,6 +7,7 @@ import ru.app.protocol.ucs.UCSCommand;
 import ru.app.protocol.ucs.classTypes.AuthorizationRequest;
 import ru.app.protocol.ucs.classTypes.RequestAcceptance;
 import ru.app.protocol.ucs.classTypes.SessionCommands;
+import ru.app.protocol.ucs.classTypes.WorkWithOperationsArchive;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -56,7 +57,14 @@ public class Manager extends AbstractManager {
         JButton activation = createButton("Activation");
         activation.setBounds(330, 35, 140, 40);
         add(activation);
-        activation.addMouseListener(new UCSMouseAdapter(new UCSCommand(new AuthorizationRequest(AuthorizationRequest.ACTIVATION), new byte[]{})));
+        activation.addMouseListener(new UCSMouseAdapter(
+                new UCSCommand(new AuthorizationRequest(AuthorizationRequest.ACTIVATION), new byte[]{})));
+
+        JButton encashment = createButton("Encashment");
+        encashment.setBounds(330, 85, 140, 40);
+        add(encashment);
+        encashment.addMouseListener(new UCSMouseAdapter(
+                new UCSCommand(new WorkWithOperationsArchive(WorkWithOperationsArchive.FINALIZE_DAY_TOTALS), new byte[]{})));
     }
 
     private class UCSMouseAdapter extends MouseInputAdapter {

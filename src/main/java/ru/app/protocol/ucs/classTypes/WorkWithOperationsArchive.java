@@ -3,6 +3,7 @@ package ru.app.protocol.ucs.classTypes;
 import ru.app.protocol.ucs.ClassType;
 
 public class WorkWithOperationsArchive implements ClassType {
+    public static final Operation FINALIZE_DAY_TOTALS = Operation.FinalizeDayTotals;
 
     private Operation operation;
     private byte operationCode;
@@ -13,13 +14,13 @@ public class WorkWithOperationsArchive implements ClassType {
     }
 
     public enum Operation {
-        GetTransactionDetails((byte) 0x00),             // получить детали операции (копия чека)
-        FinalizeDayTotals((byte) 0x01),                 // сверка итогов. Запрос на передачу журнала транзакций на хост
-        FinalizeDayTotalsResponse((byte) 0x02),         // подтверждение отправки журнала транзакций на хост
-        FinalizeTransactionAmount((byte) 0x03),         // сверка итогов. Запрос на отправку отдельной транзакции на хост
-        FinalizeTransactionAmountResponse((byte) 0x04), // подтверждение отправки отдельной транзакции
-        GetReport((byte) 0x05),                         // запрос отчета о проведенных транзакциях
-        Commit((byte) 0x06);                            // подтверждение финансовой транзакции
+        GetTransactionDetails((byte) '0'),             // получить детали операции (копия чека)
+        FinalizeDayTotals((byte) '1'),                 // сверка итогов. Запрос на передачу журнала транзакций на хост
+        FinalizeDayTotalsResponse((byte) '2'),         // подтверждение отправки журнала транзакций на хост
+        FinalizeTransactionAmount((byte) '3'),         // сверка итогов. Запрос на отправку отдельной транзакции на хост
+        FinalizeTransactionAmountResponse((byte) '4'), // подтверждение отправки отдельной транзакции
+        GetReport((byte) '5'),                         // запрос отчета о проведенных транзакциях
+        Commit((byte) '6');                            // подтверждение финансовой транзакции
 
         private final byte code;
 
@@ -30,7 +31,7 @@ public class WorkWithOperationsArchive implements ClassType {
 
     @Override
     public byte getOperationClass() {
-        return (byte) 0x32;
+        return (byte) '2';
     }
 
     @Override

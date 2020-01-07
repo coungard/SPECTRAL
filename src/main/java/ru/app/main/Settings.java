@@ -46,6 +46,6 @@ public class Settings {
         propEmulator.put("url", "http://109.248.44.61:8080/ussdWorker/");
         propEmulator.put("timeout.status", "180000");
         propEmulator.put("timeout.requester", "60000");
-        propEmulator.put("timeout.nominals", "5000");
+        propEmulator.put("timeout.nominals", "7000");
     }
 }

@@ -187,9 +187,10 @@ public class GeneralSettings extends JPanel {
         for (Map.Entry<String, String> entry : Identification.getSoftwareMap().entrySet()) {
             softBox.addItem(entry.getKey() + ": " + entry.getValue());
         }
+        String soft = Settings.propEmulator.get("casher.soft");
         for (int i = 0; i < softBox.getItemCount(); i++) {
             String value = (String) softBox.getModel().getElementAt(i);
-            if (value.startsWith(Settings.propEmulator.get("casher.soft"))) {
+            if (soft != null && value.startsWith(soft)) {
                 softBox.setSelectedItem(value);
             }
         }
