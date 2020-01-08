@@ -19,6 +19,7 @@ import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -35,9 +36,9 @@ public class Launcher extends Thread {
     private static final Color BACKGROUND_COLOR = new Color(67, 159, 212);
     private static final Font FONT = new Font(Font.SANS_SERIF, Font.BOLD, 23);
 
-    public static void main(String[] args) throws UnsupportedLookAndFeelException {
+    public static void main(String[] args) throws UnsupportedLookAndFeelException, InvocationTargetException, InterruptedException {
         UIManager.setLookAndFeel(new NimbusLookAndFeel());
-        SwingUtilities.invokeLater(new Runnable() {
+        SwingUtilities.invokeAndWait(new Runnable() {
             public void run() {
                 new Launcher();
             }

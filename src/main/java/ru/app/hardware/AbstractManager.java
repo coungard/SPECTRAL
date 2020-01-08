@@ -9,6 +9,7 @@ import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 public abstract class AbstractManager extends JLayeredPane {
     protected JScrollPane scroll;
@@ -45,7 +46,7 @@ public abstract class AbstractManager extends JLayeredPane {
                         public void run() {
                             try {
                                 Launcher.main(new String[0]);
-                            } catch (UnsupportedLookAndFeelException ex) {
+                            } catch (UnsupportedLookAndFeelException | InterruptedException | InvocationTargetException ex) {
                                 ex.printStackTrace();
                             }
                         }

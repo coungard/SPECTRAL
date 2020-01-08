@@ -78,7 +78,12 @@ public class Manager extends AbstractManager {
         struct();
 
         if (Files.exists(Paths.get(Settings.autoLaunchPropFile))) {
-            startProcess(true);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    startProcess(true);
+                }
+            }).start();
         }
         LOGGER.info(LogCreator.console("Client manager started on port: " + portName));
     }
