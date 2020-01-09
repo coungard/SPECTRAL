@@ -135,7 +135,6 @@ public class Manager extends AbstractManager {
                             LOGGER.error(LogCreator.console("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!"));
                         } else {
                             LOGGER.info(LogCreator.console("Identification command received. 10 minutes waiting for repaints..."));
-                            watchDog();
                             Thread.sleep(60000 * 10); // wait after terminal send command Identefication
                             if (!requesterStarted) startRequester();
                         }
@@ -164,11 +163,11 @@ public class Manager extends AbstractManager {
             @Override
             public void run() {
                 LOGGER.info("Watch dog started");
-                long delay = System.currentTimeMillis();
+                long delay = 0;
                 do {
                     if (!client.isPollingActivity()) {
                         if (System.currentTimeMillis() - delay > 10000) {
-                            LOGGER.warn("Warning! Terminal is not polling! (5 sec timeout)");
+                            LOGGER.warn(LogCreator.console("Warning! Terminal is not polling! (5 sec timeout)"));
                             delay = System.currentTimeMillis();
                         }
                     }
@@ -211,6 +210,7 @@ public class Manager extends AbstractManager {
             @Override
             public void run() {
                 LOGGER.info(LogCreator.console("Requester loop started"));
+                watchDog();
                 while (requesterStarted) {
                     try {
                         Thread.sleep(3000);
@@ -248,6 +248,19 @@ public class Manager extends AbstractManager {
                                 if (!idling) continue;
 
                                 List<Integer> nominals = Utils.calculatePayment(payment.getSum());
+                                long timeout = System.currentTimeMillis();
+                                boolean goNext = false;
+                                do {
+                                    if (client.isPollingActivity()) {
+                                        goNext = true;
+                                        break;
+                                    }
+                                } while (System.currentTimeMillis() - timeout < 5000);
+                                if (!goNext) {
+                                    LOGGER.info(LogCreator.console("Terminal is not polling! Can not stacking. Payment error!"));
+                                    saveAsError();
+                                    continue;
+                                }
                                 for (Integer nominal : nominals) {
                                     Thread.sleep(NOMINALS_TIME_OUT);
                                     String bill = "" + nominal;

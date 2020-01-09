@@ -43,6 +43,9 @@ class Client {
     private volatile BillStateType status = BillStateType.UnitDisabled;
     private boolean active = false;
     private long pollingActivity;
+    private boolean isPoll;
+    private boolean depositTransaktion = false;
+    private boolean sentMessage;
 
     Client(String portName, ManagerListener listener) {
         serialPort = new SerialPort(portName);
@@ -147,7 +150,7 @@ class Client {
                         cashCodeClient.sendBytes(response.toByteArray());
                     else
                         emulateProcess(response.toByteArray());
-                } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
+                } catch (SerialPortException | SerialPortTimeoutException | IOException | InterruptedException ex) {
                     listener.serialPortErrorReports();
                     LOGGER.error(LogCreator.console(ex.getMessage()), ex);
                 }
@@ -155,7 +158,7 @@ class Client {
         }
     }
 
-    private void emulateProcess(byte[] received) {
+    private void emulateProcess(byte[] received) throws InterruptedException {
         switch (currentCommand) {
             case ACK:
                 return;
@@ -181,13 +184,24 @@ class Client {
                 break;
             case Poll:
                 pollingActivity = System.currentTimeMillis();
+                isPoll = true;
+                if (depositTransaktion)
+                    Thread.sleep(50);
                 BillStateType status = getStatus();
                 switch (status) {
                     case Accepting:
                         sendMessage(new Command(BillStateType.Accepting));
                         break;
+                    case EscrowPosition:
+                        sendMessage(new Command(BillStateType.EscrowPosition, currentDenom));
+                        sentMessage = true;
+                        break;
+                    case Stacking:
+                        sendMessage(new Command(BillStateType.Stacking));
+                        break;
                     case BillStacked:
                         sendMessage(new Command(BillStateType.BillStacked, currentDenom));
+                        sentMessage = true;
                         break;
                     case Initialize:
                         sendMessage(new Command(BillStateType.Initialize));
@@ -284,9 +298,70 @@ class Client {
         }).start();
     }
 
+    synchronized void deposit() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                depositTransaktion = true;
+                try {
+                    setStatus(BillStateType.Accepting);
+                    Thread.sleep(1000);
+                    boolean access = setStatusAfterPolling(BillStateType.EscrowPosition);
+                    // todo ... использовать access для менеджера, в котором используется billAcceptance
+                    long start = System.currentTimeMillis();
+                    do {
+                        if (sentMessage)
+                            break;
+                    } while (System.currentTimeMillis() - start < 1000);
+                    if (!sentMessage) {
+                        LOGGER.info(LogCreator.console("Message was not sent!"));
+                        setStatus(BillStateType.Idling);
+                        depositTransaktion = false;
+                        return;
+                    }
+                    setStatus(BillStateType.Stacking);
+                    Thread.sleep(1000);
+                    setStatusAfterPolling(BillStateType.BillStacked);
+                    start = System.currentTimeMillis();
+                    do {
+                        if (sentMessage)
+                            break;
+                    } while (System.currentTimeMillis() - start < 1000);
+                    if (!sentMessage) {
+                        LOGGER.info(LogCreator.console("Message was not sent!"));
+                        setStatus(BillStateType.Idling);
+                        depositTransaktion = false;
+                        return;
+                    }
+                } catch (InterruptedException ex) {
+                    LOGGER.error(LogCreator.console(ex.getMessage()));
+                    depositTransaktion = false;
+                }
+                depositTransaktion = false;
+                setStatus(BillStateType.Idling);
+            }
+        }).start();
+    }
+
     synchronized void setStatus(BillStateType status) {
         LOGGER.info(LogCreator.console("new status = " + status + ", old status = " + getStatus()));
         this.status = status;
+    }
+
+    synchronized boolean setStatusAfterPolling(BillStateType status) throws InterruptedException {
+        long start = System.currentTimeMillis();
+        isPoll = false;
+        do {
+            Thread.sleep(20);
+            if (isPoll) {
+                setStatus(status);
+                return true;
+            }
+        } while (System.currentTimeMillis() - start < 5000);
+        if (isPoll = false) {
+            LOGGER.info(LogCreator.console("Still not polling yet!"));
+        }
+        return false;
     }
 
     synchronized BillStateType getStatus() {
@@ -317,6 +392,6 @@ class Client {
     }
 
     public boolean isPollingActivity() {
-        return System.currentTimeMillis() - pollingActivity < 5000;
+        return System.currentTimeMillis() - pollingActivity < 1000;
     }
 }
