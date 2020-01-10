@@ -44,7 +44,7 @@ public class Manager extends AbstractManager {
     private boolean cassetteOut = false;
     private JLabel emul;
     private JLabel casher;
-    private JLabel serialError = new JLabel("SERIAL PORT ERRORS!");
+    private JLabel serialError = new JLabel("SERIAL PORT ERROR!");
     private JLabel modeLabel = new JLabel("change mode -->>");
     private Map<String, byte[]> billTable;
     private List<JButton> billButtons = new ArrayList<>();
@@ -71,6 +71,7 @@ public class Manager extends AbstractManager {
             @Override
             public void serialPortErrorReports() {
                 serialError.setVisible(true);
+                LOGGER.warn(LogCreator.console("SERIAL PORT ERROR!"));
             }
         });
         requester = new Requester(URL);
@@ -165,8 +166,8 @@ public class Manager extends AbstractManager {
                 LOGGER.info("Watch dog started");
                 long delay = 0;
                 do {
-                    if (!client.isPollingActivity()) {
-                        if (System.currentTimeMillis() - delay > 10000) {
+                    if (System.currentTimeMillis() - delay > 5000) {
+                        if (!client.isPollingActivity()) {
                             LOGGER.warn(LogCreator.console("Warning! Terminal is not polling! (5 sec timeout)"));
                             delay = System.currentTimeMillis();
                         }
@@ -289,9 +290,8 @@ public class Manager extends AbstractManager {
                                     Helper.saveFile(payment, Status.SUCCESS);
                                     String request = requester.sendStatus(payment, Status.SUCCESS);
                                     LOGGER.info(LogCreator.console("Request status : " + request));
-                                } else {
+                                } else
                                     LOGGER.info(LogCreator.console("С ПЛАТЕЖОМ ЧТО-ТО НЕ ТО! ГОСПОДИ БОЖЕ МОЙ!"));
-                                }
                             }
                         }
                         Thread.sleep(REQUESTER_TIME_OUT);
@@ -565,7 +565,7 @@ public class Manager extends AbstractManager {
     /**
      * Эмуляция вставки банкноты по ее номиналу
      *
-     * @param denomination - байт номинала банкноты (смотреть BillTable)void
+     * @param denomination - байт номинала банкноты (смотреть BillTable)
      * @return true - в случае успешного депозита банкноты, false - в случае провала
      */
     private boolean billAcceptance(byte[] denomination) {
@@ -574,8 +574,9 @@ public class Manager extends AbstractManager {
                 LOGGER.info(LogCreator.console("bill accept : " + entry.getKey()));
             }
         }
+        client.setSentDeposit(false);
         client.setCurrentDenom(denomination);
-        client.deposit();
+        sendEscrowPosition();
         long start = System.currentTimeMillis();
         do {
             if (client.isSentDeposit())
@@ -596,7 +597,7 @@ public class Manager extends AbstractManager {
 
     private void sendEscrowPosition() {
         if (client.getStatus() != BillStateType.UnitDisabled || client.realDeviceConnected()) {
-            client.escrowNominal();
+            client.deposit();
         } else {
             LOGGER.warn(LogCreator.console("can not escrow, casher disabled state now!"));
         }

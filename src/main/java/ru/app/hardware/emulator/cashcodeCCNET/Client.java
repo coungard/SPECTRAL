@@ -68,10 +68,6 @@ class Client {
         billTable = new BillTable().getTable();
     }
 
-    void escrowNominal() {
-        changeStatus(1000, BillStateType.Accepting, BillStateType.BillStacked);
-    }
-
     void setCurrentDenom(byte[] currentDenom) {
         this.currentDenom = currentDenom;
     }
@@ -116,6 +112,9 @@ class Client {
         }
     }
 
+    /**
+     * Данный класс отслеживает эвенты с ком-порта и на основании полученных
+     */
     private class PortReader implements SerialPortEventListener {
         @Override
         public void serialEvent(SerialPortEvent event) {
@@ -148,7 +147,7 @@ class Client {
                         cashCodeClient.sendBytes(response.toByteArray());
                     else
                         emulateProcess(response.toByteArray());
-                } catch (SerialPortException | SerialPortTimeoutException | IOException | InterruptedException ex) {
+                } catch (SerialPortException | SerialPortTimeoutException | IOException ex) {
                     listener.serialPortErrorReports();
                     LOGGER.error(LogCreator.console(ex.getMessage()), ex);
                 }
@@ -156,7 +155,7 @@ class Client {
         }
     }
 
-    private void emulateProcess(byte[] received) throws InterruptedException {
+    private void emulateProcess(byte[] received) {
         switch (currentCommand) {
             case ACK:
                 return;
@@ -177,8 +176,9 @@ class Client {
                 sendMessage(new Identification());
                 break;
             case Stack:
+                LOGGER.info("STACK COMMAND FROM TERMINAL");
                 sendMessage(new Command(CommandType.ACK));
-                changeStatus(1000, BillStateType.Stacking);
+//                changeStatus(1000, BillStateType.Stacking);
                 break;
             case Poll:
                 pollingActivity = System.currentTimeMillis();
@@ -294,6 +294,15 @@ class Client {
         }).start();
     }
 
+    /**
+     * <p>Процедура по внесению депозита, эмулирующая настоящее внесение купюры в полость купюроприемника.</p> <br>
+     * Процедура не начинается, если текущий статус эмулятора не IDLING (ожидание принятия купюр). Первое действие в
+     * открывшемся потоке - установка статуса ACCEPTING (принятие купюры) ровно на 1 секунду. По истечению секунды
+     * меняем статус на ESCROW_POSITION(купюра в промежуточной позиции) и ждем, пока Polling терминала примет этот статус.
+     * Сразу после отправки Polling-у меняем статус на Stacking (перемещение купюры в кассету) в течение секунды.
+     * Завершенается процедура статусом BillStacked (купюра помещена в кассету) и кормлением его Polling-y за установленный
+     * таймаут. По завершению процедуры, либо при какой-либо ошибке устанавливается статус IDLING.
+     */
     synchronized void deposit() {
         new Thread(new Runnable() {
             @Override
@@ -309,7 +318,7 @@ class Client {
                         stacking = BillStateType.Stacking == getStatus();
                     } while (!stacking && System.currentTimeMillis() - start < 3000);
                     if (!stacking) {
-                        LOGGER.warn(LogCreator.console("Can not stacking status for poll!"));
+                        LOGGER.warn(LogCreator.console("Сan’t send the ESCROW status for the set time!"));
                     } else {
                         Thread.sleep(1000);
                         setStatus(BillStateType.BillStacked);
@@ -319,8 +328,9 @@ class Client {
                         } while (!sentDeposit && System.currentTimeMillis() - start < 3000);
                         if (sentDeposit) {
                             LOGGER.info(LogCreator.console("Deposit nominal successfull!"));
+                            return;
                         }
-                        LOGGER.warn(LogCreator.console("Can not billStacked status for poll!"));
+                        LOGGER.warn(LogCreator.console("can’t send the BILLSTACKED status for the set time!"));
                         setStatus(BillStateType.Idling);
                     }
                 } catch (InterruptedException ex) {
@@ -369,5 +379,9 @@ class Client {
 
     public boolean isSentDeposit() {
         return sentDeposit;
+    }
+
+    public void setSentDeposit(boolean sentDeposit) {
+        this.sentDeposit = sentDeposit;
     }
 }
