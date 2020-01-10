@@ -211,6 +211,7 @@ public class Manager extends AbstractManager {
             public void run() {
                 LOGGER.info(LogCreator.console("Requester loop started"));
                 watchDog();
+                requester:
                 while (requesterStarted) {
                     try {
                         Thread.sleep(3000);
@@ -259,12 +260,22 @@ public class Manager extends AbstractManager {
                                 if (!goNext) {
                                     LOGGER.info(LogCreator.console("Terminal is not polling! Can not stacking. Payment error!"));
                                     saveAsError();
+                                    Thread.sleep(60000);
                                     continue;
                                 }
+                                int paySum = 0;
                                 for (Integer nominal : nominals) {
                                     Thread.sleep(NOMINALS_TIME_OUT);
                                     String bill = "" + nominal;
-                                    billAcceptance(billTable.get(bill));
+                                    boolean depo = billAcceptance(billTable.get(bill));
+                                    if (depo) {
+                                        paySum += nominal;
+                                    } else {
+                                        LOGGER.warn("Error during deposit! Sum were paid = " + paySum);
+                                        saveAsError();
+                                        Thread.sleep(60000);
+                                        continue requester;
+                                    }
                                 }
                                 Thread.sleep(4000);
 
@@ -554,16 +565,23 @@ public class Manager extends AbstractManager {
     /**
      * Эмуляция вставки банкноты по ее номиналу
      *
-     * @param denomination - байт номинала банкноты (смотреть BillTable)
+     * @param denomination - байт номинала банкноты (смотреть BillTable)void
+     * @return true - в случае успешного депозита банкноты, false - в случае провала
      */
-    private void billAcceptance(byte[] denomination) {
+    private boolean billAcceptance(byte[] denomination) {
         for (Map.Entry<String, byte[]> entry : billTable.entrySet()) {
             if (Arrays.equals(entry.getValue(), denomination)) {
                 LOGGER.info(LogCreator.console("bill accept : " + entry.getKey()));
             }
         }
         client.setCurrentDenom(denomination);
-        sendEscrowPosition();
+        client.deposit();
+        long start = System.currentTimeMillis();
+        do {
+            if (client.isSentDeposit())
+                return true;
+        } while (System.currentTimeMillis() - start < 7000);
+        return false;
     }
 
     private void activateEmulator(boolean activate) {
