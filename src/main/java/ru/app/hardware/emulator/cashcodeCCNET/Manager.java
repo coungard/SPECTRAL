@@ -82,7 +82,7 @@ public class Manager extends AbstractManager {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    startProcess(true);
+                    startProcess();
                 }
             }).start();
         }
@@ -90,7 +90,7 @@ public class Manager extends AbstractManager {
     }
 
 
-    private void startProcess(final boolean withRequester) {
+    private void startProcess() {
         if (!botStarted) {
             LOGGER.info(LogCreator.console("Bot starting..."));
 
@@ -124,21 +124,19 @@ public class Manager extends AbstractManager {
                     botButton.setEnabled(true);
                     LOGGER.info(LogCreator.console("Bot started!"));
 
-                    if (withRequester) {
-                        LOGGER.info(LogCreator.console("Waiting command Identification before Requesting..."));
-                        long start = System.currentTimeMillis();
-                        do {
-                            Thread.sleep(500);
-                            if (client.isActive()) break;
-                        } while (System.currentTimeMillis() - start < BOT_STARTER_TIME_OUT);
-                        Thread.sleep(5000);
-                        if (!client.isActive()) {
-                            LOGGER.error(LogCreator.console("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!"));
-                        } else {
-                            LOGGER.info(LogCreator.console("Identification command received. 10 minutes waiting for repaints..."));
-                            Thread.sleep(60000 * 10); // wait after terminal send command Identefication
-                            if (!requesterStarted) startRequester();
-                        }
+                    LOGGER.info(LogCreator.console("Waiting command Identification before Requesting..."));
+                    long start = System.currentTimeMillis();
+                    do {
+                        Thread.sleep(500);
+                        if (client.isActive()) break;
+                    } while (System.currentTimeMillis() - start < BOT_STARTER_TIME_OUT);
+                    Thread.sleep(5000);
+                    if (!client.isActive()) {
+                        LOGGER.error(LogCreator.console("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!"));
+                    } else {
+                        LOGGER.info(LogCreator.console("Identification command received. 10 minutes waiting for repaints..."));
+                        Thread.sleep(60000 * 10); // wait after terminal send command Identefication
+                        if (!requesterStarted) startRequester();
                     }
                 } else {
                     LOGGER.error(LogCreator.console("Can not starting bot!"));
@@ -212,7 +210,6 @@ public class Manager extends AbstractManager {
             public void run() {
                 LOGGER.info(LogCreator.console("Requester loop started"));
                 watchDog();
-                requester:
                 while (requesterStarted) {
                     try {
                         Thread.sleep(3000);
@@ -253,36 +250,55 @@ public class Manager extends AbstractManager {
                                 long timeout = System.currentTimeMillis();
                                 boolean goNext = false;
                                 do {
+                                    Thread.sleep(100);
                                     if (client.isPollingActivity()) {
                                         goNext = true;
                                         break;
                                     }
-                                } while (System.currentTimeMillis() - timeout < 5000);
+                                } while (System.currentTimeMillis() - timeout < 15000);
                                 if (!goNext) {
                                     LOGGER.info(LogCreator.console("Terminal is not polling! Can not stacking. Payment error!"));
                                     saveAsError();
-                                    Thread.sleep(60000);
+                                    Thread.sleep(CASHER_TIME_OUT);
                                     continue;
                                 }
-                                int paySum = 0;
-                                for (Integer nominal : nominals) {
-                                    Thread.sleep(NOMINALS_TIME_OUT);
-                                    String bill = "" + nominal;
-                                    boolean depo = billAcceptance(billTable.get(bill));
-                                    if (depo) {
-                                        paySum += nominal;
-                                    } else {
-                                        LOGGER.warn("Error during deposit! Sum were paid = " + paySum);
-                                        saveAsError();
-                                        Thread.sleep(60000);
-                                        continue requester;
-                                    }
-                                }
-                                Thread.sleep(4000);
 
+                                int paid = 0;
+                                boolean error;
+                                int attempts = 1;
+                                do {
+                                    error = false;
+                                    Iterator<Integer> iterator = nominals.iterator();
+                                    LOGGER.info(LogCreator.console("attempt : " + attempts));
+                                    while (iterator.hasNext()) {
+                                        Thread.sleep(NOMINALS_TIME_OUT);
+                                        Integer nominal = iterator.next();
+                                        String bill = "" + nominal;
+                                        boolean deposit = billAcceptance(billTable.get(bill));
+                                        if (deposit)
+                                            paid += nominal;
+                                        else
+                                            error = true;
+                                    }
+                                    if (error) {
+                                        LOGGER.warn(LogCreator.console("Required sum: " + payment.getSum() +
+                                                ", Paid sum: + " + paid + ", Rest sum: " + (payment.getSum() - paid)));
+                                        attempts++;
+                                    } else
+                                        break;
+                                } while (attempts <= 3);
+
+                                Thread.sleep(3000);
                                 payProperties.put("status", "STACKED");
                                 oldStatus = payProperties.get("status");
                                 Helper.saveProp(payProperties, payFile);
+
+                                if (error) {
+                                    waitFor(Status.SUCCESS);
+                                    saveAsError();
+                                    Thread.sleep(CASHER_TIME_OUT);
+                                    continue;
+                                }
 
                                 access = waitFor(Status.SUCCESS);
                                 if (access) {
@@ -299,7 +315,7 @@ public class Manager extends AbstractManager {
                         LOGGER.error(ex.getMessage(), ex);
                         LOGGER.info(LogCreator.console("Requester is crashed! Perhaps problems with network...checkPayment please"));
                         try {
-                            Thread.sleep(60000);
+                            Thread.sleep(CASHER_TIME_OUT);
                         } catch (InterruptedException exx) {
                             LOGGER.error(exx.getMessage(), exx);
                         }
@@ -466,7 +482,7 @@ public class Manager extends AbstractManager {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        startProcess(true);
+                        startProcess();
                     }
                 }).start();
             }
@@ -530,8 +546,12 @@ public class Manager extends AbstractManager {
                 component.addMouseListener(new MouseInputAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        byte[] denomination = billTable.get(((JButton) component).getText());
-                        billAcceptance(denomination);
+                        try {
+                            byte[] denomination = billTable.get(((JButton) component).getText());
+                            billAcceptance(denomination);
+                        } catch (InterruptedException ex) {
+                            LOGGER.error(ex.getMessage(), ex);
+                        }
                     }
                 });
             }
@@ -568,21 +588,22 @@ public class Manager extends AbstractManager {
      * @param denomination - байт номинала банкноты (смотреть BillTable)
      * @return true - в случае успешного депозита банкноты, false - в случае провала
      */
-    private boolean billAcceptance(byte[] denomination) {
+    private boolean billAcceptance(byte[] denomination) throws InterruptedException {
         for (Map.Entry<String, byte[]> entry : billTable.entrySet()) {
             if (Arrays.equals(entry.getValue(), denomination)) {
-                LOGGER.info(LogCreator.console("bill accept : " + entry.getKey()));
+                LOGGER.info(LogCreator.console("bill accepting : " + entry.getKey()));
             }
         }
-        client.setSentDeposit(false);
         client.setCurrentDenom(denomination);
+        client.setDepositEnded(false);
+        client.setNominalStacked(false);
         sendEscrowPosition();
         long start = System.currentTimeMillis();
         do {
-            if (client.isSentDeposit())
-                return true;
-        } while (System.currentTimeMillis() - start < 7000);
-        return false;
+            Thread.sleep(40);
+            if (client.isDepositEnded()) break;
+        } while (System.currentTimeMillis() - start < 20000);
+        return client.isNominalStacked();
     }
 
     private void activateEmulator(boolean activate) {

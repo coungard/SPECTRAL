@@ -43,7 +43,8 @@ class Client {
     private volatile BillStateType status = BillStateType.UnitDisabled;
     private boolean active = false;
     private long pollingActivity;
-    private volatile boolean sentDeposit;
+    private volatile boolean depositEnded = false;
+    private volatile boolean nominalStacked = false;
 
     Client(String portName, ManagerListener listener) {
         serialPort = new SerialPort(portName);
@@ -81,7 +82,7 @@ class Client {
                 } else
                     currentResponse = command.toString();
             }
-            if (currentResponse != null && currentResponse.contains("BillStacked")) {
+            if (currentResponse != null && (currentResponse.contains("BillStacked") || currentResponse.contains("EscrowPosition"))) {
                 for (Map.Entry<String, byte[]> entry : billTable.entrySet()) {
                     if (Arrays.equals(entry.getValue(), currentDenom)) {
                         currentResponse += " [" + entry.getKey() + "]"; // example: BillStacked [100]
@@ -196,7 +197,7 @@ class Client {
                         break;
                     case BillStacked:
                         sendMessage(new Command(BillStateType.BillStacked, currentDenom));
-                        sentDeposit = true;
+                        nominalStacked = true;
                         setStatus(BillStateType.Idling);
                         break;
                     case Initialize:
@@ -319,23 +320,27 @@ class Client {
                     } while (!stacking && System.currentTimeMillis() - start < 3000);
                     if (!stacking) {
                         LOGGER.warn(LogCreator.console("Сan’t send the ESCROW status for the set time!"));
+                        depositEnded = true;
                     } else {
                         Thread.sleep(1000);
                         setStatus(BillStateType.BillStacked);
                         start = System.currentTimeMillis();
                         do {
                             Thread.sleep(20);
-                        } while (!sentDeposit && System.currentTimeMillis() - start < 3000);
-                        if (sentDeposit) {
+                        } while (!nominalStacked && System.currentTimeMillis() - start < 10000);
+                        if (nominalStacked) {
                             LOGGER.info(LogCreator.console("Deposit nominal successfull!"));
+                            depositEnded = true;
                             return;
                         }
                         LOGGER.warn(LogCreator.console("can’t send the BILLSTACKED status for the set time!"));
                         setStatus(BillStateType.Idling);
+                        depositEnded = true;
                     }
                 } catch (InterruptedException ex) {
                     LOGGER.error(LogCreator.console(ex.getMessage()));
                     setStatus(BillStateType.Idling);
+                    depositEnded = true;
                 }
             }
         }).start();
@@ -377,11 +382,19 @@ class Client {
         return System.currentTimeMillis() - pollingActivity < 1000;
     }
 
-    public boolean isSentDeposit() {
-        return sentDeposit;
+    public void setDepositEnded(boolean depositEnded) {
+        this.depositEnded = depositEnded;
     }
 
-    public void setSentDeposit(boolean sentDeposit) {
-        this.sentDeposit = sentDeposit;
+    public boolean isDepositEnded() {
+        return depositEnded;
+    }
+
+    public void setNominalStacked(boolean nominalStacked) {
+        this.nominalStacked = nominalStacked;
+    }
+
+    public boolean isNominalStacked() {
+        return nominalStacked;
     }
 }
