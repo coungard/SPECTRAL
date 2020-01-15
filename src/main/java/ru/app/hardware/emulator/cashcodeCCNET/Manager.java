@@ -247,22 +247,6 @@ public class Manager extends AbstractManager {
                                 if (!idling) continue;
 
                                 List<Integer> nominals = Utils.calculatePayment(payment.getSum());
-                                long timeout = System.currentTimeMillis();
-                                boolean goNext = false;
-                                do {
-                                    Thread.sleep(100);
-                                    if (client.isPollingActivity()) {
-                                        goNext = true;
-                                        break;
-                                    }
-                                } while (System.currentTimeMillis() - timeout < 15000);
-                                if (!goNext) {
-                                    LOGGER.info(LogCreator.console("Terminal is not polling! Can not stacking. Payment error!"));
-                                    saveAsError();
-                                    Thread.sleep(CASHER_TIME_OUT);
-                                    continue;
-                                }
-
                                 int paid = 0;
                                 boolean error;
                                 int attempts = 1;
@@ -275,9 +259,10 @@ public class Manager extends AbstractManager {
                                         Integer nominal = iterator.next();
                                         String bill = "" + nominal;
                                         boolean deposit = billAcceptance(billTable.get(bill));
-                                        if (deposit)
+                                        if (deposit) {
                                             paid += nominal;
-                                        else
+                                            iterator.remove();
+                                        } else
                                             error = true;
                                     }
                                     if (error) {
@@ -288,7 +273,7 @@ public class Manager extends AbstractManager {
                                         break;
                                 } while (attempts <= 3);
 
-                                Thread.sleep(3000);
+                                Thread.sleep(6000);
                                 payProperties.put("status", "STACKED");
                                 oldStatus = payProperties.get("status");
                                 Helper.saveProp(payProperties, payFile);
