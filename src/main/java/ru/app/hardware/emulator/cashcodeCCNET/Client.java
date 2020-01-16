@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 
 
-class Client {
+public class Client {
     private static final Logger LOGGER = Logger.getLogger(Client.class);
     private final ManagerListener listener;
 
@@ -46,7 +46,7 @@ class Client {
     private volatile boolean depositEnded = false;
     private volatile boolean nominalStacked = false;
 
-    Client(String portName, ManagerListener listener) {
+    public Client(String portName, ManagerListener listener) {
         serialPort = new SerialPort(portName);
         this.listener = listener;
         try {

@@ -37,12 +37,17 @@ public class Launcher extends Thread {
     private static final Font FONT = new Font(Font.SANS_SERIF, Font.BOLD, 23);
 
     public static void main(String[] args) throws UnsupportedLookAndFeelException, InvocationTargetException, InterruptedException {
-        UIManager.setLookAndFeel(new NimbusLookAndFeel());
-        SwingUtilities.invokeAndWait(new Runnable() {
-            public void run() {
-                new Launcher();
-            }
-        });
+        Settings.args = args;
+        if (args.length > 0 && args[0].equals("--service")) {
+            new Service();
+        } else {
+            UIManager.setLookAndFeel(new NimbusLookAndFeel());
+            SwingUtilities.invokeAndWait(new Runnable() {
+                public void run() {
+                    new Launcher();
+                }
+            });
+        }
     }
 
     public static void defineManager(AbstractManager manager) {

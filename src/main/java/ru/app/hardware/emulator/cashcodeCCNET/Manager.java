@@ -52,12 +52,13 @@ public class Manager extends AbstractManager {
     private Requester requester;
     private boolean requesterStarted = false;
     private boolean botStarted = false;
-    private static final String URL = Settings.propEmulator.get("url");
     private static final int STATUS_TIME_OUT = Integer.parseInt(Settings.propEmulator.get("timeout.status")); // timeout between bot-statuses
     private static final int NOMINALS_TIME_OUT = Integer.parseInt(Settings.propEmulator.get("timeout.nominals")); // timeout between insert notes
     private static final int REQUESTER_TIME_OUT = Integer.parseInt(Settings.propEmulator.get("timeout.requester")); // timeout between insert notes
     private static final int BOT_STARTER_TIME_OUT = 60000 * 10; // timeout for start bot & receive identification command
     private static final long CASHER_TIME_OUT = 60000;  // timeout for expected cashmachine status
+
+    public static final String URL = Settings.propEmulator.get("url");
 
     private JButton botButton;
     private JButton requesterButton;
@@ -88,7 +89,6 @@ public class Manager extends AbstractManager {
         }
         LOGGER.info(LogCreator.console("Client manager started on port: " + portName));
     }
-
 
     private void startProcess() {
         if (!botStarted) {
