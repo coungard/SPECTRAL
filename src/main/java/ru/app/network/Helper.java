@@ -31,9 +31,9 @@ public class Helper {
         String[] data = cmd1.split("\\*");
 
         Payment payment = new Payment();
-        payment.setId(Long.valueOf(cmd2));
+        payment.setId(Long.parseLong(cmd2));
         payment.setNumber(data[1]);
-        payment.setSum(Double.valueOf(data[2]));
+        payment.setSum(Double.parseDouble(data[2]));
         payment.setProvider(data[3]);
         payment.setText(data[4].substring(0, data[4].length() - 1)); // w/o # symbol
 

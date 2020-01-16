@@ -1,6 +1,7 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
 import jssc.*;
+import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.apache.log4j.Logger;
 import ru.app.main.Settings;
 import ru.app.protocol.ccnet.BillStateType;
@@ -15,8 +16,14 @@ import ru.app.util.LogCreator;
 import ru.app.util.StreamType;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
@@ -46,6 +53,10 @@ public class Client {
     private volatile boolean depositEnded = false;
     private volatile boolean nominalStacked = false;
 
+    private static final SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+    private static final String qiwiLogPath = "C:/qiwi/logs/";
+    private volatile String denomValue;
+
     public Client(String portName, ManagerListener listener) {
         serialPort = new SerialPort(portName);
         this.listener = listener;
@@ -67,6 +78,7 @@ public class Client {
             cashCodeClient = new CashCodeClient(Settings.realPortForEmulator, this);
 
         billTable = new BillTable().getTable();
+        pollingActivity = System.currentTimeMillis();
     }
 
     void setCurrentDenom(byte[] currentDenom) {
@@ -86,6 +98,7 @@ public class Client {
                 for (Map.Entry<String, byte[]> entry : billTable.entrySet()) {
                     if (Arrays.equals(entry.getValue(), currentDenom)) {
                         currentResponse += " [" + entry.getKey() + "]"; // example: BillStacked [100]
+                        denomValue = entry.getKey();
                         break;
                     }
                 }
@@ -182,6 +195,11 @@ public class Client {
 //                changeStatus(1000, BillStateType.Stacking);
                 break;
             case Poll:
+                long diff = new Date().getTime() - new Date(pollingActivity).getTime();
+
+                if (diff > 1000)
+                    LOGGER.warn(LogCreator.console("Polling activity timeout: " + diff));
+
                 pollingActivity = System.currentTimeMillis();
                 BillStateType status = getStatus();
                 switch (status) {
@@ -196,8 +214,8 @@ public class Client {
                         sendMessage(new Command(BillStateType.Stacking));
                         break;
                     case BillStacked:
-                        sendMessage(new Command(BillStateType.BillStacked, currentDenom));
                         nominalStacked = true;
+                        sendMessage(new Command(BillStateType.BillStacked, currentDenom));
                         setStatus(BillStateType.Idling);
                         break;
                     case Initialize:
@@ -309,6 +327,14 @@ public class Client {
             @Override
             public void run() {
                 try {
+                    Date date = new Date();
+                    String log = qiwiLogPath + formatter.format(date) + ".log";
+                    boolean qiwiLogExists = true;
+                    if (!Files.exists(Paths.get(log))) {
+                        LOGGER.warn(LogCreator.console("Not found qiwi log file!"));
+                        qiwiLogExists = false;
+                    }
+
                     setStatus(BillStateType.Accepting);
                     Thread.sleep(1000);
                     setStatus(BillStateType.EscrowPosition);
@@ -317,7 +343,7 @@ public class Client {
                     do {
                         Thread.sleep(20);
                         stacking = BillStateType.Stacking == getStatus();
-                    } while (!stacking && System.currentTimeMillis() - start < 3000);
+                    } while (!stacking && System.currentTimeMillis() - start < 4000);
                     if (!stacking) {
                         LOGGER.warn(LogCreator.console("Сan’t send the ESCROW status for the set time!"));
                         depositEnded = true;
@@ -329,18 +355,44 @@ public class Client {
                             Thread.sleep(20);
                         } while (!nominalStacked && System.currentTimeMillis() - start < 10000);
                         if (nominalStacked) {
-                            LOGGER.info(LogCreator.console("Deposit nominal successfull!"));
+                            if (qiwiLogExists) {
+                                boolean success = false;
+                                File qiwiLog = Paths.get(log).toFile();
+                                long started = System.currentTimeMillis();
+                                do {
+                                    Thread.sleep(10);
+                                    ReversedLinesFileReader reader = new ReversedLinesFileReader(qiwiLog, Charset.forName("windows-1251"));
+                                    // проверка последней и предпоследней строки qiwi log
+                                    for (int i = 0; i < 2; i++) {
+                                        String line = reader.readLine();
+                                        if (line != null && (line.contains("Принята купюра " + denomValue) ||
+                                                line.contains("Принята монета " + denomValue)))
+                                            success = true;
+                                    }
+                                    reader.close();
+                                } while (System.currentTimeMillis() - started < 5000 && !success);
+                                if (success) {
+                                    LOGGER.info(LogCreator.console("Deposit " + denomValue + " successfull"));
+                                } else {
+                                    LOGGER.warn(LogCreator.console("Deposit " + denomValue + " not sended!"));
+                                }
+                            } else {
+                                LOGGER.info(LogCreator.console("Deposit nominal successfull!"));
+                            }
+                            setStatus(BillStateType.Idling);
                             depositEnded = true;
-                            return;
+                        } else {
+                            LOGGER.warn(LogCreator.console("can’t send the BILLSTACKED status for the set time!"));
+                            setStatus(BillStateType.Idling);
+                            depositEnded = true;
                         }
-                        LOGGER.warn(LogCreator.console("can’t send the BILLSTACKED status for the set time!"));
-                        setStatus(BillStateType.Idling);
-                        depositEnded = true;
                     }
                 } catch (InterruptedException ex) {
                     LOGGER.error(LogCreator.console(ex.getMessage()));
                     setStatus(BillStateType.Idling);
                     depositEnded = true;
+                } catch (IOException ex) {
+                    LOGGER.error(LogCreator.console(ex.getMessage()));
                 }
             }
         }).start();
@@ -376,10 +428,6 @@ public class Client {
 
     public boolean isActive() {
         return active;
-    }
-
-    public boolean isPollingActivity() {
-        return System.currentTimeMillis() - pollingActivity < 1000;
     }
 
     public void setDepositEnded(boolean depositEnded) {

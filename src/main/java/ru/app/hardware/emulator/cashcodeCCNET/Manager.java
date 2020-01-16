@@ -1,5 +1,6 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
+import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import ru.app.hardware.AbstractManager;
@@ -22,9 +23,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.*;
 
@@ -58,7 +61,7 @@ public class Manager extends AbstractManager {
     private static final int BOT_STARTER_TIME_OUT = 60000 * 10; // timeout for start bot & receive identification command
     private static final long CASHER_TIME_OUT = 60000;  // timeout for expected cashmachine status
 
-    public static final String URL = Settings.propEmulator.get("url");
+    private static final String URL = Settings.propEmulator.get("url");
 
     private JButton botButton;
     private JButton requesterButton;
@@ -154,27 +157,6 @@ public class Manager extends AbstractManager {
         }
     }
 
-    /**
-     * Дополнительный метод слежения за клиентом, отслеживающий разные состояния эмулятора
-     */
-    private void watchDog() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                LOGGER.info("Watch dog started");
-                long delay = 0;
-                do {
-                    if (System.currentTimeMillis() - delay > 5000) {
-                        if (!client.isPollingActivity()) {
-                            LOGGER.warn(LogCreator.console("Warning! Terminal is not polling! (5 sec timeout)"));
-                            delay = System.currentTimeMillis();
-                        }
-                    }
-                } while (true);
-            }
-        }).start();
-    }
-
     private void startRequester() {
         if (!requesterStarted) {
             if (!botStarted) {
@@ -209,7 +191,6 @@ public class Manager extends AbstractManager {
             @Override
             public void run() {
                 LOGGER.info(LogCreator.console("Requester loop started"));
-                watchDog();
                 while (requesterStarted) {
                     try {
                         Thread.sleep(3000);
@@ -587,7 +568,7 @@ public class Manager extends AbstractManager {
         do {
             Thread.sleep(40);
             if (client.isDepositEnded()) break;
-        } while (System.currentTimeMillis() - start < 20000);
+        } while (System.currentTimeMillis() - start < 23000);
         return client.isNominalStacked();
     }
 
