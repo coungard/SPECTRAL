@@ -9,8 +9,12 @@ import ru.app.util.Utils;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.MouseInputAdapter;
+import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,6 +37,7 @@ public class GeneralSettings extends JPanel {
     private final JTextField requesterTimeout;
     private static boolean attention;
     private final JComboBox<Object> softBox;
+    private final JTextArea qiwiLogDirectory;
     private JCheckBox hexLog;
     private JCheckBox bytesLog;
     private JCheckBox asciiLog;
@@ -49,6 +54,39 @@ public class GeneralSettings extends JPanel {
         label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 28));
         label.setBounds(0, 10, getWidth(), 40);
         add(label);
+
+        final JLabel qiwiPathLabel = new JLabel("Qiwi logs directory:");
+        qiwiPathLabel.setBounds(700, 50, 200, 30);
+        qiwiPathLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        add(qiwiPathLabel);
+
+        qiwiLogDirectory = new JTextArea();
+        qiwiLogDirectory.setBounds(700, 90, 250, 30);
+        qiwiLogDirectory.setFont(qiwiPathLabel.getFont());
+        qiwiLogDirectory.setBorder(BorderFactory.createBevelBorder(1));
+        add(qiwiLogDirectory);
+        qiwiLogDirectory.setText(Settings.propEmulator.get("qiwi.log.dir"));
+
+        JButton dirButton = new JButton("Change directory");
+        dirButton.setBounds(700, 130, 180, 40);
+        add(dirButton);
+
+        dirButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                jfc.setDialogTitle("Choose a qiwi log directory: ");
+                jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+                int returnValue = jfc.showSaveDialog(null);
+                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = jfc.getSelectedFile();
+                    if (selectedFile.isDirectory()) {
+                        LOGGER.info("Selected the directory: " + selectedFile);
+                        qiwiLogDirectory.setText(selectedFile.toString() + System.getProperty("file.separator"));
+                    }
+                }
+            }
+        });
 
         JLabel logsLabel = new JLabel("Log level:");
         logsLabel.setBounds(20, 70, 300, 50);
@@ -238,6 +276,9 @@ public class GeneralSettings extends JPanel {
         return cb;
     }
 
+    /**
+     * Чтение из 2 конфигурационных файлов с последующим сохранением их в настройки
+     */
     private void loadConfig() {
         try {
             Properties p = new Properties();
@@ -269,6 +310,7 @@ public class GeneralSettings extends JPanel {
         Settings.propEmulator.put("timeout.status", statusTimeout.getText());
         Settings.propEmulator.put("timeout.nominals", nominalTimeout.getText());
         Settings.propEmulator.put("timeout.requester", requesterTimeout.getText());
+        Settings.propEmulator.put("qiwi.log.dir", qiwiLogDirectory.getText());
 
         Utils.saveProp(Settings.propEmulator, Settings.propEmulatorFile);
         Utils.saveProp(Settings.prop, Settings.propFile);

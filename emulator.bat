@@ -1,8 +1,6 @@
-cd C:\terminal4
 :g1
-	start cmd /k Call bot/starterPy.bat
 	echo begin
-	jre\bin\java.exe -jar Spectral.jar
+	java -jar Spectral.jar
 	set res=%errorlevel%
 	echo res: %res%
 	if %res%==0 exit

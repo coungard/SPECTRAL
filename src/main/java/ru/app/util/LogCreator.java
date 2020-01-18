@@ -21,7 +21,7 @@ public class LogCreator {
     }
 
     public static String console(String text) {
-        if (manager != null)
+        if (manager != null && Settings.args.length == 0)
             manager.textArea.setText(manager.textArea.getText() + Settings.dateFormat.format(new Date()) + "\t" + text + "\n");
         return text;
     }
@@ -98,7 +98,7 @@ public class LogCreator {
                 ("1".equals(Settings.prop.get("logLevel.hex")) ? "HEX:  " + Utils.bytes2hex((buffer)) + "\t" : "") +
                 ("1".equals(Settings.prop.get("logLevel.ascii")) ? "ASCII:  " + ascii.toString() + "\t\t" : "") + commandType;
 
-        if (manager != null)
+        if (manager != null && Settings.args.length == 0)
             manager.textArea.setText(manager.textArea.getText() + Settings.dateFormat.format(new Date()) + "\t" + log + "\n");
         return log;
     }

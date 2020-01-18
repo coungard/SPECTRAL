@@ -1,6 +1,5 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
-import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import ru.app.hardware.AbstractManager;
@@ -23,11 +22,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.*;
 
@@ -149,7 +146,6 @@ public class Manager extends AbstractManager {
             } finally {
                 botButton.setEnabled(true);
             }
-
         } else {
             LOGGER.info(LogCreator.console("stop bot button pressed"));
             botButton.setIcon(null);
@@ -545,7 +541,7 @@ public class Manager extends AbstractManager {
 
     @Override
     public void redraw() {
-        LOGGER.info(LogCreator.console("Emulator configuration: " + Settings.propEmulator));
+        LOGGER.info(LogCreator.console("Emulator + v." + Settings.VERSION + " configuration: " + Settings.propEmulator));
     }
 
     /**
@@ -568,7 +564,7 @@ public class Manager extends AbstractManager {
         do {
             Thread.sleep(40);
             if (client.isDepositEnded()) break;
-        } while (System.currentTimeMillis() - start < 23000);
+        } while (System.currentTimeMillis() - start < 25000);
         return client.isNominalStacked();
     }
 

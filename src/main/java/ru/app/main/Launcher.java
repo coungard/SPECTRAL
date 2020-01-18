@@ -61,7 +61,7 @@ public class Launcher extends Thread {
         String log4jPath = System.getProperty("os.name").contains("Linux") ? "log4j.xml" : "log4j_win.xml";
         DOMConfigurator.configure(Objects.requireNonNull(this.getClass().getClassLoader().getResource(log4jPath)));
 
-        LOGGER.info(LogCreator.console("Spectral started"));
+        LOGGER.info(LogCreator.console("Spectral v." + Settings.VERSION + " started"));
         window.setSize(Settings.dimension);
 
         addPanel(mainPanel);
