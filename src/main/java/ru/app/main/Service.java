@@ -11,25 +11,29 @@ import ru.app.network.Helper;
 import ru.app.network.Payment;
 import ru.app.network.Requester;
 import ru.app.network.Status;
+import ru.app.network.rmi.RmiServerInterface;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.emulator.BillTable;
 import ru.app.util.Utils;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.rmi.Naming;
+import java.rmi.RMISecurityManager;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
-import java.util.List;
 
 /**
  * Специальный сервис для эмулятора, который работает исключительно в командной строке, не используя графический
  * интерфейс.
  */
-public class Service {
+public class Service extends UnicastRemoteObject implements RmiServerInterface {
     public static final Logger LOGGER = Logger.getLogger(Service.class);
     private Client client;
     private Requester requester;
@@ -49,7 +53,7 @@ public class Service {
     private File payFile;
     private boolean cassetteOut;
 
-    public Service() {
+    public Service() throws RemoteException {
         String log4jPath = System.getProperty("os.name").contains("Linux") ? "log4j.xml" : "log4j_win.xml";
         DOMConfigurator.configure(Objects.requireNonNull(this.getClass().getClassLoader().getResource(log4jPath)));
 
@@ -95,7 +99,33 @@ public class Service {
         requester = new Requester(URL);
         billTable = new BillTable().getTable();
         LOGGER.info("Emulator properties: " + Settings.propEmulator);
+        startRMI();
         startProcess();
+    }
+
+    private void startRMI() {
+        // Create and install a security manager
+        if (System.getSecurityManager() == null) {
+            System.setSecurityManager(new RMISecurityManager());
+            LOGGER.info("Security manager installed.");
+        } else {
+            LOGGER.info("Security manager already exists.");
+        }
+        try { //special exception handler for registry creation
+            LocateRegistry.createRegistry(1099);
+            LOGGER.info("java RMI registry created.");
+        } catch (RemoteException ex) {
+            //do nothing, error means registry already exists
+            LOGGER.info("java RMI registry already exists.");
+        }
+        try {
+            // Bind this object instance to the name "RmiServer"
+            Naming.rebind("//localhost/Service", this);
+
+            LOGGER.info("PeerServer bound in registry");
+        } catch (Exception ex) {
+            LOGGER.error("RMI server exception:" + ex.getMessage());
+        }
     }
 
     private void startProcess() {
@@ -335,12 +365,14 @@ public class Service {
         return client.isNominalStacked();
     }
 
-    // TODO... как вызывать эту функцию в любой удобный момент времени?
-    private void encashment() {
+    @Override
+    public void encashment() {
         cassetteOut = !cassetteOut;
         if (cassetteOut) {
+            LOGGER.info("DropCassetteOutOfPosition");
             client.setStatus(BillStateType.DropCassetteOutOfPosition);
         } else {
+            LOGGER.info("CassetteOn");
             client.setStatus(BillStateType.UnitDisabled);
         }
     }
