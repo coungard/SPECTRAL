@@ -4,6 +4,7 @@ import ru.app.bus.DeviceType;
 import ru.app.hardware.AbstractManager;
 import ru.app.hardware.smartPayout.Client;
 import ru.app.main.Launcher;
+import ru.app.main.Service;
 import ru.app.main.Settings;
 
 import java.io.UnsupportedEncodingException;
@@ -15,9 +16,11 @@ import static ru.app.util.StreamType.*;
 
 public class LogCreator {
     private static AbstractManager manager;
+    private static boolean isService;
 
     public static void init() {
         manager = Launcher.currentManager;
+        isService = Settings.args.length > 0 && Settings.args[0].equals("--service");
     }
 
     public static String console(String text) {
@@ -74,13 +77,15 @@ public class LogCreator {
                 }
                 break;
             case EMULATOR:
-                if (manager == null)
+                if (manager == null && !isService)
                     return null;
                 if (Settings.deviceForEmulator.equals("CCNET CASHER")) {
-                    if (type == INPUT)
-                        commandType = manager.getCurrentCommand();
-                    if (type == OUTPUT) {
-                        commandType = manager.getCurrentResponse();
+                    if (isService) {
+                        if (type == INPUT) commandType = Service.getCurrentCommand();
+                        if (type == OUTPUT) commandType = Service.getCurrentResponse();
+                    } else {
+                        if (type == INPUT) commandType = manager.getCurrentCommand();
+                        if (type == OUTPUT) commandType = manager.getCurrentResponse();
                     }
                 }
                 break;
@@ -98,7 +103,7 @@ public class LogCreator {
                 ("1".equals(Settings.prop.get("logLevel.hex")) ? "HEX:  " + Utils.bytes2hex((buffer)) + "\t" : "") +
                 ("1".equals(Settings.prop.get("logLevel.ascii")) ? "ASCII:  " + ascii.toString() + "\t\t" : "") + commandType;
 
-        if (manager != null && Settings.args.length == 0)
+        if (manager != null && !isService)
             manager.textArea.setText(manager.textArea.getText() + Settings.dateFormat.format(new Date()) + "\t" + log + "\n");
         return log;
     }

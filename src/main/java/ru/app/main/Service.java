@@ -14,6 +14,7 @@ import ru.app.network.Status;
 import ru.app.network.rmi.RmiServerInterface;
 import ru.app.protocol.ccnet.BillStateType;
 import ru.app.protocol.ccnet.emulator.BillTable;
+import ru.app.util.LogCreator;
 import ru.app.util.Utils;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -35,7 +36,7 @@ import java.util.*;
  */
 public class Service extends UnicastRemoteObject implements RmiServerInterface {
     public static final Logger LOGGER = Logger.getLogger(Service.class);
-    private Client client;
+    private static Client client;
     private Requester requester;
     private Map<String, byte[]> billTable;
 
@@ -56,6 +57,7 @@ public class Service extends UnicastRemoteObject implements RmiServerInterface {
     public Service() throws RemoteException {
         String log4jPath = System.getProperty("os.name").contains("Linux") ? "log4j.xml" : "log4j_win.xml";
         DOMConfigurator.configure(Objects.requireNonNull(this.getClass().getClassLoader().getResource(log4jPath)));
+        LogCreator.init();
 
         LOGGER.info("Emulator v." + Settings.VERSION + " started!");
         try {
@@ -87,6 +89,14 @@ public class Service extends UnicastRemoteObject implements RmiServerInterface {
         } catch (IOException ex) {
             LOGGER.error(ex.getMessage(), ex);
         }
+    }
+
+    public static String getCurrentCommand() {
+        return client.getCurrentCommand() == null ? "" : "Command: " + client.getCurrentCommand().toString();
+    }
+
+    public static String getCurrentResponse() {
+        return client.getCurrentResponse();
     }
 
     private void startManager(String emulPort) {

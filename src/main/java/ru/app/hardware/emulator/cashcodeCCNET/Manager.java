@@ -597,6 +597,8 @@ public class Manager extends AbstractManager {
     }
 
     static boolean isVerboseLog() {
+        if (Settings.args.length > 0)
+            return false;
         return (verboseLog == null || verboseLog.isSelected());
     }
 

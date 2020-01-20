@@ -409,11 +409,11 @@ public class Client {
         return status;
     }
 
-    CommandType getCurrentCommand() {
+    public CommandType getCurrentCommand() {
         return currentCommand;
     }
 
-    String getCurrentResponse() {
+    public String getCurrentResponse() {
         return "Response: " + currentResponse;
     }
 
