@@ -6,7 +6,7 @@
 
     <groupId>com.coungard</groupId>
     <artifactId>spectral</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.77</version>
 
     <packaging>jar</packaging>
 

@@ -4,11 +4,10 @@ import ru.app.bus.DeviceType;
 import ru.app.hardware.AbstractManager;
 import ru.app.hardware.smartPayout.Client;
 import ru.app.main.Launcher;
-import ru.app.main.Service;
+import ru.app.main.RmiServer;
 import ru.app.main.Settings;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -81,8 +80,8 @@ public class LogCreator {
                     return null;
                 if (Settings.deviceForEmulator.equals("CCNET CASHER")) {
                     if (isService) {
-                        if (type == INPUT) commandType = Service.getCurrentCommand();
-                        if (type == OUTPUT) commandType = Service.getCurrentResponse();
+                        if (type == INPUT) commandType = RmiServer.getCurrentCommand();
+                        if (type == OUTPUT) commandType = RmiServer.getCurrentResponse();
                     } else {
                         if (type == INPUT) commandType = manager.getCurrentCommand();
                         if (type == OUTPUT) commandType = manager.getCurrentResponse();

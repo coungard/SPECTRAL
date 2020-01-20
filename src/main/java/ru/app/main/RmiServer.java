@@ -34,8 +34,8 @@ import java.util.*;
  * Специальный сервис для эмулятора, который работает исключительно в командной строке, не используя графический
  * интерфейс.
  */
-public class Service extends UnicastRemoteObject implements RmiServerInterface {
-    public static final Logger LOGGER = Logger.getLogger(Service.class);
+public class RmiServer extends UnicastRemoteObject implements RmiServerInterface {
+    public static final Logger LOGGER = Logger.getLogger(RmiServer.class);
     private static Client client;
     private Requester requester;
     private Map<String, byte[]> billTable;
@@ -54,7 +54,7 @@ public class Service extends UnicastRemoteObject implements RmiServerInterface {
     private File payFile;
     private boolean cassetteOut;
 
-    public Service() throws RemoteException {
+    public RmiServer() throws RemoteException {
         String log4jPath = System.getProperty("os.name").contains("Linux") ? "log4j.xml" : "log4j_win.xml";
         DOMConfigurator.configure(Objects.requireNonNull(this.getClass().getClassLoader().getResource(log4jPath)));
         LogCreator.init();
@@ -91,14 +91,6 @@ public class Service extends UnicastRemoteObject implements RmiServerInterface {
         }
     }
 
-    public static String getCurrentCommand() {
-        return client.getCurrentCommand() == null ? "" : "Command: " + client.getCurrentCommand().toString();
-    }
-
-    public static String getCurrentResponse() {
-        return client.getCurrentResponse();
-    }
-
     private void startManager(String emulPort) {
         client = new Client(emulPort, new ManagerListener() {
             @Override
@@ -130,8 +122,7 @@ public class Service extends UnicastRemoteObject implements RmiServerInterface {
         }
         try {
             // Bind this object instance to the name "RmiServer"
-            Naming.rebind("//localhost/Service", this);
-
+            Naming.rebind("//localhost/RmiServer", this);
             LOGGER.info("PeerServer bound in registry");
         } catch (Exception ex) {
             LOGGER.error("RMI server exception:" + ex.getMessage());
@@ -376,14 +367,48 @@ public class Service extends UnicastRemoteObject implements RmiServerInterface {
     }
 
     @Override
-    public void encashment() {
-        cassetteOut = !cassetteOut;
-        if (cassetteOut) {
-            LOGGER.info("DropCassetteOutOfPosition");
-            client.setStatus(BillStateType.DropCassetteOutOfPosition);
-        } else {
-            LOGGER.info("CassetteOn");
-            client.setStatus(BillStateType.UnitDisabled);
+    public String send(final String command) throws RemoteException {
+        final String[] answer = {null};
+        Thread rmiThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                LOGGER.info("Command from RMIclient: " + command);
+                switch (command) {
+                    case "encash":
+                        cassetteOut = !cassetteOut;
+                        if (cassetteOut) {
+                            LOGGER.info("DropCassetteOutOfPosition");
+                            client.setStatus(BillStateType.DropCassetteOutOfPosition);
+                            answer[0] = "CassetteOutOfPosition ";
+                        } else {
+                            LOGGER.info("Cassette Inserted");
+                            client.setStatus(BillStateType.UnitDisabled);
+                            answer[0] = "Cassette Inserted";
+                        }
+                        break;
+                    case "bill":
+                        answer[0] = "bill nominal insert operation under development.";
+                        // todo...
+                        break;
+                    default:
+                        answer[0] = "unknown command";
+                }
+            }
+        });
+        rmiThread.start();
+        try {
+            rmiThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        return answer[0];
+    }
+
+    public static String getCurrentCommand() {
+        return client.getCurrentCommand() == null ? "" : "Command: " + client.getCurrentCommand().toString();
+    }
+
+    public static String getCurrentResponse() {
+        return client.getCurrentResponse();
     }
 }

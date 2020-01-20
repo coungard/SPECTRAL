@@ -4,5 +4,5 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface RmiServerInterface extends Remote {
-    public void encashment() throws RemoteException;
+    public String send(String command) throws RemoteException;
 }
