@@ -10,7 +10,6 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.rmi.RemoteException;
 
 public abstract class AbstractManager extends JLayeredPane {
     protected JScrollPane scroll;
@@ -47,7 +46,7 @@ public abstract class AbstractManager extends JLayeredPane {
                         public void run() {
                             try {
                                 Launcher.main(new String[0]);
-                            } catch (UnsupportedLookAndFeelException | InterruptedException | InvocationTargetException | RemoteException ex) {
+                            } catch (UnsupportedLookAndFeelException | InterruptedException | InvocationTargetException ex) {
                                 ex.printStackTrace();
                             }
                         }
