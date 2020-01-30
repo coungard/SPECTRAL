@@ -6,7 +6,7 @@
 
     <groupId>com.coungard</groupId>
     <artifactId>spectral</artifactId>
-    <version>1.77</version>
+    <version>1.78</version>
 
     <packaging>jar</packaging>
 
@@ -17,6 +17,7 @@
     </properties>
 
     <build>
+<!--        <finalName>RmiClient</finalName>-->
         <finalName>Spectral</finalName>
         <plugins>
             <plugin>
@@ -56,6 +57,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib</classpathPrefix>
+<!--                            <mainClass>ru.app.network.rmi.RmiClient</mainClass>-->
                             <mainClass>ru.app.main.Launcher</mainClass>
                         </manifest>
                     </archive>
