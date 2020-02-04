@@ -77,7 +77,7 @@ public class Manager extends AbstractManager {
         });
         requester = new Requester(URL);
         billTable = new BillTable().getTable();
-        struct();
+        content();
 
         if (Files.exists(Paths.get(Settings.autoLaunchPropFile))) {
             new Thread(new Runnable() {
@@ -362,7 +362,7 @@ public class Manager extends AbstractManager {
     }
 
     @Override
-    public void struct() {
+    public void content() {
         JLabel mainLabel = formLabel("EMULATOR CASHCODE CCNET", 0);
         add(mainLabel);
 

@@ -1,6 +1,6 @@
 package ru.app.util;
 
-import ru.app.hardware.smartPayout.Manager;
+import ru.app.hardware.smartSystem.payout.Manager;
 import ru.app.hardware.ucs.Client;
 import ru.app.main.Settings;
 import ru.app.protocol.bne.DepositTable;
@@ -46,7 +46,7 @@ public class ResponseHandler {
                 }
                 return result.toString();
 
-            case SMART_PAYOUT:
+            case SMART_SYSTEM:
                 byte resp;
                 if (buffer.length > 6) {
                     resp = buffer[4];

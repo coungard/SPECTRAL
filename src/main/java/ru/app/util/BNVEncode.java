@@ -1,7 +1,7 @@
 package ru.app.util;
 
 public class BNVEncode {
-    private static final int BNVCodeLength = 6;
+    private static final int BNVCodeLength = 0;
     private static final byte[] secCode = new byte[]{1, 2, 3, 4, 5, 6};
 
     public static boolean IsValidBNVCode(byte[] BNVCode) {

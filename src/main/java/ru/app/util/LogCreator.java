@@ -2,7 +2,6 @@ package ru.app.util;
 
 import ru.app.bus.DeviceType;
 import ru.app.hardware.AbstractManager;
-import ru.app.hardware.smartPayout.Client;
 import ru.app.main.Launcher;
 import ru.app.main.RmiServer;
 import ru.app.main.Settings;
@@ -63,9 +62,9 @@ public class LogCreator {
         String commandType = "";
 
         switch (Settings.hardware) {
-            case SMART_PAYOUT:
+            case SMART_SYSTEM:
                 if (type == OUTPUT || type == OUTPUT_ENCRYPT) {
-                    commandType = Client.currentCommand.getCommandType().toString();
+                    commandType = manager.getCurrentCommand();
                 } else {
                     commandType = ResponseHandler.parseResponse(type, buffer);
                 }
@@ -78,7 +77,7 @@ public class LogCreator {
             case EMULATOR:
                 if (manager == null && !isService)
                     return null;
-                if (Settings.deviceForEmulator.equals("CCNET CASHER")) {
+                if (Settings.device.equals("CCNET CASHER")) {
                     if (isService) {
                         if (type == INPUT) commandType = RmiServer.getCurrentCommand();
                         if (type == OUTPUT) commandType = RmiServer.getCurrentResponse();
@@ -97,8 +96,8 @@ public class LogCreator {
                     commandType = manager.getCurrentResponse();
                 }
         }
-
         String log = type + ("1".equals(Settings.prop.get("logLevel.bytes")) ? "BYTES:  " + Arrays.toString(buffer) + "\t" : "") +
+                ("1".equals(Settings.prop.get("logLevel.int")) ? "INT:  " + Utils.bytes2int((buffer)) + "\t" : "") +
                 ("1".equals(Settings.prop.get("logLevel.hex")) ? "HEX:  " + Utils.bytes2hex((buffer)) + "\t" : "") +
                 ("1".equals(Settings.prop.get("logLevel.ascii")) ? "ASCII:  " + ascii.toString() + "\t\t" : "") + commandType;
 

@@ -265,6 +265,14 @@ public class Utils {
         return md5Hex.toString();
     }
 
+    /**
+     * Считывает из проперти файла значение, взятое из ключа по передаваемой строке
+     *
+     * @param file путь к файлу
+     * @param target ключ, по которому будет считывать значение
+     * @return значение
+     * @throws IOException если такого файла нет
+     */
     public static String getPropertyFromFile(String file, String target) throws IOException {
         String result = null;
         Properties p = new Properties();
@@ -279,7 +287,7 @@ public class Utils {
     }
 
     /**
-     * Сохранить настройки в файл
+     * Сохранить настройки формата ключ-значение в файл как property
      */
     public static void saveProp(Map<String, String> prms, String file) {
         try {
@@ -310,5 +318,31 @@ public class Utils {
             LOGGER.error(ex.getMessage(), ex);
             return null;
         }
+    }
+
+    /**
+     * Переводит массив байтов в строковое значение массива интов
+     *
+     * @param buffer передаваемый массив байтов
+     * @return строка интов
+     */
+    public static String bytes2int(byte[] buffer) {
+        int[] res = new int[buffer.length];
+        for (int i = 0; i < buffer.length; i++) {
+            res[i] = buffer[i] & 0xFF;
+        }
+        return Arrays.toString(res);
+    }
+
+    public static boolean isNumeric(String num) {
+        if (num == null) {
+            return false;
+        }
+        try {
+            Double.parseDouble(num);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
     }
 }

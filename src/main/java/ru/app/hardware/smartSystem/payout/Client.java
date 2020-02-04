@@ -1,4 +1,4 @@
-package ru.app.hardware.smartPayout;
+package ru.app.hardware.smartSystem.payout;
 
 import jssc.SerialPort;
 import jssc.SerialPortEvent;
@@ -15,14 +15,15 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Calendar;
 
+/**
+ * Rлиент для Smart Payout-a, работающий на протоколе CC2 (расширенный cctalk) с шифрованием.
+ */
 public class Client {
     private static final Logger LOGGER = Logger.getLogger(Client.class);
-    public static Command currentCommand;
     private SerialPort serialPort;
-    private byte deviceAddr;
     private byte[] received;
 
-    Client(String portName) throws SerialPortException {
+    public Client(String portName) throws SerialPortException {
         serialPort = new SerialPort(portName);
         serialPort.openPort();
 
@@ -34,12 +35,12 @@ public class Client {
         serialPort.setEventsMask(SerialPort.MASK_RXCHAR);
         serialPort.addEventListener(new PortReader());
 
-        System.out.println("Initialization port " + portName + " was succesfull!");
+        LOGGER.info(LogCreator.console("Initialization port " + portName + " was succesfull!"));
     }
 
-    synchronized byte[] sendMessage(Command command) {
+    public synchronized byte[] sendMessage(Command command) {
+        LOGGER.info(LogCreator.console(command.toString()));
         byte[] result = new byte[0];
-        currentCommand = command;
         byte[] crcPacket = formPacket(command.getCommandType().getCode(), command.getData());
         try {
             serialPort.writeBytes(crcPacket);
@@ -59,19 +60,6 @@ public class Client {
             LOGGER.error(LogCreator.console(ex.getMessage()));
         }
         return result;
-    }
-
-    synchronized public void sendBytes(byte[] bytes) {
-        try {
-            LOGGER.debug(LogCreator.console(Arrays.toString(bytes)));
-            serialPort.writeBytes(bytes);
-            long start = Calendar.getInstance().getTimeInMillis();
-            do {
-                if (received == null) Thread.sleep(10);
-            } while (Calendar.getInstance().getTimeInMillis() - start < 1200 && received == null);
-        } catch (SerialPortException | InterruptedException ex) {
-            LOGGER.error(LogCreator.console(ex.getMessage()));
-        }
     }
 
     private byte[] encryptPacket(byte[] packet) {
@@ -135,6 +123,15 @@ public class Client {
                     LOGGER.error(LogCreator.console(ex.getMessage()));
                 }
             }
+        }
+    }
+
+    public void close() {
+        try {
+            if (serialPort.isOpened())
+                serialPort.closePort();
+        } catch (SerialPortException ex) {
+            LOGGER.error(LogCreator.console(ex.getMessage()));
         }
     }
 }

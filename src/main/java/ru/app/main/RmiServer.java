@@ -81,7 +81,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
 
             if (emulPort != null) {
                 Settings.hardware = DeviceType.EMULATOR;
-                Settings.deviceForEmulator = "CCNET CASHER";
+                Settings.device = "CCNET CASHER";
                 startManager(emulPort);
             } else {
                 LOGGER.info("emulPort = null!");

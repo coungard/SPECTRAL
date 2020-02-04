@@ -1,20 +1,14 @@
 package ru.app.protocol.cctalk;
 
-import ru.app.main.Settings;
 import ru.app.protocol.cctalk.payout.BillTable;
 import ru.app.util.Utils;
 
-import java.util.Arrays;
 import java.util.Formatter;
 
 
 public class Nominal {
     private String note;
-    private byte[] value;
-
-    public Nominal(byte[] value) {
-        this.value = value;
-    }
+    private String country = "RUB";
 
     public Nominal(String note) {
         this.note = note;
@@ -25,12 +19,11 @@ public class Nominal {
         String hex = new Formatter().format("%08X", BillTable.getTable().get(note)).toString();
 
         String nominal = Utils.inverse(hex);
-        char[] country = Settings.COUNTRY.toCharArray();
+        char[] country = this.country.toCharArray();
         StringBuilder countryBytes = new StringBuilder();
         for (char c : country) {
             countryBytes.append(new Formatter().format("%02X", (int) c));
         }
-
         nominal += countryBytes;
 
         int temp = 0;
@@ -39,7 +32,10 @@ public class Nominal {
             temp = temp + 2;
         }
 
-        System.out.println(Arrays.toString(array));
         return array;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
     }
 }

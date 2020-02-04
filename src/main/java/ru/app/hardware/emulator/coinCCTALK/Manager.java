@@ -24,11 +24,11 @@ public class Manager extends AbstractManager {
         setOpaque(true);
         setBackground(BACKGROUND_COLOR);
         client = new Client(port);
-        struct();
+        content();
     }
 
     @Override
-    public void struct() {
+    public void content() {
         JLabel descr = formLabel("COIN MACHINE EMULATOR (CCTALK)", 0);
         add(descr);
 
