@@ -2,9 +2,11 @@ package ru.app.util;
 
 import ru.app.bus.DeviceType;
 import ru.app.hardware.AbstractManager;
+import ru.app.hardware.smartSystem.hopper.Client;
 import ru.app.main.Launcher;
 import ru.app.main.RmiServer;
 import ru.app.main.Settings;
+import ru.app.protocol.cctalk.Command;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -63,10 +65,18 @@ public class LogCreator {
 
         switch (Settings.hardware) {
             case SMART_SYSTEM:
-                if (type == OUTPUT || type == OUTPUT_ENCRYPT) {
+                if (Settings.device.equals("SMART_HOPPER")) {
                     commandType = manager.getCurrentCommand();
+                    Command hopperCommand = Client.getHopperCommand();
+                    if (type == INPUT) {
+                        commandType = CCTalkParser.parseCC2(hopperCommand, buffer);
+                    }
                 } else {
-                    commandType = ResponseHandler.parseResponse(type, buffer);
+                    if (type == OUTPUT || type == OUTPUT_ENCRYPT) {
+                        commandType = manager.getCurrentCommand();
+                    } else {
+                        commandType = ResponseHandler.parseResponse(type, buffer);
+                    }
                 }
                 break;
             case BNE_S110M:

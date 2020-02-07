@@ -7,9 +7,12 @@ import jssc.SerialPortException;
 import org.apache.log4j.Logger;
 import ru.app.protocol.cctalk.Command;
 import ru.app.util.LogCreator;
+import ru.app.util.StreamType;
+import ru.app.util.Utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Calendar;
 
 /**
@@ -22,6 +25,12 @@ public class Client {
     private final byte SOURCE_ADDRESS = 0x01;
     private byte[] received;
     private byte[] transmit;
+
+    private byte[] receivedTmp;
+    private byte[] transmitTmp;
+
+    private long activityDate;
+    private static Command hopperCommand;
 
     public Client(String portName) throws SerialPortException {
         serialPort = new SerialPort(portName);
@@ -39,10 +48,11 @@ public class Client {
     }
 
     public synchronized byte[] sendMessage(Command command) {
-        LOGGER.info(LogCreator.console(command.toString()));
+        hopperCommand = command;
         transmit = formPacket(command.getCommandType().getCode(), command.getData());
         try {
-            LOGGER.info(LogCreator.logOutput(transmit));
+            if (accessLog(transmit, StreamType.OUTPUT))
+                LOGGER.info(LogCreator.logOutput(transmit));
             serialPort.writeBytes(transmit);
             long start = Calendar.getInstance().getTimeInMillis();
             do {
@@ -65,23 +75,8 @@ public class Client {
             raw.write(data);
         } catch (IOException ignored) {
         }
-        raw.write(checksum(raw.toByteArray()));
+        raw.write(Utils.checksum(raw.toByteArray()));
         return raw.toByteArray();
-    }
-
-    /**
-     * Высчитать контрольную сумму у части массива байт (modulo 256)
-     *
-     * @param data - данные
-     */
-    private byte checksum(byte[] data) {
-        int sum = 0;
-        for (byte b : data) sum += 0xff & b;
-
-        while (sum > 256)
-            sum = sum - 256;
-
-        return (byte) (256 - sum);
     }
 
     private class PortReader implements SerialPortEventListener {
@@ -90,25 +85,57 @@ public class Client {
             if (event.getEventType() == SerialPortEvent.RXCHAR) {
                 try {
                     received = serialPort.readBytes();
-
                     boolean reply = true;
                     ByteArrayOutputStream msg = new ByteArrayOutputStream();
                     for (int i = 0; i < received.length; i++) {
                         if (i < transmit.length) {
                             if (transmit[i] != received[i])
                                 reply = false;
-                        } else {
+                        } else
                             msg.write(received[i]);
-                        }
                     }
                     if (!reply)
                         LOGGER.error(LogCreator.console("No reply from hopper!"));
-                    LOGGER.debug(LogCreator.logInput(msg.toByteArray()));
+
+                    if (accessLog(received, StreamType.INPUT))
+                        LOGGER.debug(LogCreator.logInput(msg.toByteArray()));
                 } catch (SerialPortException ex) {
                     LOGGER.error(LogCreator.console(ex.getMessage()));
                 }
             }
         }
+    }
+
+    private boolean accessLog(byte[] buffer, StreamType type) {
+        switch (type) {
+            case INPUT:
+                if (!Arrays.equals(buffer, receivedTmp)) {
+                    receivedTmp = buffer;
+                    return true;
+                }
+                break;
+            case OUTPUT:
+                if (!Arrays.equals(buffer, transmitTmp)) {
+                    transmitTmp = buffer;
+                    return true;
+                }
+                break;
+        }
+
+        long timestamp = System.currentTimeMillis();
+        if (timestamp - activityDate > 60000) {
+            activityDate = timestamp;
+            return true;
+        }
+        return false;
+    }
+
+    public static Command getHopperCommand() {
+        return hopperCommand;
+    }
+
+    public String getCurrentCommand() {
+        return hopperCommand.toString();
     }
 
     public void close() {

@@ -47,6 +47,21 @@ public class Utils {
     }
 
     /**
+     * Высчитать контрольную сумму у части массива байт (modulo 256)
+     *
+     * @param data - данные
+     */
+    public static byte checksum(byte[] data) {
+        int sum = 0;
+        for (byte b : data) sum += 0xff & b;
+
+        while (sum > 256)
+            sum = sum - 256;
+
+        return (byte) (256 - sum);
+    }
+
+    /**
      * Инвертирование строки (по 2 символам - 16ричные значения)<p>Пример {"1B442C" ==> "2C441B"}
      *
      * @param s упорядоченный набор 16-ричных значений, идущих по 2 символа слитно друг за другом
@@ -64,6 +79,7 @@ public class Utils {
      *
      * @param runBeforeRestart some custom code to be run before restarting
      */
+    @Deprecated
     public static void restartApplication(Runnable runBeforeRestart) throws IOException {
         try {
             // java binary
