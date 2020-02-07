@@ -18,9 +18,11 @@ public class HardwareListener extends MouseInputAdapter {
     public void mousePressed(MouseEvent e) {
         Settings.hardware = hardware;
         Launcher.mainPanel.setVisible(false);
-        if ("EMULATOR".equals(Settings.hardware.toString()))
-            Launcher.devicesPage.setVisible(true);
-        else
+        String hw = Settings.hardware.toString();
+        if (hw.equals("EMULATOR") || hw.equals("SMART_SYSTEM")) {
+            Launcher.devicesPage.redraw(hw);
+        } else {
             Launcher.portsPage.setVisible(true);
+        }
     }
 }

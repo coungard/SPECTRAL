@@ -2,13 +2,13 @@ package ru.app.util;
 
 import ru.app.bus.DeviceType;
 import ru.app.hardware.AbstractManager;
-import ru.app.hardware.smartPayout.Client;
+import ru.app.hardware.smartSystem.hopper.Client;
 import ru.app.main.Launcher;
-import ru.app.main.Service;
+import ru.app.main.RmiServer;
 import ru.app.main.Settings;
+import ru.app.protocol.cctalk.Command;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -64,11 +64,19 @@ public class LogCreator {
         String commandType = "";
 
         switch (Settings.hardware) {
-            case SMART_PAYOUT:
-                if (type == OUTPUT || type == OUTPUT_ENCRYPT) {
-                    commandType = Client.currentCommand.getCommandType().toString();
+            case SMART_SYSTEM:
+                if (Settings.device.equals("SMART_HOPPER")) {
+                    commandType = manager.getCurrentCommand();
+                    Command hopperCommand = Client.getHopperCommand();
+                    if (type == INPUT) {
+                        commandType = CCTalkParser.parseCC2(hopperCommand, buffer);
+                    }
                 } else {
-                    commandType = ResponseHandler.parseResponse(type, buffer);
+                    if (type == OUTPUT || type == OUTPUT_ENCRYPT) {
+                        commandType = manager.getCurrentCommand();
+                    } else {
+                        commandType = ResponseHandler.parseResponse(type, buffer);
+                    }
                 }
                 break;
             case BNE_S110M:
@@ -79,10 +87,10 @@ public class LogCreator {
             case EMULATOR:
                 if (manager == null && !isService)
                     return null;
-                if (Settings.deviceForEmulator.equals("CCNET CASHER")) {
+                if (Settings.device.equals("CCNET CASHER")) {
                     if (isService) {
-                        if (type == INPUT) commandType = Service.getCurrentCommand();
-                        if (type == OUTPUT) commandType = Service.getCurrentResponse();
+                        if (type == INPUT) commandType = RmiServer.getCurrentCommand();
+                        if (type == OUTPUT) commandType = RmiServer.getCurrentResponse();
                     } else {
                         if (type == INPUT) commandType = manager.getCurrentCommand();
                         if (type == OUTPUT) commandType = manager.getCurrentResponse();
@@ -98,8 +106,8 @@ public class LogCreator {
                     commandType = manager.getCurrentResponse();
                 }
         }
-
         String log = type + ("1".equals(Settings.prop.get("logLevel.bytes")) ? "BYTES:  " + Arrays.toString(buffer) + "\t" : "") +
+                ("1".equals(Settings.prop.get("logLevel.int")) ? "INT:  " + Utils.bytes2int((buffer)) + "\t" : "") +
                 ("1".equals(Settings.prop.get("logLevel.hex")) ? "HEX:  " + Utils.bytes2hex((buffer)) + "\t" : "") +
                 ("1".equals(Settings.prop.get("logLevel.ascii")) ? "ASCII:  " + ascii.toString() + "\t\t" : "") + commandType;
 

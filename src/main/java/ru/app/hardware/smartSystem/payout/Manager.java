@@ -1,4 +1,4 @@
-package ru.app.hardware.smartPayout;
+package ru.app.hardware.smartSystem.payout;
 
 import jssc.SerialPortException;
 import org.apache.log4j.Logger;
@@ -12,7 +12,6 @@ import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 
-import static ru.app.protocol.cctalk.hopper.HopperCommands.RequestHopperCoin;
 import static ru.app.protocol.cctalk.payout.PayoutCommands.*;
 
 public class Manager extends AbstractManager {
@@ -29,11 +28,11 @@ public class Manager extends AbstractManager {
         setOpaque(true);
         setBackground(BACKGROUND_COLOR);
         client = new Client(port);
-        struct();
+        content();
     }
 
     @Override
-    public void struct() {
+    public void content() {
         JLabel cmdLabel = formLabel("CCTalk Smart Payout (CC2)", 0);
         add(cmdLabel);
         JButton enableButton = new JButton("Enable cashment");
@@ -125,21 +124,13 @@ public class Manager extends AbstractManager {
 
         JButton requestHopper = new JButton("Request Hopper");
         requestHopper.setBounds(230, 90, 160, 30);
-        requestHopper.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                pause();
-                client.sendMessage(new Command(RequestHopperCoin));
-            }
-        });
 
         JButton testButton = new JButton("Test");
         testButton.setBounds(830, 50, 160, 30);
         testButton.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                // zdes mojet bit vasha reklama
-                isEnabled = !isEnabled;
+                LOGGER.info(LogCreator.console("Здесь могла быть ваша реклама!"));
             }
         });
 
@@ -158,7 +149,7 @@ public class Manager extends AbstractManager {
 
     @Override
     protected void closeAll() {
-
+        client.close();
     }
 
     private void pause() {

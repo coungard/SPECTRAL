@@ -9,13 +9,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Settings {
-    public static final String VERSION = "1.76";
+    public static final String VERSION = "1.79";
     public static final Dimension dimension = new Dimension(1020, 600);
     public static final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:S");
-    public static final String COUNTRY = "ITL";
+    public static final String COUNTRY = "RUB";
     public static String qiwiLogPath;
     public static DeviceType hardware;
-    public static String deviceForEmulator = null;
+    public static String device = null;
     public static String realPortForEmulator = null;
     public static String[] args;
 
@@ -41,6 +41,7 @@ public class Settings {
     static {
         prop.put("logLevel.hex", "1");
         prop.put("logLevel.bytes", "0");
+        prop.put("logLevel.int", "0");
         prop.put("logLevel.ascii", "0");
 
         prop.put("casher.soft", "1");

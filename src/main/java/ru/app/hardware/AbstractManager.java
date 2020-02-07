@@ -15,7 +15,7 @@ public abstract class AbstractManager extends JLayeredPane {
     protected JScrollPane scroll;
     public volatile JTextArea textArea;
 
-    public abstract void struct();
+    public abstract void content();
 
     public abstract void redraw();
 
@@ -32,6 +32,7 @@ public abstract class AbstractManager extends JLayeredPane {
         scroll.setBounds(30, 140, 960, 390);
         add(scroll);
 
+<<<<<<< HEAD
         JButton restartButton = new JButton("Restart");
         restartButton.setBackground(new Color(132, 47, 197));
         restartButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 23));
@@ -60,10 +61,12 @@ public abstract class AbstractManager extends JLayeredPane {
         });
         add(restartButton);
 
+=======
+>>>>>>> rmi
         final JButton exitButton = new JButton("Exit");
         exitButton.setBackground(new Color(208, 44, 50));
-        exitButton.setFont(restartButton.getFont());
-        exitButton.setForeground(restartButton.getForeground());
+        exitButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 23));
+        exitButton.setForeground(Color.WHITE);
         exitButton.setBounds(788, 530, 200, 40);
         exitButton.addMouseListener(new MouseInputAdapter() {
             @Override

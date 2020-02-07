@@ -21,14 +21,21 @@ public class PortListener extends MouseInputAdapter {
         DeviceType hardware = Settings.hardware;
         try {
             switch (hardware) {
-                case SMART_PAYOUT:
-                    Launcher.defineManager(new ru.app.hardware.smartPayout.Manager(portName));
+                case SMART_SYSTEM:
+                    switch (Settings.device) {
+                        case "SMART_PAYOUT":
+                            Launcher.defineManager(new ru.app.hardware.smartSystem.payout.Manager(portName));
+                            break;
+                        case "SMART_HOPPER":
+                            Launcher.defineManager(new ru.app.hardware.smartSystem.hopper.Manager(portName));
+                            break;
+                    }
                     break;
                 case BNE_S110M:
                     Launcher.defineManager(new ru.app.hardware.bneS110M.Manager(portName));
                     break;
                 case EMULATOR:
-                    switch (Settings.deviceForEmulator) {
+                    switch (Settings.device) {
                         case "CCNET CASHER":
                             Launcher.defineManager(new ru.app.hardware.emulator.cashcodeCCNET.Manager(portName));
                             break;

@@ -41,6 +41,7 @@ public class GeneralSettings extends JPanel {
     private JCheckBox hexLog;
     private JCheckBox bytesLog;
     private JCheckBox asciiLog;
+    private JCheckBox intLog;
 
     public GeneralSettings() {
         setSize(1020, 450);
@@ -93,9 +94,10 @@ public class GeneralSettings extends JPanel {
         logsLabel.setFont(FONT);
         add(logsLabel);
 
-        hexLog = createCheckBox("Hex", 200, logsLabel.getY(), "logLevel.hex");
-        bytesLog = createCheckBox("Bytes", 320, logsLabel.getY(), "logLevel.bytes");
-        asciiLog = createCheckBox("Ascii", 440, logsLabel.getY(), "logLevel.ascii");
+        hexLog = createCheckBox("Hex", 140, logsLabel.getY(), "logLevel.hex");
+        bytesLog = createCheckBox("Bytes", 240, logsLabel.getY(), "logLevel.bytes");
+        asciiLog = createCheckBox("Ascii", 340, logsLabel.getY(), "logLevel.ascii");
+        intLog = createCheckBox("Int", 440, logsLabel.getY(), "logLevel.int");
 
         JPanel requesterPanel = new JPanel();
         requesterPanel.setLayout(null);
@@ -269,8 +271,8 @@ public class GeneralSettings extends JPanel {
 
     private JCheckBox createCheckBox(String name, int x, int y, String propertyKey) {
         JCheckBox cb = new JCheckBox(name);
-        cb.setFont(FONT.deriveFont(Font.PLAIN));
-        cb.setBounds(x, y, 120, 50);
+        cb.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 17));
+        cb.setBounds(x, y, 90, 50);
         cb.setSelected("1".equals(Settings.prop.get(propertyKey)));
         add(cb);
         return cb;
@@ -301,6 +303,7 @@ public class GeneralSettings extends JPanel {
         Settings.prop.put("logLevel.hex", hexLog.isSelected() ? "1" : "0");
         Settings.prop.put("logLevel.bytes", bytesLog.isSelected() ? "1" : "0");
         Settings.prop.put("logLevel.ascii", asciiLog.isSelected() ? "1" : "0");
+        Settings.prop.put("logLevel.int", intLog.isSelected() ? "1" : "0");
 
         Settings.propEmulator.put("casher.soft", ((String) Objects.requireNonNull(softBox.getSelectedItem())).split(":")[0]);
         Settings.propEmulator.put("login", login.getText());

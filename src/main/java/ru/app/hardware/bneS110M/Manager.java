@@ -21,11 +21,11 @@ public class Manager extends AbstractManager {
         setOpaque(true);
         setBackground(BACKGROUND_COLOR);
         client = new Client(port);
-        struct();
+        content();
     }
 
     @Override
-    public void struct() {
+    public void content() {
         JLabel cmdLabel = formLabel("BNE-S110M", 0);
         add(cmdLabel);
 

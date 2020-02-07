@@ -39,7 +39,7 @@ public class Launcher extends Thread {
     public static void main(String[] args) throws UnsupportedLookAndFeelException, InvocationTargetException, InterruptedException {
         Settings.args = args;
         if (args.length > 0 && args[0].equals("--service")) {
-            new Service();
+            new RmiServer();
         } else {
             UIManager.setLookAndFeel(new NimbusLookAndFeel());
             SwingUtilities.invokeAndWait(new Runnable() {
@@ -90,7 +90,7 @@ public class Launcher extends Thread {
             if (emulPort != null) {
                 mainPanel.setVisible(false);
                 Settings.hardware = DeviceType.EMULATOR;
-                Settings.deviceForEmulator = "CCNET CASHER";
+                Settings.device = "CCNET CASHER";
                 defineManager(new ru.app.hardware.emulator.cashcodeCCNET.Manager(emulPort));
             } else {
                 LOGGER.info("emulPort = null!");

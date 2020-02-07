@@ -27,7 +27,7 @@ public class Client {
         serialPort.setEventsMask(SerialPort.MASK_RXCHAR);
         serialPort.addEventListener(new PortReader());
 
-        System.out.println("Initialization port " + portName + " was succesfull!");
+        LOGGER.info(LogCreator.console("Initialization port " + portName + " was succesfull!"));
     }
 
     synchronized public byte[] sendMessage(Command command) {
