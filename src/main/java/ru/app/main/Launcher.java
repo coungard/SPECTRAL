@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.rmi.RemoteException;
 import java.util.Objects;
 
 public class Launcher extends Thread {
@@ -36,7 +37,7 @@ public class Launcher extends Thread {
     private static final Color BACKGROUND_COLOR = new Color(67, 159, 212);
     private static final Font FONT = new Font(Font.SANS_SERIF, Font.BOLD, 23);
 
-    public static void main(String[] args) throws UnsupportedLookAndFeelException, InvocationTargetException, InterruptedException {
+    public static void main(String[] args) throws UnsupportedLookAndFeelException, InvocationTargetException, InterruptedException, RemoteException {
         Settings.args = args;
         if (args.length > 0 && args[0].equals("--service")) {
             new RmiServer();

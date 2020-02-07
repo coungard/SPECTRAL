@@ -32,37 +32,6 @@ public abstract class AbstractManager extends JLayeredPane {
         scroll.setBounds(30, 140, 960, 390);
         add(scroll);
 
-<<<<<<< HEAD
-        JButton restartButton = new JButton("Restart");
-        restartButton.setBackground(new Color(132, 47, 197));
-        restartButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 23));
-        restartButton.setForeground(Color.WHITE);
-        restartButton.setBounds(30, 530, 200, 40);
-        restartButton.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                try {
-                    Utils.restartApplication(new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                Launcher.main(new String[0]);
-                            } catch (UnsupportedLookAndFeelException | InterruptedException | InvocationTargetException ex) {
-                                ex.printStackTrace();
-                            }
-                        }
-                    }));
-                    closeAll();
-                    System.exit(0);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-        add(restartButton);
-
-=======
->>>>>>> rmi
         final JButton exitButton = new JButton("Exit");
         exitButton.setBackground(new Color(208, 44, 50));
         exitButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 23));
