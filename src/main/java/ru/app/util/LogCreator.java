@@ -51,7 +51,7 @@ public class LogCreator {
 
     private static String log(byte[] buffer, StreamType type) {
         StringBuilder ascii = new StringBuilder();
-        if (Settings.hardware == DeviceType.UCS) {
+        if (Settings.hardware == DeviceType.ACQUIRING) {
             try {
                 ascii.append(new String(buffer, "windows-1251"));
             } catch (UnsupportedEncodingException e) {
@@ -97,7 +97,7 @@ public class LogCreator {
                     }
                 }
                 break;
-            case UCS:
+            case ACQUIRING:
                 if (manager == null)
                     return null;
                 if (type == OUTPUT)

@@ -6,6 +6,7 @@ import ru.app.hardware.AbstractManager;
 import ru.app.protocol.cctalk.Command;
 import ru.app.protocol.cctalk.Nominal;
 import ru.app.protocol.cctalk.hopper.HopperCommand;
+import ru.app.util.CCTalkParser;
 import ru.app.util.LogCreator;
 import ru.app.util.Utils;
 
@@ -13,8 +14,8 @@ import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
 import java.util.Formatter;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -41,7 +42,101 @@ public class Manager extends AbstractManager {
 
         scroll.setBounds(30, 190, 960, 340);
 
-        JButton reset = createButton("Reset", new Point(40, 40));
+        JButton run = createButton("Run Hopper", new Point(40, 40));
+        run.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        interrupted = false;
+                        while (!interrupted) {
+                            client.sendMessage(new Command(HopperCommand.MC_REQUEST_STATUS));
+                            pause(200);
+                        }
+                    }
+                }).start();
+            }
+        });
+
+        JButton stop = createButton("Stop Hopper", new Point(230, 40));
+        stop.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                interrupted = true;
+            }
+        });
+
+        JButton getNotesAmount = createButton("Get Notes Amount", new Point(40, 90));
+        getNotesAmount.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                getNotesAmountMap();
+            }
+        });
+
+        JButton setNotesAmount = createButton("Set Notes Amount", new Point(230, 90));
+        setNotesAmount.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                Map<String, Integer> map = getNotesAmountMap();
+                JFrame frame = new JFrame("Set notes amount");
+                frame.setSize(300, 200);
+                JPanel panel = new JPanel();
+                panel.setBounds(frame.getBounds());
+                panel.setLayout(null);
+                for (int i = 0; i < table.length; i++) {
+                    JLabel coinL = new JLabel("coin " + table[i]);
+                    coinL.setBounds(10, i * 20 + 10, 70, 20);
+                    panel.add(coinL);
+
+                    JTextField field = new JTextField();
+                    field.setBounds(110, i * 20 + 10, 70, 20);
+                    panel.add(field);
+
+                    JLabel amount = new JLabel();
+                    amount.setText(String.valueOf(map.get(table[i])));
+                    amount.setBounds(200, i * 20 + 10, 40, 20);
+                    panel.add(amount);
+
+                    // TODO...
+                }
+                frame.add(panel);
+                frame.setLocationRelativeTo(null);
+                frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                frame.setVisible(true);
+            }
+        });
+
+        JButton payoutAmount = createButton("Payout Amount", new Point(420, 40));
+        payoutAmount.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                String input = JOptionPane.showInputDialog(null, "Enter sum payout");
+                if (!Utils.isNumeric(input)) {
+                    LOGGER.warn(LogCreator.console("Invalid sum entired!"));
+                } else {
+                    byte[] data = buildSum(input);
+                    client.sendMessage(new Command(HopperCommand.PAYOUT_AMOUNT, data));
+                }
+            }
+        });
+
+        JButton getCurrentSum = createButton("Get Current Sum", new Point(420, 90));
+        getCurrentSum.addMouseListener(new MouseInputAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                Map<String, Integer> map = getNotesAmountMap();
+                int sum = 0;
+                for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                    int money = Integer.parseInt(entry.getKey()) * entry.getValue();
+                    sum += money;
+                }
+                JOptionPane.showMessageDialog(null, sum);
+            }
+        });
+
+        JButton reset = createButton("Reset", new Point(610, 40));
         reset.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -49,7 +144,7 @@ public class Manager extends AbstractManager {
             }
         });
 
-        JButton requestSoftware = createButton("Request Software", new Point(230, 40));
+        JButton requestSoftware = createButton("Request Software", new Point(800, 40));
         requestSoftware.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -69,83 +164,35 @@ public class Manager extends AbstractManager {
             }
         });
 
-        JButton getDeviceSetup = createButton("Get Device Setup", new Point(420, 40));
-        getDeviceSetup.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                client.sendMessage(new Command(HopperCommand.MC_GET_DEVICE_SETUP));
-            }
-        });
-
-        JButton payoutAmount = createButton("Payout Amount", new Point(610, 40));
-        payoutAmount.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                String input = JOptionPane.showInputDialog(null, "Enter sum payout");
-                if (!Utils.isNumeric(input)) {
-                    LOGGER.warn(LogCreator.console("Invalid sum entired!"));
-                } else {
-                    byte[] data = buildSum(input);
-                    client.sendMessage(new Command(HopperCommand.PAYOUT_AMOUNT, data));
-                }
-            }
-        });
-
-        JButton setNoteAmount = createButton("Set Note Amount", new Point(800, 40));
-        setNoteAmount.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                Nominal nominal = new Nominal("10");
-                try {
-                    byte[] level = nominal.setLevel(3);
-                    client.sendMessage(new Command(HopperCommand.MC_SET_DENOMINATION_AMOUNT, level));
-                } catch (IOException ex) {
-                    LOGGER.error(LogCreator.console(ex.getMessage()));
-                }
-            }
-        });
-
-        JButton run = createButton("Run Hopper", new Point(40, 90));
-        run.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        interrupted = false;
-                        while (!interrupted) {
-                            client.sendMessage(new Command(HopperCommand.MC_REQUEST_STATUS));
-                            pause(200);
-                        }
-                    }
-                }).start();
-            }
-        });
-
-        JButton stop = createButton("Stop Hopper", new Point(230, 90));
-        stop.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                interrupted = true;
-            }
-        });
-
-        JButton getNoteAmount = createButton("Get Notes Amount", new Point(420, 90));
-        getNoteAmount.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                for (String sum : table) {
-                    Nominal nominal = new Nominal(sum);
-                    byte[] amount = client.sendMessage(new Command(HopperCommand.MC_GET_NOTE_AMOUNT, nominal.getValue()));
-                    // todo... parse amount
-                }
-            }
-        });
-
         cash.put("1", 0);
         cash.put("2", 0);
         cash.put("5", 0);
         cash.put("10", 0);
+    }
+
+    private Map<String, Integer> getNotesAmountMap() {
+        Map<String, Integer> result = new HashMap<>();
+        for (String note : table) {
+            Nominal nominal = new Nominal(note);
+            Command command = new Command(HopperCommand.MC_GET_NOTE_AMOUNT, nominal.getValue());
+            byte[] resp = client.sendMessage(command);
+            String logic = CCTalkParser.parseCC2(command, resp);
+            int amount = getAmount(logic);
+            result.put(note, amount);
+        }
+        return result;
+    }
+
+    private int getAmount(String text) {
+        int result = 0;
+        try {
+            String[] parts = text.split(" ");
+            if (parts[0].equals("Amount")) {
+                result = Integer.parseInt(parts[1]);
+            }
+        } catch (Exception ignored) {
+        }
+        return result;
     }
 
     private byte[] buildSum(String input) {

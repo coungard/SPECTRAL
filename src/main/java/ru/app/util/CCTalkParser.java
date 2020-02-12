@@ -52,13 +52,12 @@ public abstract class CCTalkParser {
                 Utils.reverse(tmp);
                 int amount = ByteBuffer.wrap(tmp).getInt();
 
-                return "Amount [" + amount + "]";
+                return "Amount " + amount;
             } else {
-                LOGGER.warn("Invalid note length amount!");
                 return "Invalid note length amount!";
             }
         }
-        return null;
+        return "";
     }
 
     private static String parseNAK(byte[] data) {
@@ -81,15 +80,12 @@ public abstract class CCTalkParser {
      */
     private static String checkValid(byte[] msg) {
         if (msg.length < DEFAULT_LENGTH) {
-            LOGGER.warn("Invalid message length!");
             return "Invalid message length!";
         }
         if (msg[0] != SOURCE_ADDRESS || msg[2] != DESTINATION_ADDRESS) {
-            LOGGER.warn("Invalid Device Address!");
             return "Invalid Device Address!";
         }
         if (msg.length - DEFAULT_LENGTH != msg[1]) {
-            LOGGER.warn("Invalid! Сurrent length differs from declared!");
             return "Invalid! Сurrent length differs from declared!";
         }
         byte[] content = new byte[msg.length - 1];

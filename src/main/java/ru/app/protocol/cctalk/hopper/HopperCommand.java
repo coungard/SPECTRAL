@@ -15,7 +15,9 @@ public enum HopperCommand implements CCTalkCommand {
     MC_GET_DEVICE_SETUP((byte) 0x2E), // 46,
     MC_SET_DENOMINATION_AMOUNT((byte) 0x2B), // 43,
     MC_GET_NOTE_AMOUNT((byte) 0x2A), // 42
+    MC_GET_MINIMUM_PAYOUT((byte) 0x29), // 41
     RequestStatus((byte) 0x1D), // 29
+    GetMinimumPayout((byte) 0x19), // 25
     PAYOUT_AMOUNT((byte) 0x16), // 22,
     RequestCommsRevision((byte) 0x04),
     ResetDevice((byte) 1);

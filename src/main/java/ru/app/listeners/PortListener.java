@@ -44,7 +44,7 @@ public class PortListener extends MouseInputAdapter {
                             break;
                     }
                     break;
-                case UCS:
+                case ACQUIRING:
                     Launcher.defineManager(new ru.app.hardware.ucs.Manager(portName));
                     break;
             }

@@ -73,4 +73,6 @@ public class Nominal {
     public void setCountry(String country) {
         this.country = country;
     }
+
+
 }

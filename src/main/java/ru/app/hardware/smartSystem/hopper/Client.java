@@ -6,6 +6,7 @@ import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
 import org.apache.log4j.Logger;
 import ru.app.protocol.cctalk.Command;
+import ru.app.protocol.cctalk.hopper.HopperCommand;
 import ru.app.util.LogCreator;
 import ru.app.util.StreamType;
 import ru.app.util.Utils;
@@ -84,19 +85,20 @@ public class Client {
         public void serialEvent(SerialPortEvent event) {
             if (event.getEventType() == SerialPortEvent.RXCHAR) {
                 try {
-                    received = serialPort.readBytes();
+                    byte[] input = serialPort.readBytes();
                     boolean reply = true;
                     ByteArrayOutputStream msg = new ByteArrayOutputStream();
-                    for (int i = 0; i < received.length; i++) {
+                    for (int i = 0; i < input.length; i++) {
                         if (i < transmit.length) {
-                            if (transmit[i] != received[i])
+                            if (transmit[i] != input[i])
                                 reply = false;
                         } else
-                            msg.write(received[i]);
+                            msg.write(input[i]);
                     }
                     if (!reply)
                         LOGGER.error(LogCreator.console("No reply from hopper!"));
 
+                    received = msg.toByteArray();
                     if (accessLog(received, StreamType.INPUT))
                         LOGGER.debug(LogCreator.logInput(msg.toByteArray()));
                 } catch (SerialPortException ex) {
@@ -107,6 +109,9 @@ public class Client {
     }
 
     private boolean accessLog(byte[] buffer, StreamType type) {
+        if (hopperCommand.getCommandType() != HopperCommand.MC_REQUEST_STATUS) {
+            return true;
+        }
         switch (type) {
             case INPUT:
                 if (!Arrays.equals(buffer, receivedTmp)) {
