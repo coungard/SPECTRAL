@@ -361,4 +361,16 @@ public class Utils {
         }
         return true;
     }
+
+    public static boolean isNumber(String num) {
+        if (num == null) {
+            return false;
+        }
+        try {
+            double d = Double.parseDouble(num);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
+    }
 }

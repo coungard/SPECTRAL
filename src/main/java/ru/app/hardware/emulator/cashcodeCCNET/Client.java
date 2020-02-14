@@ -1,7 +1,6 @@
 package ru.app.hardware.emulator.cashcodeCCNET;
 
 import jssc.*;
-import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.apache.log4j.Logger;
 import ru.app.main.Settings;
 import ru.app.protocol.ccnet.BillStateType;
@@ -16,12 +15,7 @@ import ru.app.util.LogCreator;
 import ru.app.util.StreamType;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
@@ -53,8 +47,8 @@ public class Client {
     private volatile boolean depositEnded = false;
     private volatile boolean nominalStacked = false;
 
-    private static final SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
-    private volatile String denomValue;
+//    private static final SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+//    private volatile String denomValue;
 
     public Client(String portName, ManagerListener listener) {
         serialPort = new SerialPort(portName);
@@ -97,7 +91,7 @@ public class Client {
                 for (Map.Entry<String, byte[]> entry : billTable.entrySet()) {
                     if (Arrays.equals(entry.getValue(), currentDenom)) {
                         currentResponse += " [" + entry.getKey() + "]"; // example: BillStacked [100]
-                        denomValue = entry.getKey();
+//                        denomValue = entry.getKey();
                         break;
                     }
                 }
@@ -326,14 +320,6 @@ public class Client {
             @Override
             public void run() {
                 try {
-                    Date date = new Date();
-                    String log = Settings.qiwiLogPath + formatter.format(date) + ".log";
-                    boolean qiwiLogExists = true;
-                    if (!Files.exists(Paths.get(log))) {
-                        LOGGER.warn(LogCreator.console("Not found qiwi log file!"));
-                        qiwiLogExists = false;
-                    }
-
                     setStatus(BillStateType.Accepting);
                     Thread.sleep(1000);
                     setStatus(BillStateType.EscrowPosition);
@@ -354,33 +340,7 @@ public class Client {
                             Thread.sleep(20);
                         } while (!nominalStacked && System.currentTimeMillis() - start < 10000);
                         if (nominalStacked) {
-                            if (qiwiLogExists) {
-                                boolean success = false;
-                                File qiwiLog = Paths.get(log).toFile();
-                                // проверка последних 10 строчек qiwi лога
-                                lineReader:
-                                for (int k = 0; k < 3; k++) {
-                                    ReversedLinesFileReader reader = new ReversedLinesFileReader(qiwiLog, Charset.forName("windows-1251"));
-                                    for (int i = 0; i < 10; i++) {
-                                        String line = reader.readLine();
-                                        if (line != null && (line.contains("Принята купюра " + denomValue) ||
-                                                line.contains("Принята монета " + denomValue))) {
-                                            success = true;
-                                            reader.close();
-                                            break lineReader;
-                                        }
-                                        reader.close();
-                                    }
-                                    Thread.sleep(1000);
-                                }
-                                if (success) {
-                                    LOGGER.info(LogCreator.console("Deposit " + denomValue + " successfull"));
-                                } else {
-                                    LOGGER.warn(LogCreator.console("Deposit " + denomValue + " not sended!"));
-                                }
-                            } else {
-                                LOGGER.info(LogCreator.console("Deposit nominal successfull!"));
-                            }
+                            LOGGER.info(LogCreator.console("Deposit nominal successfull!"));
                             setStatus(BillStateType.Idling);
                             depositEnded = true;
                         } else {
@@ -393,8 +353,6 @@ public class Client {
                     LOGGER.error(LogCreator.console(ex.getMessage()));
                     setStatus(BillStateType.Idling);
                     depositEnded = true;
-                } catch (IOException ex) {
-                    LOGGER.error(LogCreator.console(ex.getMessage()));
                 }
             }
         }).start();

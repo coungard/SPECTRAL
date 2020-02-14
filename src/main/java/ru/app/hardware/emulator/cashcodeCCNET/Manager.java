@@ -217,8 +217,8 @@ public class Manager extends AbstractManager {
                                 payFile = new File(Settings.paymentPath);
                                 Helper.saveProp(payProperties, payFile);
 
-                                boolean access = waitFor(Status.COMPLETED);
-                                if (!access) continue;
+                                boolean desired = waitFor(Status.COMPLETED);
+                                if (!desired) continue;
 
                                 boolean idling = waitFor2(BillStateType.Idling);
                                 if (!idling) continue;
@@ -262,8 +262,8 @@ public class Manager extends AbstractManager {
                                     continue;
                                 }
 
-                                access = waitFor(Status.SUCCESS);
-                                if (access) {
+                                desired = waitFor(Status.SUCCESS);
+                                if (desired) {
                                     LOGGER.info(LogCreator.console("Payment successfully complete!"));
                                     Helper.saveFile(payment, Status.SUCCESS);
                                     String request = requester.sendStatus(payment, Status.SUCCESS);

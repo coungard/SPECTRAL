@@ -53,6 +53,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
     private String oldStatus = "";
     private File payFile;
     private boolean cassetteOut;
+    private boolean requesterStarted;
 
     public RmiServer() throws RemoteException {
         String log4jPath = System.getProperty("os.name").contains("Linux") ? "log4j.xml" : "log4j_win.xml";
@@ -101,6 +102,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
         requester = new Requester(URL);
         billTable = new BillTable().getTable();
         LOGGER.info("Emulator properties: " + Settings.propEmulator);
+        startRMI();
         startProcess();
     }
 
@@ -164,8 +166,8 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                     LOGGER.error("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!");
                 } else {
                     LOGGER.info("Identification command received. 10 minutes waiting for repaints...");
-                    Thread.sleep(60000 * 10); // wait after terminal send command Identefication
-                    startRequester();
+                    Thread.sleep(60000 * 10); // wait after terminal send command Identification
+                    if (!requesterStarted) startRequester();
                 }
             } else {
                 LOGGER.error("Can not starting bot!");
@@ -177,6 +179,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
 
     private void startRequester() {
         LOGGER.info("Requester loop started");
+        requesterStarted = true;
         while (true) {
             try {
                 Thread.sleep(3000);
@@ -366,7 +369,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
     }
 
     @Override
-    public String send(final String command) throws RemoteException {
+    public String send(final String command) {
         final String[] answer = {null};
         Thread rmiThread = new Thread(new Runnable() {
             @Override
@@ -386,20 +389,34 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                         }
                         break;
                     case "bill":
-                        answer[0] = "bill nominal insert operation under development.";
+                        answer[0] = "Bill nominal insert operation under development.";
                         // todo...
+                        break;
+                    case "requester":
+                        if (requesterStarted) {
+                            answer[0] = "Requester already started.";
+                        } else {
+                            answer[0] = "Requester starting...";
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    startRequester();
+                                }
+                            }).start();
+                        }
                         break;
                     default:
                         answer[0] = "unknown command";
                 }
             }
         });
-        rmiThread.start();
         try {
+            rmiThread.start();
             rmiThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException ex) {
+            LOGGER.error(ex.getMessage(), ex);
         }
+        LOGGER.info("Returned to RmiClient: " + answer[0]);
         return answer[0];
     }
 

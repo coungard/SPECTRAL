@@ -1,5 +1,7 @@
 package ru.app.network.rmi;
 
+import ru.app.main.Settings;
+
 import java.io.UnsupportedEncodingException;
 import java.rmi.Naming;
 import java.rmi.RMISecurityManager;
@@ -27,6 +29,7 @@ public class RmiClient {
             System.setSecurityManager(new RMISecurityManager());
         }
         RmiClient cli = new RmiClient();
+        System.out.println("RmiClient v." + Settings.VERSION + " started!");
         while (true) {
             System.out.println("Enter the command for emulator:");
             String command = scanner.nextLine();

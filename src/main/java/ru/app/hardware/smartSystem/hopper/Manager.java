@@ -14,6 +14,7 @@ import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -80,11 +81,14 @@ public class Manager extends AbstractManager {
             @Override
             public void mousePressed(MouseEvent e) {
                 Map<String, Integer> map = getNotesAmountMap();
-                JFrame frame = new JFrame("Set notes amount");
+                final JFrame frame = new JFrame("Set notes amount");
                 frame.setSize(300, 200);
                 JPanel panel = new JPanel();
                 panel.setBounds(frame.getBounds());
                 panel.setLayout(null);
+
+                final JTextField[] coinFields = new JTextField[table.length];
+
                 for (int i = 0; i < table.length; i++) {
                     JLabel coinL = new JLabel("coin " + table[i]);
                     coinL.setBounds(10, i * 20 + 10, 70, 20);
@@ -93,17 +97,43 @@ public class Manager extends AbstractManager {
                     JTextField field = new JTextField();
                     field.setBounds(110, i * 20 + 10, 70, 20);
                     panel.add(field);
+                    coinFields[i] = field;
 
                     JLabel amount = new JLabel();
                     amount.setText(String.valueOf(map.get(table[i])));
                     amount.setBounds(200, i * 20 + 10, 40, 20);
                     panel.add(amount);
-
-                    // TODO...
                 }
+                JButton save = new JButton("Save");
+                save.setBounds(20, 120, 100, 30);
+                panel.add(save);
+                save.addMouseListener(new MouseInputAdapter() {
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                        for (int i = 0; i < table.length; i++) {
+                            JTextField field = coinFields[i];
+                            if (Utils.isNumber(field.getText())) {
+                                setNoteAmount(table[i], Integer.parseInt(field.getText()));
+                            }
+                        }
+                        frame.dispose();
+                        JOptionPane.showMessageDialog(null, "Saved");
+                    }
+                });
+
+                JButton back = new JButton("Back");
+                back.setBounds(200, 120, 100, 30);
+                panel.add(back);
+                back.addMouseListener(new MouseInputAdapter() {
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                        frame.dispose();
+                    }
+                });
+
                 frame.add(panel);
                 frame.setLocationRelativeTo(null);
-                frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                 frame.setVisible(true);
             }
         });
@@ -168,6 +198,18 @@ public class Manager extends AbstractManager {
         cash.put("2", 0);
         cash.put("5", 0);
         cash.put("10", 0);
+    }
+
+    private void setNoteAmount(String note, int count) {
+        LOGGER.info("Add note: " + note + " count: " + count);
+        try {
+            Nominal nominal = new Nominal(note);
+            byte[] amountNote;
+            amountNote = nominal.setLevel(count);
+            client.sendMessage(new Command(HopperCommand.MC_SET_DENOMINATION_AMOUNT, amountNote));
+        } catch (IOException e) {
+            LOGGER.error(LogCreator.console(e.getMessage()), e);
+        }
     }
 
     private Map<String, Integer> getNotesAmountMap() {
