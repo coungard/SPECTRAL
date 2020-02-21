@@ -1,4 +1,4 @@
-package ru.app.protocol.ucs.classTypes;
+package ru.app.protocol.ucs.commands;
 
 import ru.app.protocol.ucs.ClassType;
 

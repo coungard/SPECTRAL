@@ -1,23 +1,20 @@
-package ru.app.protocol.ucs.classTypes;
+package ru.app.protocol.ucs.commands;
 
 import ru.app.protocol.ucs.ClassType;
 
-public class Message implements ClassType {
+public class AuthorizationAnswer implements ClassType {
 
     private Operation operation;
     private byte operationCode;
 
-    public Message(Operation operation) {
+    public AuthorizationAnswer(Operation operation) {
         this.operation = operation;
         this.operationCode = operation.code;
     }
 
     public enum Operation {
 
-        DirectMessageToTheHost((byte) 0x00),        // сообщение, передаваемое без изменений на авторизационный сервер
-        DirectMessageFromTheHost((byte) 0x01),      // сообщение, полученное от авторизационного сервера
-        DirectMessageToTheEFTPOS((byte) 0x02),      // сообщение, передаваемое без изменений на EFTPOS устройство
-        DirectMessageFromTheEFTPOS((byte) 0x03);    // сообщение, полученное от EFTPOS устройстваД
+        AuthorizationResponse((byte) 0x00);     // авторизационный ответ/детальный отчет о транзакции
 
         private final byte code;
 
@@ -28,7 +25,7 @@ public class Message implements ClassType {
 
     @Override
     public byte getOperationClass() {
-        return (byte) 0x37;
+        return (byte) 0x36;
     }
 
     @Override
@@ -47,7 +44,7 @@ public class Message implements ClassType {
 
     @Override
     public String toString() {
-        return "Message{" +
+        return "AuthorizationAnswer{" +
                 "operation=" + operation +
                 '}';
     }
