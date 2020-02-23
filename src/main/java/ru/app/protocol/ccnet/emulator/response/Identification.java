@@ -96,6 +96,26 @@ public class Identification extends EmulatorCommand {
         softwareMap.put("38", "P/N=SM-RU1353, S/N=39K813067761, A/N=-51.2.77.83.19.8.-16");
         softwareMap.put("39", "P/N=SM-RU1353, S/N=21KD39035248, A/N=-10.72.77.83.19.19.-16");
         softwareMap.put("40", "P/N=SM-RU1353, S/N=21K945016308, A/N=31.2.77.83.5.49.-16");
+        softwareMap.put("41", "P/N=SM-RU1353, S/N=21K842041343, A/N=77.8.77.83.4.88.-16");
+        softwareMap.put("42", "P/N=SM-RU1353, S/N=21KA37033239, A/N=80.2.77.83.55.16.-16");
+        softwareMap.put("43", "P/N=SM-RU1353, S/N=21KB23025110, A/N=73.1.77.83.25.17.-16");
+        softwareMap.put("44", "P/N=SM-RU1353, S/N=39K733038363, A/N=79.8.77.83.40.7.-16");
+        softwareMap.put("45", "P/N=SM-RU1353, S/N=21K839035787, A/N=-26.0.77.83.53.8.-16");
+        softwareMap.put("46", "P/N=SM-RU1353, S/N=21KC33027858, A/N=-83.0.77.83.50.18.-16");
+        softwareMap.put("47", "P/N=SM-RU1353, S/N=21K946019476, A/N=92.1.77.83.7.19.-16");
+        softwareMap.put("48", "P/N=SM-RU1353, S/N=21K843042889, A/N=36.4.77.83.6.78.-16");
+        softwareMap.put("49", "P/N=SM-RU1353, S/N=21KA06005913, A/N=42.2.77.83.21.6.-16");
+        softwareMap.put("50", "P/N=SM-RU1353, S/N=21KC09009725, A/N=58.0.77.83.41.8.-16");
+        softwareMap.put("51", "P/N=SM-RU1353, S/N=21K826011890, A/N=25.0.77.83.48.8.-16");
+        softwareMap.put("52", "P/N=SM-RU1353, S/N=21KB18019464, A/N=40.0.77.83.19.17.-16");
+        softwareMap.put("53", "P/N=SM-RU1353, S/N=39K818071767, A/N=10.57.77.83.22.8.-16");
+        softwareMap.put("54", "P/N=SM-RU1353, S/N=67K802004047, A/N=47.1.77.83.54.7.-16");
+        softwareMap.put("55", "P/N=SM-RU1353, S/N=39K717024675, A/N=45.0.77.83.22.7.-16");
+        softwareMap.put("56", "P/N=SM-RU1353, S/N=39K734039522, A/N=-51.5.77.83.68.7.-16");
+        softwareMap.put("57", "P/N=SM-RU1353, S/N=21KA45044177, A/N=-11.23.77.83.17.8.-16");
+        softwareMap.put("58", "P/N=SM-RU1353, S/N=21KC20017197, A/N=-28.2.77.83.25.18.-16");
+        softwareMap.put("59", "P/N=SM-RU1353, S/N=21K942013427, A/N=10.35.77.83.8.29.-16");
+        softwareMap.put("60", "P/N=SM-RU1353, S/N=21KD41035660, A/N=-63.1.77.83.82.18.-14");
     }
 
     public static Map<String, String> getSoftwareMap() {
