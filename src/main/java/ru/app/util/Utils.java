@@ -159,7 +159,7 @@ public class Utils {
         return hexString.toString();
     }
 
-    static void reverse(byte[] array) {
+    public static void reverse(byte[] array) {
         if (array != null) {
             int i = 0;
 
@@ -372,5 +372,19 @@ public class Utils {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Данный метод принимает на вход массив байтов и возвращает строку представления Character в русской кодировке
+     */
+    public static String getAsciiFromBuffer(byte[] buffer) {
+        StringBuilder ascii = new StringBuilder();
+        try {
+            ascii.append(new String(buffer, "windows-1251"));
+        } catch (UnsupportedEncodingException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            return null;
+        }
+        return ascii.toString();
     }
 }

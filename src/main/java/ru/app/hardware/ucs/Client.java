@@ -39,6 +39,9 @@ public class Client implements SerialPortEventListener {
     private String currentCommand;
     private String currentResponse;
 
+    private String response;
+    private String currentMessage;
+
     Client(String portName) throws SerialPortException {
         serialPort = new SerialPort(portName);
         serialPort.openPort();
@@ -51,7 +54,7 @@ public class Client implements SerialPortEventListener {
         serialPort.setEventsMask(SerialPort.MASK_RXCHAR);
         serialPort.addEventListener(this);
 
-        LOGGER.info(LogCreator.console("Initialization port " + portName + " was succesfull!"));
+        LOGGER.info(LogCreator.console("Port " + portName + " initialized"));
     }
 
     private synchronized void sendPacket(byte[] packet) {
@@ -145,19 +148,28 @@ public class Client implements SerialPortEventListener {
         return false;
     }
 
-    // Формируем message для отправки сообщения на EFTPOS сессии
+    /**
+     * <p>Формирование сообщения по протоколу EFT-POS, в который не входят дефолтные DLE/ETX/STX/ENQ/ACK/LRC символы, использующиеся
+     * для инициации начала/конца сообщения, очереди, контрольной суммы и т.д.</p><br> Сообщение делится на 5 частей:
+     * <ol><li>Class | 1 Char | 1 байт. Класс операции </li>
+     * <li>Code | 1 Char | 1 байт. Код операции </li>
+     * <li>Terminal ID | 10 Numeric | 10 байт. Идентификатор терминала, присваивается эквайрером</li>
+     * <li>Length | 2 Char | 2 байта. Длина последующего поля с данными</li>
+     * <li>Data | Length Alpha | n bytes. Поле с данными</li></ol>
+     *
+     * @param command UCS команда
+     * @return сформированный пакет данных
+     * @throws IOException if shit happens
+     */
     private byte[] formPacket(UCSCommand command) throws IOException {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
-
         byte classType = command.getClassType().getOperationClass();
         byte operationCode = command.getClassType().getOperationCode();
         result.write(classType);
         result.write(operationCode);
-
         byte[] tid = TERMINAL_ID.getBytes();
         result.write(tid);
         byte[] len = Utils.getASCIIlength(command.getData().length);
-        if (classType == (byte) 0x31) len = new byte[]{(byte) '0', (byte) 'C'};
         result.write(len);
         result.write(command.getData());
 
@@ -171,15 +183,14 @@ public class Client implements SerialPortEventListener {
                 received = serialPort.readBytes();
                 currentResponse = ResponseHandler.parseUCS(received);
                 LOGGER.debug(LogCreator.logInput(received));
-
-                if (received != null) formAnswer(received);
+                if (received != null) parsing(received);
             } catch (SerialPortException ex) {
                 LOGGER.error(LogCreator.console(ex.getMessage()), ex);
             }
         }
     }
 
-    private void formAnswer(byte[] received) {
+    private void parsing(byte[] received) {
         if (received.length == 1) {
             switch (received[0]) {
                 case ENQ:
@@ -192,19 +203,20 @@ public class Client implements SerialPortEventListener {
                 case NAC:
                     break;
                 default:
-                    LOGGER.error(LogCreator.console("INVALID BYTE FROM POST TERMINAL!"));
+                    LOGGER.error("INVALID BYTE FROM POST TERMINAL!");
             }
         } else {
+            boolean incorrect = false;
             byte[] start = new byte[]{received[0], received[1]};
             if (!Arrays.equals(start, new byte[]{DLE, STX})) {
-                LOGGER.error(LogCreator.console("Wrong starting DLE/STX bytes from POST Terminal!"));
-                return;
+                LOGGER.error("Wrong starting DLE/STX bytes from POST Terminal!");
+                incorrect = true;
             }
 
             byte[] end = new byte[]{received[received.length - 3], received[received.length - 2]};
             if (!Arrays.equals(end, new byte[]{DLE, ETX})) {
-                LOGGER.error(LogCreator.console("Wrong ending DLE/ETX bytes from POST Terminal!"));
-                return;
+                LOGGER.error("Wrong ending DLE/ETX bytes from POST Terminal!");
+                incorrect = true;
             }
 
             ByteArrayOutputStream msg = new ByteArrayOutputStream();
@@ -214,12 +226,50 @@ public class Client implements SerialPortEventListener {
             byte lrc = Utils.getLRC(msg.toByteArray());
 
             if (lrc != received[received.length - 1]) {
-                LOGGER.error(LogCreator.console("Wrong lrc from POST Terminal!"));
-                return;
+                LOGGER.error("Wrong lrc from POST Terminal!");
+                incorrect = true;
             }
 
-            sendACK();
+            ByteArrayOutputStream logic = new ByteArrayOutputStream();
+            if (msg.size() > 14) {
+                byte[] logicArray = msg.toByteArray();
+                for (int i = 14; i < logicArray.length; i++) {
+                    logic.write(logicArray[i]);
+                }
+                String temp = Utils.getAsciiFromBuffer(logic.toByteArray());
+                if (temp != null && !temp.startsWith("1"))
+                    currentMessage = temp;
+            }
+
+            if (received.length > 4)
+                response = "" + (char) received[2] + (char) received[3];
+            if (!incorrect && response != null && !response.equals("")) {
+                LOGGER.info(LogCreator.console("response = " + response + (currentMessage == null ? "" : " , message = " + currentMessage)));
+                sendACK();
+            }
         }
+
+
+//        switch (response) { // todo...
+//            case "":
+//                break;
+//            case "31":
+//            case "51":
+//            case "54":
+//                LOGGER.info("Timeout 3 sec");
+//                Thread.sleep(3000);
+//                break;
+//            case "60":
+//            case "32":
+//                LOGGER.info("Timeout 10 sec");
+//                Thread.sleep(10000);
+//                break;
+//            case "5X":
+//                LOGGER.info("Timeout 15 sec");
+//                Thread.sleep(15000);
+//                break;
+//        }
+        response = "";
     }
 
     void close() throws SerialPortException {
