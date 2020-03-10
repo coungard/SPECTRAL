@@ -6,23 +6,23 @@ import ru.app.util.Utils;
  * Команда протокола
  */
 public class Command {
-    private CCTalkCommand commandType;
+    private CCTalkCommandType commandType;
     private byte[] data;
 
-    public Command(CCTalkCommand commandType) {
+    public Command(CCTalkCommandType commandType) {
         this.commandType = commandType;
     }
 
-    public Command(CCTalkCommand commandType, byte[] data) {
+    public Command(CCTalkCommandType commandType, byte[] data) {
         this.commandType = commandType;
         this.data = data;
     }
 
-    public CCTalkCommand getCommandType() {
+    public CCTalkCommandType getCommandType() {
         return commandType;
     }
 
-    public void setCommandType(CCTalkCommand commandType) {
+    public void setCommandType(CCTalkCommandType commandType) {
         this.commandType = commandType;
     }
 

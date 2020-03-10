@@ -2,8 +2,8 @@ package ru.app.util;
 
 import org.apache.log4j.Logger;
 import ru.app.protocol.cctalk.CCTalkCommand;
+import ru.app.protocol.cctalk.CCTalkCommandType;
 import ru.app.protocol.cctalk.Command;
-import ru.app.protocol.cctalk.hopper.HopperCommand;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -41,11 +41,11 @@ public abstract class CCTalkParser {
     }
 
     private static String parseData(Command command, byte[] data) {
-        CCTalkCommand ccTalkCommand = command.getCommandType();
+        CCTalkCommandType ccTalkCommand = command.getCommandType();
         byte[] commandData = command.getData();
 
-        HopperCommand hope = HopperCommand.valueOf(ccTalkCommand.getCode());
-        if (hope == HopperCommand.MC_GET_NOTE_AMOUNT) {
+        CCTalkCommand cct = CCTalkCommand.valueOf(ccTalkCommand.getCode());
+        if (cct == CCTalkCommand.MC_GET_NOTE_AMOUNT) {
             if (data.length == 2) {
                 byte[] tmp = new byte[4];
                 System.arraycopy(data, 0, tmp, 0, data.length);

@@ -12,7 +12,7 @@ import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 
-import static ru.app.protocol.cctalk.payout.PayoutCommands.*;
+import static ru.app.protocol.cctalk.CCTalkCommand.*;
 
 public class Manager extends AbstractManager {
     private static final Logger LOGGER = Logger.getLogger(Manager.class);

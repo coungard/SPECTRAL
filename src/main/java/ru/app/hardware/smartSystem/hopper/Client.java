@@ -5,8 +5,8 @@ import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
 import org.apache.log4j.Logger;
+import ru.app.protocol.cctalk.CCTalkCommand;
 import ru.app.protocol.cctalk.Command;
-import ru.app.protocol.cctalk.hopper.HopperCommand;
 import ru.app.util.LogCreator;
 import ru.app.util.StreamType;
 import ru.app.util.Utils;
@@ -109,7 +109,7 @@ public class Client {
     }
 
     private boolean accessLog(byte[] buffer, StreamType type) {
-        if (hopperCommand.getCommandType() != HopperCommand.MC_REQUEST_STATUS) {
+        if (hopperCommand.getCommandType() != CCTalkCommand.MC_REQUEST_STATUS) {
             return true;
         }
         switch (type) {

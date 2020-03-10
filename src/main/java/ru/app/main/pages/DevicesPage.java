@@ -51,7 +51,7 @@ public class DevicesPage extends JPanel {
                 }
                 break;
             case "SMART_SYSTEM":
-                final String[] smartDevices = new String[]{"SMART_PAYOUT", "SMART_HOPPER"};
+                final String[] smartDevices = new String[]{"SMART_PAYOUT", "SMART_HOPPER", "BV_20"};
                 for (int j = 0; j < smartDevices.length; j++) {
                     JButton button = new JButton(smartDevices[j]);
                     button.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 23));
@@ -77,6 +77,7 @@ public class DevicesPage extends JPanel {
         label.setBounds(0, y, Settings.dimension.width, 40);
         label.setHorizontalAlignment(SwingConstants.CENTER);
         label.setVerticalAlignment(SwingConstants.CENTER);
+        add(label);
         return label;
     }
 }

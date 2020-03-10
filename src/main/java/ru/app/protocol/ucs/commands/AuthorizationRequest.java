@@ -18,10 +18,10 @@ public class AuthorizationRequest implements ClassType {
         MailOrder((byte) '3'),             // заказ по почте/телефону (клиент и карта отсутствуют)
         Credit((byte) '4'),                // возврат денег на счет клиента
         ElectronicCommerce((byte) '5'),    // продажа товаров и услуг через Internet
-        OfflineSale((byte) 0x06),           // введение транзакции после голосовой авторизации
-        OfflineCash((byte) 0x07),           // выдача наличных после голосовой авторизации
-        Recurring((byte) 0x08),             // регулярная транзакция
-        Void((byte) 0x09),                  // отмена транзакции
+        OfflineSale((byte) '6'),           // введение транзакции после голосовой авторизации
+        OfflineCash((byte) '7'),           // выдача наличных после голосовой авторизации
+        Recurring((byte) '8'),             // регулярная транзакция
+        Void((byte) '9'),                  // отмена транзакции
         ReversalOfSale((byte) 0x0A),        // онлайн отмена продажи
         ReversalOfCredit((byte) 0x0B),      // онлайн отмена кредитовой транзакции
         ReversalOfCash((byte) 0x0C),        // онлайн отмена выдачи наличных

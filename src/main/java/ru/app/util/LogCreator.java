@@ -45,7 +45,7 @@ public class LogCreator {
 
     public static String logInput(byte[] received, byte[] decrypted) {
         String res = log(received, INPUT);
-        if (decrypted != null) res += log(decrypted, INPUT_DECRYPT);
+        if (decrypted != null) res += "\t" + log(decrypted, INPUT_DECRYPT);
         return res;
     }
 

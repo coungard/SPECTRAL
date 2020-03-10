@@ -3,9 +3,9 @@ package ru.app.hardware.smartSystem.hopper;
 import jssc.SerialPortException;
 import org.apache.log4j.Logger;
 import ru.app.hardware.AbstractManager;
+import ru.app.protocol.cctalk.CCTalkCommand;
 import ru.app.protocol.cctalk.Command;
 import ru.app.protocol.cctalk.Nominal;
-import ru.app.protocol.cctalk.hopper.HopperCommand;
 import ru.app.util.CCTalkParser;
 import ru.app.util.LogCreator;
 import ru.app.util.Utils;
@@ -52,7 +52,7 @@ public class Manager extends AbstractManager {
                     public void run() {
                         interrupted = false;
                         while (!interrupted) {
-                            client.sendMessage(new Command(HopperCommand.MC_REQUEST_STATUS));
+                            client.sendMessage(new Command(CCTalkCommand.MC_REQUEST_STATUS));
                             pause(200);
                         }
                     }
@@ -147,7 +147,7 @@ public class Manager extends AbstractManager {
                     LOGGER.warn(LogCreator.console("Invalid sum entired!"));
                 } else {
                     byte[] data = buildSum(input);
-                    client.sendMessage(new Command(HopperCommand.PAYOUT_AMOUNT, data));
+                    client.sendMessage(new Command(CCTalkCommand.PayoutAmount, data));
                 }
             }
         });
@@ -170,7 +170,7 @@ public class Manager extends AbstractManager {
         reset.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                client.sendMessage(new Command(HopperCommand.ResetDevice));
+                client.sendMessage(new Command(CCTalkCommand.ResetDevice));
             }
         });
 
@@ -178,19 +178,19 @@ public class Manager extends AbstractManager {
         requestSoftware.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                client.sendMessage(new Command(HopperCommand.SimplePoll));
+                client.sendMessage(new Command(CCTalkCommand.SimplePoll));
                 pause(40);
-                client.sendMessage(new Command(HopperCommand.RequestEquipmentCategoryID));
+                client.sendMessage(new Command(CCTalkCommand.RequestEquipmentCategoryID));
                 pause(40);
-                client.sendMessage(new Command(HopperCommand.RequestManufacturerID));
+                client.sendMessage(new Command(CCTalkCommand.RequestManufacturerID));
                 pause(40);
-                client.sendMessage(new Command(HopperCommand.RequestCommsRevision));
+                client.sendMessage(new Command(CCTalkCommand.RequestCommsRevision));
                 pause(40);
-                client.sendMessage(new Command(HopperCommand.RequestProductCode));
+                client.sendMessage(new Command(CCTalkCommand.RequestProductCode));
                 pause(40);
-                client.sendMessage(new Command(HopperCommand.RequestAddressMode));
+                client.sendMessage(new Command(CCTalkCommand.RequestAddressMode));
                 pause(40);
-                client.sendMessage(new Command(HopperCommand.RequestSoftwareRevision));
+                client.sendMessage(new Command(CCTalkCommand.RequestSoftwareRevision));
             }
         });
 
@@ -206,7 +206,7 @@ public class Manager extends AbstractManager {
             Nominal nominal = new Nominal(note);
             byte[] amountNote;
             amountNote = nominal.setLevel(count);
-            client.sendMessage(new Command(HopperCommand.MC_SET_DENOMINATION_AMOUNT, amountNote));
+            client.sendMessage(new Command(CCTalkCommand.MC_SET_DENOMINATION_AMOUNT, amountNote));
         } catch (IOException e) {
             LOGGER.error(LogCreator.console(e.getMessage()), e);
         }
@@ -216,7 +216,7 @@ public class Manager extends AbstractManager {
         Map<String, Integer> result = new HashMap<>();
         for (String note : table) {
             Nominal nominal = new Nominal(note);
-            Command command = new Command(HopperCommand.MC_GET_NOTE_AMOUNT, nominal.getValue());
+            Command command = new Command(CCTalkCommand.MC_GET_NOTE_AMOUNT, nominal.getValue());
             byte[] resp = client.sendMessage(command);
             String logic = CCTalkParser.parseCC2(command, resp);
             int amount = getAmount(logic);

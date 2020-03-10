@@ -29,6 +29,9 @@ public class PortListener extends MouseInputAdapter {
                         case "SMART_HOPPER":
                             Launcher.defineManager(new ru.app.hardware.smartSystem.hopper.Manager(portName));
                             break;
+                        case "BV_20":
+                            Launcher.defineManager(new ru.app.hardware.smartSystem.BV20.Manager(portName));
+                            break;
                     }
                     break;
                 case BNE_S110M:
