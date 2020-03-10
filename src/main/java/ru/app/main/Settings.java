@@ -13,7 +13,6 @@ public class Settings {
     public static final Dimension dimension = new Dimension(1020, 600);
     public static final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:S");
     public static final String COUNTRY = "RUB";
-    public static String qiwiLogPath;
     public static DeviceType hardware;
     public static String device = null;
     public static String realPortForEmulator = null;
