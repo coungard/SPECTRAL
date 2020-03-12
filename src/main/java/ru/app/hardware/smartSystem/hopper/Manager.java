@@ -112,7 +112,7 @@ public class Manager extends AbstractManager {
                     public void mousePressed(MouseEvent e) {
                         for (int i = 0; i < table.length; i++) {
                             JTextField field = coinFields[i];
-                            if (Utils.isNumber(field.getText())) {
+                            if (Utils.isNumeric(field.getText())) {
                                 setNoteAmount(table[i], Integer.parseInt(field.getText()));
                             }
                         }

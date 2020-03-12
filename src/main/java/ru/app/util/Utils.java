@@ -3,7 +3,6 @@ package ru.app.util;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.lang.management.ManagementFactory;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -72,69 +71,6 @@ public class Utils {
             return s;
         }
         return inverse(s.substring(2)) + s.charAt(0) + s.charAt(1);
-    }
-
-    /**
-     * Restart the current Java application
-     *
-     * @param runBeforeRestart some custom code to be run before restarting
-     */
-    @Deprecated
-    public static void restartApplication(Runnable runBeforeRestart) throws IOException {
-        try {
-            // java binary
-            String java = System.getProperty("java.home") + "/bin/java";
-            // vm arguments
-            List<String> vmArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
-            StringBuilder vmArgsOneLine = new StringBuilder();
-            for (String arg : vmArguments) {
-                // if it's the agent argument : we ignore it otherwise the
-                // address of the old application and the new one will be in conflict
-                if (!arg.contains("-agentlib")) {
-                    vmArgsOneLine.append(arg);
-                    vmArgsOneLine.append(" ");
-                }
-            }
-            // init the command to execute, add the vm args
-            final StringBuffer cmd = new StringBuffer("" + java + " " + vmArgsOneLine);
-
-            // program main and program arguments
-            String[] mainCommand = System.getProperty(SUN_JAVA_COMMAND).split(" ");
-            // program main is a jar
-            if (mainCommand[0].endsWith(".jar")) {
-                // if it's a jar, add -jar mainJar
-                cmd.append("-jar ").append(new File(mainCommand[0]).getPath());
-            } else {
-                // else it's a .class, add the classpath and mainClass
-                cmd.append("-cp ").append(System.getProperty("java.class.path")).append(" ").append(mainCommand[0]);
-            }
-            // finally add program arguments
-            for (int i = 1; i < mainCommand.length; i++) {
-                cmd.append(" ");
-                cmd.append(mainCommand[i]);
-            }
-            // execute the command in a shutdown hook, to be sure that all the
-            // resources have been disposed before restarting the application
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        Runtime.getRuntime().exec(cmd.toString());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            // execute some custom code before restarting
-            if (runBeforeRestart != null) {
-                runBeforeRestart.run();
-            }
-            // exit
-            System.exit(0);
-        } catch (Exception e) {
-            // something went wrong
-            throw new IOException("Error while trying to restart the application", e);
-        }
     }
 
     static void sleep(long ms) {
@@ -284,7 +220,7 @@ public class Utils {
     /**
      * Считывает из проперти файла значение, взятое из ключа по передаваемой строке
      *
-     * @param file путь к файлу
+     * @param file   путь к файлу
      * @param target ключ, по которому будет считывать значение
      * @return значение
      * @throws IOException если такого файла нет
@@ -362,18 +298,6 @@ public class Utils {
         return true;
     }
 
-    public static boolean isNumber(String num) {
-        if (num == null) {
-            return false;
-        }
-        try {
-            double d = Double.parseDouble(num);
-        } catch (NumberFormatException nfe) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * Данный метод принимает на вход массив байтов и возвращает строку представления Character в русской кодировке
      */
@@ -386,5 +310,25 @@ public class Utils {
             return null;
         }
         return ascii.toString();
+    }
+
+    /**
+     * В данном методе мы передаем текст, и проверяем, входят ли символы этого текста в нужный нам диапазон ASCii,
+     * где используется латиница и цифры, то есть ничего лишнего. <p>
+     * Использутеся для фильтрации ошибок
+     *
+     * @param text текст, который мы проверяем
+     * @return true - если весь текст входит в нужный диапазон, false - если нет (или null)
+     */
+    public static boolean isRangedAscii(String text) {
+        boolean result = true;
+        if (text == null)
+            return false;
+        for (int c : text.toCharArray())
+            if (c < 32 || c > 127) {
+                result = false;
+                break;
+            }
+        return result;
     }
 }

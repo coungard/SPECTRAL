@@ -50,8 +50,8 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
 
     private Payment payment;
     private long activity = System.currentTimeMillis();
-    private String oldStatus = "";
-    private File payFile;
+    private volatile String oldStatus = "";
+    private volatile File payFile;
     private boolean cassetteOut;
     private boolean requesterStarted;
 
