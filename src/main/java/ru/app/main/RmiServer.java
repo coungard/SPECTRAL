@@ -205,12 +205,18 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                         payFile = new File(Settings.paymentPath);
                         Helper.saveProp(payProperties, payFile);
 
-                        boolean access = waitFor(Status.COMPLETED);
-                        if (!access) continue;
+//                        boolean access = waitFor(Status.COMPLETED);
+//                        if (!access) continue;
 
-                        boolean idling = waitFor2(BillStateType.Idling);
+                        boolean idling = waitFor2(BillStateType.Idling, 180000);
                         if (!idling) continue;
 
+                        Thread.sleep(8000);
+                        Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
+                        String cur = data.get("status");
+                        if (Status.COMPLETED != Status.fromString(cur)) {
+                            LOGGER.warn(LogCreator.console("Warning! Payment status still not completed yet!"));
+                        }
                         List<Integer> nominals = Utils.calculatePayment(payment.getSum());
                         int paid = 0;
                         boolean error;
@@ -222,7 +228,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                             while (iterator.hasNext()) {
                                 Thread.sleep(NOMINALS_TIME_OUT);
                                 Integer nominal = iterator.next();
-                                String bill = "" + nominal;
+                                String bill = String.valueOf(nominal);
                                 boolean deposit = billAcceptance(billTable.get(bill));
                                 if (deposit) {
                                     paid += nominal;
@@ -243,14 +249,14 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                         Helper.saveProp(payProperties, payFile);
 
                         if (error) {
-                            waitFor(Status.SUCCESS);
+                            waitFor(Status.SUCCESS, 180000);
                             saveAsError();
                             Thread.sleep(CASHER_TIME_OUT);
                             continue;
                         }
 
-                        access = waitFor(Status.SUCCESS);
-                        if (access) {
+                        boolean success = waitFor(Status.SUCCESS, 30000);
+                        if (success) {
                             LOGGER.info("Payment successfully complete!");
                             Helper.saveFile(payment, Status.SUCCESS);
                             String request = requester.sendStatus(payment, Status.SUCCESS);
@@ -262,7 +268,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                 Thread.sleep(REQUESTER_TIME_OUT);
             } catch (IOException | InterruptedException ex) {
                 LOGGER.error(ex.getMessage(), ex);
-                LOGGER.info("Requester is crashed! Perhaps problems with network...checkPayment please");
+                LOGGER.info("Requester is crashed! Perhaps problems with network...check Payment please");
                 try {
                     Thread.sleep(CASHER_TIME_OUT);
                 } catch (InterruptedException exx) {
@@ -283,8 +289,9 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
      * @return true - если мы получили ожидаемый статус, false - в противном случае
      */
     private boolean
-    waitFor(Status expected) throws InterruptedException, IOException {
+    waitFor(Status expected, long timeout) throws InterruptedException, IOException {
         LOGGER.info("Wait for status: " + expected);
+        activity = System.currentTimeMillis();
         Status current;
         long start = System.currentTimeMillis();
         do {
@@ -305,7 +312,8 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                 LOGGER.info("Status Error. Break Payment Process!");
                 break;
             }
-        } while (current != expected && System.currentTimeMillis() - activity < STATUS_TIME_OUT);
+//        } while (current != expected && System.currentTimeMillis() - activity < STATUS_TIME_OUT);
+        } while (current != expected && System.currentTimeMillis() - activity < timeout);
 
         if (current != expected) {
             LOGGER.info("Payment Status is not " + expected + "!");
@@ -321,14 +329,15 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
      * @param expected - передаем статус купюроприемника, который мы ожидаем
      * @return true - если мы получили ожидаемый статус, false - в противном случае
      */
-    private boolean waitFor2(BillStateType expected) throws InterruptedException, IOException {
+    private boolean waitFor2(BillStateType expected, long timeout) throws InterruptedException, IOException {
         LOGGER.info("wait for casher state: " + expected);
         activity = System.currentTimeMillis();
         BillStateType state;
         do {
             Thread.sleep(400);
             state = client.getStatus();
-        } while (state != expected && System.currentTimeMillis() - activity < CASHER_TIME_OUT);
+//        } while (state != expected && System.currentTimeMillis() - activity < CASHER_TIME_OUT);
+        } while (state != expected && System.currentTimeMillis() - activity < timeout);
 
         if (state != expected) {
             LOGGER.error("Terminal still not " + expected + " yet! Time out error!");
