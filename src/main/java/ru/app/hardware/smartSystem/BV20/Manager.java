@@ -59,7 +59,6 @@ public class Manager extends AbstractManager {
         final JButton start = createButton("Start", new Point(30, 50));
         start.setEnabled(false);
         start.setToolTipText("Start BV 20 after requesting Bills ID");
-
         start.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {

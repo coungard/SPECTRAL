@@ -123,7 +123,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
         }
         try {
             // Bind this object instance to the name "RmiServer"
-            Naming.rebind("//localhost/RmiServer", this);
+            Naming.rebind("//127.0.0.1/RmiServer", this);
             LOGGER.info("PeerServer bound in registry");
         } catch (Exception ex) {
             LOGGER.error("RMI server exception:" + ex.getMessage());
@@ -208,7 +208,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
 //                        boolean access = waitFor(Status.COMPLETED);
 //                        if (!access) continue;
 
-                        boolean idling = waitFor2(BillStateType.Idling, 180000);
+                        boolean idling = waitFor2(BillStateType.Idling, 200000);
                         if (!idling) continue;
 
                         Thread.sleep(8000);

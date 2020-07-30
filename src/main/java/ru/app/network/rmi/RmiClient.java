@@ -14,7 +14,7 @@ public class RmiClient {
 
     private String send(String command) {
         try {
-            obj = (RmiServerInterface) Naming.lookup("//localhost/RmiServer");
+            obj = (RmiServerInterface) Naming.lookup("//127.0.0.1/RmiServer");
             return obj.send(command);
         } catch (Exception e) {
             System.err.println("RmiClient exception: " + e);
