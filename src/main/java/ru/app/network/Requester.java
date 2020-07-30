@@ -31,9 +31,7 @@ public class Requester {
         conn.setUseCaches(false);
         conn.setDoInput(true);
         conn.setDoOutput(true);
-
         conn.addRequestProperty("Content-Type", "text/plain; charset=UTF-8");
-        boolean success = status == Status.SUCCESS;
 
         String login = Settings.propEmulator.get("login");
         String password = Settings.propEmulator.get("passwd");
@@ -41,15 +39,33 @@ public class Requester {
         String imei = Settings.propEmulator.get("imei");
         String sign = Utils.md5(login + password + type + imei);
 
+        String statusName = "";
+        switch (status) {
+            case SUCCESS:
+                statusName = "ok";
+                break;
+            case ERROR:
+                statusName = "error";
+                break;
+            case MANUAL:
+                statusName = "manual";
+                break;
+            default:
+                statusName = "undeclared";
+                break;
+        }
+
         StringBuilder request = new StringBuilder();
         request.append("<request>\n").append("  <type>").append(type).append("</type>\n").
                 append("  <login>").append(Settings.propEmulator.get("login")).append("</login>\n").
                 append("  <imei>").append(Settings.propEmulator.get("imei")).append("</imei>\n")
                 .append("  <result>\n")
                 .append("    <command_id>").append(payment.getId()).append("</command_id>\n")
-                .append("    <status>")
-                .append(success ? "ok" : "error")
+                .append("<status>")
+                .append(statusName)
                 .append("    </status>\n");
+
+        boolean success = status == Status.SUCCESS;
         if (success) {
             request.append("    <data>\n").append("    \t<answer>")
                     .append("Пополнение ").append(payment.getNumber()).append(" на ").append(payment.getSum())

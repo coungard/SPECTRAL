@@ -306,7 +306,7 @@ public class Manager extends AbstractManager {
                     Thread.sleep(400);
                     Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
                     String cur = data.get("status");
-                    current = Status.fromString(cur);
+                    current = Status.valueOf(cur);
                     if (!cur.equals(oldStatus)) {
                         activity = System.currentTimeMillis();
                         LOGGER.info(LogCreator.console("Current Payment Status : " + current));

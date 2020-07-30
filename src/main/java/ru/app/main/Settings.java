@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Settings {
-    public static final String VERSION = "1.83";
+    public static final String VERSION = "1.84";
     public static final Dimension dimension = new Dimension(1020, 600);
     public static final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:S");
     public static final String COUNTRY = "RUB";
@@ -34,6 +34,7 @@ public class Settings {
     public static final String paymentsDir = "payments/";
     public static final String successDir = "payments/success/";
     public static final String errorDir = "payments/error/";
+    public static final String manualDir = "payments/manual";
     public static final String paymentPath = "payments/payment";
 
     // свойства по умолчанию

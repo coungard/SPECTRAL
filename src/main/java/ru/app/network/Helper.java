@@ -57,10 +57,8 @@ public class Helper {
             PrintWriter printWriter = new PrintWriter(payFile, "cp1251");
             printWriter.write(prop);
             printWriter.close();
-        } catch (FileNotFoundException ex) {
+        } catch (FileNotFoundException | UnsupportedEncodingException ex) {
             LOGGER.error(ex.getMessage(), ex);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
         }
     }
 
@@ -72,7 +70,20 @@ public class Helper {
             return;
         }
         long timestamp = System.currentTimeMillis();
-        Path target = Paths.get((status == Status.SUCCESS ? Settings.successDir : Settings.errorDir) + "payment_" + id + "_t" + timestamp);
+        String fileName = "payment_" + id + "_t" + timestamp;
+        Path target;
+        switch (status) {
+            case SUCCESS:
+                target = Paths.get(Settings.successDir + fileName);
+                break;
+            case ERROR:
+                target = Paths.get(Settings.errorDir + fileName);
+                break;
+            default:
+                LOGGER.warn("Status undefined: " + status);
+                target = Paths.get(Settings.paymentsDir + fileName);
+                break;
+        }
         Files.copy(payFile, target);
         Files.delete(payFile);
         LOGGER.info(LogCreator.console("payment file: " + target.toString() + " successfully saved"));

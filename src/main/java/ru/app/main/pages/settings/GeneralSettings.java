@@ -246,16 +246,15 @@ public class GeneralSettings extends JPanel {
                 Files.createFile(Paths.get(Settings.propFile));
             if (Files.notExists(Paths.get(Settings.propEmulatorFile)))
                 Files.createFile(Paths.get(Settings.propEmulatorFile));
-
-            if (Files.notExists(Paths.get(Settings.paymentsDir))) {
+            if (Files.notExists(Paths.get(Settings.paymentsDir)))
                 Files.createDirectory(Paths.get(Settings.paymentsDir));
-            }
-            if (Files.notExists(Paths.get(Settings.successDir))) {
+            if (Files.notExists(Paths.get(Settings.successDir)))
                 Files.createDirectory(Paths.get(Settings.successDir));
-            }
-            if (Files.notExists(Paths.get(Settings.errorDir))) {
+            if (Files.notExists(Paths.get(Settings.errorDir)))
                 Files.createDirectory(Paths.get(Settings.errorDir));
-            }
+            if (Files.notExists(Paths.get(Settings.manualDir)))
+                Files.createDirectory(Paths.get(Settings.manualDir));
+
             if (Files.exists(Paths.get("payments/autoRun")))
                 Files.delete(Paths.get("payments/autoRun"));
             if (Files.notExists(Paths.get("payments/loading/")))
