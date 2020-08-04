@@ -79,6 +79,9 @@ public class Helper {
             case ERROR:
                 target = Paths.get(Settings.errorDir + fileName);
                 break;
+            case MANUAL:
+                target = Paths.get(Settings.manualDir + fileName);
+                break;
             default:
                 LOGGER.warn("Status undefined: " + status);
                 target = Paths.get(Settings.paymentsDir + fileName);

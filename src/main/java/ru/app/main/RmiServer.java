@@ -337,14 +337,30 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
         LOGGER.info("wait for casher state: " + expected);
         activity = System.currentTimeMillis();
         BillStateType state;
+        Status current;
+
         do {
             Thread.sleep(500);
             state = client.getStatus();
+
+            Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
+            String cur = data.get("status");
+            current = Status.valueOf(cur);
+
+            if (current == Status.ERROR) {
+                LOGGER.info("Status Error. Break Payment Process!");
+                break;
+            }
         } while (state != expected && System.currentTimeMillis() - activity < timeout);
+
+        if (current == Status.ERROR) {
+            saveAsError();
+            return false;
+        }
 
         if (state != expected) {
             LOGGER.error("Terminal still not " + expected + " yet! Time out error!");
-            saveAsError();
+            saveAsManual();
             return false;
         }
         return true;
