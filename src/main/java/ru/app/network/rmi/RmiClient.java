@@ -17,6 +17,7 @@ public class RmiClient {
             obj = (RmiServerInterface) Naming.lookup("//127.0.0.1/RmiServer");
             return obj.send(command);
         } catch (Exception e) {
+            System.out.println("RmiClient exception: " + e);
             System.err.println("RmiClient exception: " + e);
             e.printStackTrace();
         }

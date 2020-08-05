@@ -56,23 +56,25 @@ public class Requester {
         }
 
         StringBuilder request = new StringBuilder();
-        request.append("<request>\n").append("  <type>").append(type).append("</type>\n").
-                append("  <login>").append(Settings.propEmulator.get("login")).append("</login>\n").
-                append("  <imei>").append(Settings.propEmulator.get("imei")).append("</imei>\n")
-                .append("  <result>\n")
-                .append("    <command_id>").append(payment.getId()).append("</command_id>\n")
-                .append("<status>")
-                .append(statusName)
-                .append("    </status>\n");
+        request.append("<request>\n").append("\t<type>").append(type).append("</type>\n")
+                .append("\t<login>").append(Settings.propEmulator.get("login")).append("</login>\n")
+                .append("\t<imei>").append(Settings.propEmulator.get("imei")).append("</imei>\n")
+                .append("\t<result>\n")
+                .append("\t\t<command_id>").append(payment.getId()).append("</command_id>\n")
+                .append("\t\t<status>").append(statusName).append("</status>\n");
 
         boolean success = status == Status.SUCCESS;
         if (success) {
-            request.append("    <data>\n").append("    \t<answer>")
+            request.append("\t\t<data>\n")
+                    .append("\t\t\t<answer>")
                     .append("Пополнение ").append(payment.getNumber()).append(" на ").append(payment.getSum())
-                    .append(" руб. /**/Запрос на активацию принятия платежа/*").append("</answer>\n").append("    </data>\n");
-        } else
-            request.append("    <data></data>\n");
-        request.append("  </result>\n").append("  <sign>").append(sign).append("</sign>\n").append("</request>");
+                    .append(" руб. /**/Запрос на активацию принятия платежа/*").append("</answer>\n")
+                    .append("\t\t</data>\n");
+        } else {
+            request.append("\t\t<data></data>\n");
+        }
+        request.append("\t</result>\n")
+                .append("\t<sign>").append(sign).append("</sign>\n").append("</request>");
 
         LOGGER.info(LogCreator.console("Requester send >> " + request.toString()));
         byte[] data = request.toString().getBytes(StandardCharsets.UTF_8);

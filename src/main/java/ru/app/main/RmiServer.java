@@ -201,6 +201,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                         payProperties.put("sum", "" + payment.getSum());
                         payProperties.put("provider", payment.getProvider());
                         payProperties.put("status", Status.ACCEPTED.name());
+                        payProperties.put("operationCode", "");     // empty value
 
                         payFile = new File(Settings.paymentPath);
                         Helper.saveProp(payProperties, payFile);
