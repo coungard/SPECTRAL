@@ -54,11 +54,13 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
     private volatile File payFile;
     private boolean cassetteOut;
     private boolean requesterStarted;
+    private boolean mock;
 
-    public RmiServer() throws RemoteException {
+    public RmiServer(boolean mock) throws RemoteException {
         String log4jPath = System.getProperty("os.name").contains("Linux") ? "log4j.xml" : "log4j_win.xml";
         DOMConfigurator.configure(Objects.requireNonNull(this.getClass().getClassLoader().getResource(log4jPath)));
         LogCreator.init();
+        this.mock = mock;
 
         LOGGER.info("Emulator v." + Settings.VERSION + " started!");
         try {
@@ -159,14 +161,14 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                 long start = System.currentTimeMillis();
                 do {
                     Thread.sleep(500);
-                    if (client.isActive()) break;
+                    if (client.isActive() || mock) break;
                 } while (System.currentTimeMillis() - start < BOT_STARTER_TIME_OUT);
                 Thread.sleep(5000);
-                if (!client.isActive()) {
+                if (!client.isActive() && !mock) {
                     LOGGER.error("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!");
                 } else {
                     LOGGER.info("Identification command received. 10 minutes waiting for repaints...");
-                    Thread.sleep(60000 * 10); // wait after terminal send command Identification
+                    Thread.sleep(mock ? 5000 : 60000 * 10);
                     if (!requesterStarted) startRequester();
                 }
             } else {
@@ -183,6 +185,21 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
         while (true) {
             try {
                 Thread.sleep(3000);
+
+                if (mock) {
+                    payment = new Payment();
+                    payment.setId(100500);
+                    payment.setNumber("89634100211");
+                    payment.setProvider("qiwi");
+                    payment.setNumber("100.00");
+                    payment.setText("mock");
+                    payment.setCodeOperation("");
+
+                    String requestErr = requester.sendStatus(payment, Status.ERROR);
+                    LOGGER.info("Request status : " + requestErr);
+                    break;
+                }
+
                 String response = requester.checkPayment();
                 LOGGER.info("Response:\n" + response);
                 boolean isCommand = response != null && response.contains("command");
@@ -201,7 +218,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                         payProperties.put("sum", "" + payment.getSum());
                         payProperties.put("provider", payment.getProvider());
                         payProperties.put("status", Status.ACCEPTED.name());
-                        payProperties.put("operationCode", "");     // empty value
+                        payProperties.put("code_operation", "");     // empty value
 
                         payFile = new File(Settings.paymentPath);
                         Helper.saveProp(payProperties, payFile);
@@ -300,6 +317,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
             Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
             String cur = data.get("status");
             current = Status.valueOf(cur);
+            payment.setCodeOperation(data.get("code_operation"));
             if (!cur.equals(oldStatus)) {
                 activity = System.currentTimeMillis();
                 LOGGER.info("Current Payment Status : " + current);
@@ -345,9 +363,10 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
             state = client.getStatus();
 
             Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
+
             String cur = data.get("status");
             current = Status.valueOf(cur);
-
+            payment.setCodeOperation(data.get("code_operation"));
             if (current == Status.ERROR) {
                 LOGGER.info("Status Error. Break Payment Process!");
                 break;

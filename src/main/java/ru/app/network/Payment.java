@@ -6,6 +6,7 @@ public class Payment {
     private String number;
     private String text;
     private double sum;
+    private String codeOperation;
 
     public long getId() {
         return id;
@@ -47,6 +48,14 @@ public class Payment {
         this.sum = sum;
     }
 
+    public String getCodeOperation() {
+        return codeOperation;
+    }
+
+    public void setCodeOperation(String codeOperation) {
+        this.codeOperation = codeOperation;
+    }
+
     @Override
     public String toString() {
         return "Payment{" +
@@ -55,6 +64,7 @@ public class Payment {
                 ", number='" + number + '\'' +
                 ", text='" + text + '\'' +
                 ", sum=" + sum +
+                ", codeOperation='" + codeOperation + '\'' +
                 '}';
     }
 }

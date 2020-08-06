@@ -61,7 +61,8 @@ public class Requester {
                 .append("\t<imei>").append(Settings.propEmulator.get("imei")).append("</imei>\n")
                 .append("\t<result>\n")
                 .append("\t\t<command_id>").append(payment.getId()).append("</command_id>\n")
-                .append("\t\t<status>").append(statusName).append("</status>\n");
+                .append("\t\t<status>").append(statusName).append("</status>\n")
+                .append("\t\t<code_operation>").append(payment.getCodeOperation()).append("</code_operation>\n");
 
         boolean success = status == Status.SUCCESS;
         if (success) {
@@ -76,7 +77,7 @@ public class Requester {
         request.append("\t</result>\n")
                 .append("\t<sign>").append(sign).append("</sign>\n").append("</request>");
 
-        LOGGER.info(LogCreator.console("Requester send >> " + request.toString()));
+        LOGGER.info(LogCreator.console("Requester send >> \n" + request.toString()));
         byte[] data = request.toString().getBytes(StandardCharsets.UTF_8);
         OutputStream os = conn.getOutputStream();
         os.write(data, 0, data.length);

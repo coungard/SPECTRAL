@@ -39,8 +39,12 @@ public class Launcher extends Thread {
 
     public static void main(String[] args) throws UnsupportedLookAndFeelException, InvocationTargetException, InterruptedException, RemoteException {
         Settings.args = args;
-        if (args.length > 0 && args[0].equals("--service")) {
-            new RmiServer();
+        if (args.length > 0 && (args[0].equals("--service") || args[1].equals("--service"))) {
+            if (args.length > 1 && (args[0].equals("mock") || args[1].equals("mock"))) {
+                new RmiServer(true);
+            } else {
+                new RmiServer(false);
+            }
         } else {
             UIManager.setLookAndFeel(new NimbusLookAndFeel());
             SwingUtilities.invokeAndWait(new Runnable() {

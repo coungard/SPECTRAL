@@ -36,6 +36,7 @@ public class Helper {
         payment.setSum(Double.parseDouble(data[2]));
         payment.setProvider(data[3]);
         payment.setText(data[4].substring(0, data[4].length() - 1)); // w/o # symbol
+        payment.setCodeOperation("");   // empty
 
         return payment;
     }
