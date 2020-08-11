@@ -278,6 +278,9 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                         if (success) {
                             LOGGER.info("Payment successfully complete! Waiting a minute before sending payment.");
                             Thread.sleep(60000);
+                            data = Helper.loadProp(payFile);
+                            payment.setCodeOperation(data.get("code_operation"));
+
                             Helper.saveFile(payment, Status.SUCCESS);
                             String request = requester.sendStatus(payment, Status.SUCCESS);
                             LOGGER.info("Request status : " + request);
