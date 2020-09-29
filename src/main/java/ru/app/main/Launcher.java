@@ -124,6 +124,9 @@ public class Launcher extends Thread {
             button.setFont(FONT);
             button.setBounds(window.getWidth() / 2 - 160, 80 + i * 80, 320, 60);
             button.addMouseListener(new HardwareListener(hw[i]));
+            if (hw[i].equals(DeviceType.EMULATOR)) {
+                button.setBackground(new Color(133, 221, 238));
+            }
             mainPanel.add(button);
         }
 

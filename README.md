@@ -9,5 +9,7 @@
 * Монетоприемник cctalk (emp800)
 * Купюроприемник ccnet (cashcode) с режимом моста (bridge mode)
 
+Также реализован эмулятор ccnet, взаимодействующий с сервером платежей для командной строки - без использования 
+графического интерфейса. Хорошо работает на железе с ограниченными ресурсами. 
 
-![ScreenShot](src/main/resources/img/menu.png?raw=true "main root")
+![ScreenShot](src/main/resources/img/menu.png)

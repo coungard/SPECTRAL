@@ -45,8 +45,8 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
     private static final int STATUS_TIME_OUT = Integer.parseInt(Settings.propEmulator.get("timeout.status")); // timeout between bot-statuses
     private static final int NOMINALS_TIME_OUT = Integer.parseInt(Settings.propEmulator.get("timeout.nominals")); // timeout between insert notes
     private static final int REQUESTER_TIME_OUT = Integer.parseInt(Settings.propEmulator.get("timeout.requester")); // timeout between insert notes
-    private static final int BOT_STARTER_TIME_OUT = 60000 * 10; // timeout for start bot & receive identification command
-    private static final long CASHER_TIME_OUT = 60000;  // timeout for expected cashmachine status
+    private static final int BOT_STARTER_TIME_OUT = 1000 * 60 * 10; // timeout for start bot & receive identification command
+    private static final long CASHER_TIME_OUT = 1000 * 60;  // timeout for expected cashmachine status
 
     private Payment payment;
     private long activity = System.currentTimeMillis();
@@ -168,7 +168,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                     LOGGER.error("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!");
                 } else {
                     LOGGER.info("Identification command received. 10 minutes waiting for repaints...");
-                    Thread.sleep(mock ? 5000 : 60000 * 10);
+                    Thread.sleep(mock ? 5000 : 1000 * 60 * 10);
                     if (!requesterStarted) startRequester();
                 }
             } else {
@@ -185,7 +185,6 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
         while (true) {
             try {
                 Thread.sleep(3000);
-
                 if (mock) {
                     payment = new Payment();
                     payment.setId(100500);
@@ -226,7 +225,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
 //                        boolean access = waitFor(Status.COMPLETED);
 //                        if (!access) continue;
 
-                        boolean idling = waitFor2(BillStateType.Idling, 200000);
+                        boolean idling = waitFor2(BillStateType.Idling, 1000 * 60 * 4);
                         if (!idling) continue;
 
                         Thread.sleep(8000);
@@ -268,16 +267,16 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                         Helper.saveProp(payProperties, payFile);
 
                         if (error) {
-                            waitFor(Status.SUCCESS, 180000);
+                            waitFor(Status.SUCCESS, 1000 * 60 * 3);
                             saveAsError();
                             Thread.sleep(CASHER_TIME_OUT);
                             continue;
                         }
 
-                        boolean success = waitFor(Status.SUCCESS, 30000);
+                        boolean success = waitFor(Status.SUCCESS, 1000 * 30);
                         if (success) {
                             LOGGER.info("Payment successfully complete! Waiting a minute before sending payment.");
-                            Thread.sleep(60000);
+                            Thread.sleep(1000 * 60 * 3);
                             data = Helper.loadProp(payFile);
                             payment.setCodeOperation(data.get("code_operation"));
 
