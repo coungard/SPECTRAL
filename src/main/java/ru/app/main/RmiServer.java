@@ -29,6 +29,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Специальный сервис для эмулятора, который работает исключительно в командной строке, не используя графический
@@ -54,7 +55,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
     private volatile File payFile;
     private boolean cassetteOut;
     private boolean requesterStarted;
-    private boolean mock;
+    private final boolean mock;
 
     public RmiServer(boolean mock) throws RemoteException {
         String log4jPath = System.getProperty("os.name").contains("Linux") ? "log4j.xml" : "log4j_win.xml";
@@ -147,7 +148,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
             startOpt.put("bot", "open");
             Helper.saveProp(startOpt, path.toFile());
             do {
-                Thread.sleep(400);
+                TimeUnit.MILLISECONDS.sleep(400);
                 Map<String, String> bot = Helper.loadProp(path.toFile());
                 if (bot.get("bot").equals("ok")) {
                     Files.delete(path);
@@ -160,9 +161,10 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                 LOGGER.info("Bot started! Waiting command Identification before Requesting...");
                 long start = System.currentTimeMillis();
                 do {
-                    Thread.sleep(500);
+                    TimeUnit.MILLISECONDS.sleep(500);
                     if (client.isActive() || mock) break;
                 } while (System.currentTimeMillis() - start < BOT_STARTER_TIME_OUT);
+
                 Thread.sleep(5000);
                 if (!client.isActive() && !mock) {
                     LOGGER.error("COMMAND IDENTIFICATION TIME OUT! REQUESTER WILL NOT START!");
@@ -184,7 +186,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
         requesterStarted = true;
         while (true) {
             try {
-                Thread.sleep(3000);
+                TimeUnit.SECONDS.sleep(3);
                 if (mock) {
                     payment = new Payment();
                     payment.setId(100500);
@@ -203,7 +205,11 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                 LOGGER.info("Response:\n" + response);
                 boolean isCommand = response != null && response.contains("command");
 
-                if (isCommand) {
+                payment: if (isCommand) {
+                    if (client.getStatus() == BillStateType.Idling) {
+                       LOGGER.warn("Warning! Casher is still idling yet! Break payment process for 1 minute.");
+                       break payment;
+                    }
                     LOGGER.info("Starting payment process..");
 
                     payment = Helper.createPayment(response);
@@ -228,7 +234,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                         boolean idling = waitFor2(BillStateType.Idling, 1000 * 60 * 4);
                         if (!idling) continue;
 
-                        Thread.sleep(8000);
+                        TimeUnit.SECONDS.sleep(8);
                         Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
                         String cur = data.get("status");
                         if (!cur.equals(Status.COMPLETED.name())) {
@@ -243,7 +249,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                             Iterator<Integer> iterator = nominals.iterator();
                             LOGGER.info("Attempt : " + attempts);
                             while (iterator.hasNext()) {
-                                Thread.sleep(NOMINALS_TIME_OUT);
+                                TimeUnit.MILLISECONDS.sleep(NOMINALS_TIME_OUT);
                                 Integer nominal = iterator.next();
                                 String bill = String.valueOf(nominal);
                                 boolean deposit = billAcceptance(billTable.get(bill));
@@ -261,7 +267,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                                 break;
                         } while (attempts <= 3);
 
-                        Thread.sleep(6000);
+                        TimeUnit.SECONDS.sleep(6);
                         payProperties.put("status", Status.STACKED.name());
                         oldStatus = payProperties.get("status");
                         Helper.saveProp(payProperties, payFile);
@@ -269,14 +275,14 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                         if (error) {
                             waitFor(Status.SUCCESS, 1000 * 60 * 3);
                             saveAsError();
-                            Thread.sleep(CASHER_TIME_OUT);
+                            TimeUnit.MILLISECONDS.sleep(CASHER_TIME_OUT);
                             continue;
                         }
 
                         boolean success = waitFor(Status.SUCCESS, 1000 * 30);
                         if (success) {
-                            LOGGER.info("Payment successfully complete! Waiting a minute before sending payment.");
-                            Thread.sleep(1000 * 60 * 3);
+                            LOGGER.info("Payment successfully complete! Waiting 3 minutes before sending payment.");
+                            TimeUnit.MINUTES.sleep(3);
                             data = Helper.loadProp(payFile);
                             payment.setCodeOperation(data.get("code_operation"));
 
@@ -287,12 +293,12 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                             LOGGER.info("С ПЛАТЕЖОМ ЧТО-ТО НЕ ТО! ГОСПОДИ БОЖЕ МОЙ!");
                     }
                 }
-                Thread.sleep(REQUESTER_TIME_OUT);
+                TimeUnit.MILLISECONDS.sleep(REQUESTER_TIME_OUT);
             } catch (IOException | InterruptedException ex) {
                 LOGGER.error(ex.getMessage(), ex);
                 LOGGER.info("Requester is crashed! Perhaps problems with network...check Payment please");
                 try {
-                    Thread.sleep(CASHER_TIME_OUT);
+                    TimeUnit.MILLISECONDS.sleep(CASHER_TIME_OUT);
                 } catch (InterruptedException exx) {
                     LOGGER.error(exx.getMessage(), exx);
                     break;
@@ -316,7 +322,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
         Status current;
         long start = System.currentTimeMillis();
         do {
-            Thread.sleep(400);
+            TimeUnit.MILLISECONDS.sleep(400);
             Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
             String cur = data.get("status");
             current = Status.valueOf(cur);
@@ -362,7 +368,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
         Status current;
 
         do {
-            Thread.sleep(500);
+            TimeUnit.MILLISECONDS.sleep(500);
             state = client.getStatus();
 
             Map<String, String> data = Helper.loadProp(payFile); // бот изменяет содержимое файла
@@ -419,7 +425,7 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
         client.deposit();
         long start = System.currentTimeMillis();
         do {
-            Thread.sleep(40);
+            TimeUnit.MILLISECONDS.sleep(40);
             if (client.isDepositEnded()) break;
         } while (System.currentTimeMillis() - start < 25000);
         return client.isNominalStacked();
