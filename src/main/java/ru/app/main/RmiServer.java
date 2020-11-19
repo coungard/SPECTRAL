@@ -248,8 +248,18 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
                             error = false;
                             Iterator<Integer> iterator = nominals.iterator();
                             LOGGER.info("Attempt : " + attempts);
+
                             while (iterator.hasNext()) {
                                 TimeUnit.MILLISECONDS.sleep(NOMINALS_TIME_OUT);
+
+                                BillStateType status = client.getStatus(); // если валидатор отключен, прекращаем прием купюр
+                                if (status != BillStateType.Idling) {
+                                    LOGGER.warn("Bill Validator not idling! Current state: " + status + ". Payment info:" +
+                                            " Required sum: " + payment.getSum() + ", Paid sum: " + paid + ", Rest sum: " + (payment.getSum() - paid));
+                                    error = true;
+                                    break;
+                                }
+
                                 Integer nominal = iterator.next();
                                 String bill = String.valueOf(nominal);
                                 boolean deposit = billAcceptance(billTable.get(bill));
