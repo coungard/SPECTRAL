@@ -284,7 +284,8 @@ public class RmiServer extends UnicastRemoteObject implements RmiServerInterface
 
                         if (error) {
                             waitFor(Status.SUCCESS, 1000 * 60 * 3);
-                            saveAsError();
+//                            saveAsError();
+                            saveAsManual();
                             TimeUnit.MILLISECONDS.sleep(CASHER_TIME_OUT);
                             continue;
                         }
